@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Locale — Prototype</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f5f0eb; display: flex; justify-content: center; padding: 20px 10px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+
+
+// ─── SHARED CONSTANTS ───
+const FONTS = {
+  display: "'Playfair Display', Georgia, serif",
+  body: "'DM Sans', sans-serif",
+};
+const C = {
+  dark: "#2C2220",
+  mid: "#5A4A42",
+  muted: "#8A7B72",
+  light: "#6B5B52",
+  border: "#E8E0DA",
+  bgWarm: "#FAFAF7",
+  bgTan: "#F5F0EB",
+  accent: "#B85042",
+  accentLight: "#FDF0ED",
+  green: "#1B7D3A",
+  greenBg: "#E6F4EA",
+  yellowBg: "#FEF7E0",
+  yellowText: "#9A6C00",
+  creator: "#1A6B5A",
+  creatorLight: "#E8F5F0",
+  creatorAccent: "#0D9488",
+};
+
+// ─── SMALL COMPONENTS ───
+function Chip({ label, selected, onClick, color = C.accent }) {
+  return (
+    <button onClick={onClick} style={{ padding: "8px 16px", borderRadius: 20, border: selected ? `2px solid ${color}` : `1.5px solid #D5CBC4`, background: selected ? (color === C.accent ? C.accentLight : C.creatorLight) : C.bgWarm, color: selected ? color : C.mid, fontFamily: FONTS.body, fontSize: 13, fontWeight: selected ? 600 : 400, cursor: "pointer", transition: "all 0.15s" }}>
+      {label}
+    </button>
+  );
+}
+
+function StatusBadge({ status }) {
+  const map = {
+    "In Progress": { bg: "#FEF7E0", color: "#9A6C00" },
+    "Draft Ready": { bg: "#E0EDFF", color: "#1A56A8" },
+    "Approved": { bg: "#E6F4EA", color: "#1B7D3A" },
+    "Delivered": { bg: "#E6F4EA", color: "#1B7D3A" },
+    "New": { bg: "#F0E6FF", color: "#6B2FA0" },
+    "Pending Review": { bg: "#FEF7E0", color: "#9A6C00" },
+    "Completed": { bg: "#E6F4EA", color: "#1B7D3A" },
+    "Submitted": { bg: "#E0EDFF", color: "#1A56A8" },
+    "Revision Requested": { bg: "#FEF0E0", color: "#B85C00" },
+  };
+  const s = map[status] || { bg: "#F0EDE8", color: C.mid };
+  return <span style={{ padding: "3px 10px", borderRadius: 12, fontSize: 11, fontWeight: 600, fontFamily: FONTS.body, background: s.bg, color: s.color }}>{status}</span>;
+}
+
+function SectionTitle({ children }) {
+  return <h2 style={{ fontFamily: FONTS.display, fontSize: 26, color: C.dark, margin: "0 0 4px" }}>{children}</h2>;
+}
+
+function Subtitle({ children }) {
+  return <p style={{ fontFamily: FONTS.body, fontSize: 14, color: C.muted, margin: "0 0 20px" }}>{children}</p>;
+}
+
+function Btn({ children, onClick, variant = "primary", color = C.accent, disabled = false, style: ex = {} }) {
+  const isPrimary = variant === "primary";
+  return (
+    <button onClick={disabled ? undefined : onClick} style={{ padding: isPrimary ? "12px 28px" : "12px 24px", borderRadius: 8, border: isPrimary ? "none" : "1.5px solid #D5CBC4", background: isPrimary ? (disabled ? "#C4B5AE" : color) : "transparent", color: isPrimary ? "#FFF" : C.mid, fontFamily: FONTS.body, fontSize: 14, fontWeight: isPrimary ? 600 : 400, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.7 : 1, ...ex }}>
+      {children}
+    </button>
+  );
+}
+
+function ProgressBar({ steps, currentStep, color = C.accent }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 0, padding: "0 24px", marginBottom: 28 }}>
+      {steps.map((label, i) => (
+        <div key={i} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : "none" }}>
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 50 }}>
+            <div style={{ width: 26, height: 26, borderRadius: "50%", background: i <= currentStep ? color : "#E0D5CE", color: i <= currentStep ? "#fff" : C.muted, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, fontFamily: FONTS.body }}>{i < currentStep ? "✓" : i + 1}</div>
+            <span style={{ fontSize: 9, color: i <= currentStep ? color : C.muted, marginTop: 3, fontFamily: FONTS.body, fontWeight: i === currentStep ? 600 : 400, whiteSpace: "nowrap" }}>{label}</span>
+          </div>
+          {i < steps.length - 1 && <div style={{ flex: 1, height: 2, background: i < currentStep ? color : "#E0D5CE", marginBottom: 14, minWidth: 12 }} />}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AnnotationBar({ text, bg = C.dark, textColor = "#E8DDD6", labelColor = C.accent, label = "" }) {
+  return (
+    <div style={{ background: bg, color: textColor, padding: "10px 24px", fontFamily: FONTS.body, fontSize: 12, lineHeight: 1.5 }}>
+      {label && <span style={{ color: labelColor, fontWeight: 600, marginRight: 6 }}>{label}</span>}{text}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// OPERATOR FIRST USE
+// ═══════════════════════════════════════════
+
+const OP_ANNOTATIONS = [
+  "The landing screen communicates the core value proposition: on-brand UGC, fast, no negotiations. Key stats reinforce simplicity.",
+  "Brand setup offers an optional Google Maps / Yelp link to auto-populate vibe, values, and neighborhood. This reduces setup to seconds for operators who already have an online presence. Manual chip-select remains available.",
+  "Operators see max 3 content options evaluated for fit before creator identity is revealed. Decisions happen in seconds based on content, not follower count.",
+  "Full detail view shows everything upfront: deliverables, style, pricing, timeline, and usage rights. No hidden terms.",
+  "Final confirmation — clear cost, clear terms. Creator identity is only revealed after commission, preventing follower-count bias.",
+  "Post-commission flow: draft → review → approve → download. The operator stays in control throughout delivery.",
+];
+
+const UGC_OPTIONS = [
+  { id: 1, type: "Ambiance / Interior", alignment: 94, description: "Warm morning light through storefront window, latte art close-up, cozy seating area with regulars reading", deliverables: "3 photos + 1 Reel (15s)", price: "$180", timeline: "5 business days", usage: "Organic social + in-store display, 12 months", style: "Warm, editorial, natural light" },
+  { id: 2, type: "Food & Drink", alignment: 87, description: "Seasonal drink feature with ingredient flat-lay, pouring shot, and finished presentation on branded counter", deliverables: "4 photos + 1 Story set (3 frames)", price: "$220", timeline: "7 business days", usage: "Organic social, 12 months", style: "Clean, appetizing, lifestyle" },
+  { id: 3, type: "Community / Culture", alignment: 81, description: "Behind-the-counter morning routine, barista interaction with regular, neighborhood street context", deliverables: "3 photos + 1 Reel (20s)", price: "$200", timeline: "6 business days", usage: "Organic social + paid ads, 6 months", style: "Documentary, candid, neighborhood feel" },
+];
+
+// Simulated auto-fill data from a Google Maps / Yelp link
+const AUTOFILL_PRESETS = {
+  "colectivo": { name: "Colectivo Coffee", vibe: ["Cozy & Warm"], values: ["Community-first", "Sustainability"], neighborhood: "Evanston", content: ["Ambiance / Interior", "Staff & Culture"], photo: "colectivo" },
+  "daisies": { name: "Daisies", vibe: ["Eclectic & Creative"], values: ["Craft & Quality", "Community-first"], neighborhood: "Logan Square", content: ["Food & Drink Photography", "Seasonal Specials"], photo: "daisies" },
+  "default": { name: "Metric Coffee", vibe: ["Minimal & Clean"], values: ["Craft & Quality"], neighborhood: "West Loop", content: ["Ambiance / Interior", "Food & Drink Photography"], photo: "metric" },
+};
+
+function OpWelcome({ onNext }) {
+  return (
+    <div style={{ textAlign: "center", padding: "40px 24px" }}>
+      <div style={{ fontSize: 44, marginBottom: 8 }}>☕</div>
+      <h1 style={{ fontFamily: FONTS.display, fontSize: 34, color: C.dark, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.2 }}>Source On-Brand UGC</h1>
+      <p style={{ fontFamily: FONTS.body, fontSize: 15, color: C.light, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.6 }}>Find neighborhood-aligned creators who already get your vibe. No negotiations, no follower thresholds — just content that fits.</p>
+      <Btn onClick={onNext}>Start New Request</Btn>
+      <div style={{ marginTop: 40, display: "flex", justifyContent: "center", gap: 36, color: C.muted, fontSize: 13, fontFamily: FONTS.body }}>
+        {[["3", "curated matches"], ["<2 min", "to review & decide"], ["100%", "usage rights included"]].map(([val, label], i) => (
+          <div key={i}><div style={{ fontSize: 22, fontWeight: 700, color: C.dark }}>{val}</div><div>{label}</div></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OpBrandSetup({ brandProfile, setBrandProfile, onNext, onBack }) {
+  const [linkValue, setLinkValue] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [imported, setImported] = useState(false);
+
+  const toggle = (key, value) => setBrandProfile(p => { const a = p[key] || []; return { ...p, [key]: a.includes(value) ? a.filter(v => v !== value) : [...a, value] }; });
+
+  const handleImport = () => {
+    if (!linkValue.trim()) return;
+    setImporting(true);
+    setTimeout(() => {
+      const lower = linkValue.toLowerCase();
+      let preset = AUTOFILL_PRESETS.default;
+      if (lower.includes("colectivo")) preset = AUTOFILL_PRESETS.colectivo;
+      else if (lower.includes("daisies") || lower.includes("daisi")) preset = AUTOFILL_PRESETS.daisies;
+      setBrandProfile({
+        vibe: [...preset.vibe],
+        values: [...preset.values],
+        neighborhood: preset.neighborhood,
+        content: [...preset.content],
+        importedName: preset.name,
+      });
+      setImporting(false);
+      setImported(true);
+    }, 1200);
+  };
+
+  const sections = [
+    { key: "vibe", label: "What’s your vibe?", options: ["Cozy & Warm", "Energetic & Bold", "Minimal & Clean", "Eclectic & Creative"] },
+    { key: "values", label: "What do you value most?", options: ["Community-first", "Sustainability", "Craft & Quality", "Inclusive & Welcoming"] },
+    { key: "content", label: "What content do you need?", options: ["Food & Drink Photography", "Ambiance / Interior", "Staff & Culture", "Seasonal Specials"] },
+  ];
+  const neighborhoods = ["Wicker Park", "Logan Square", "West Loop", "Hyde Park", "Evanston", "Uptown", "Andersonville"];
+
+  return (
+    <div style={{ padding: "8px 24px" }}>
+      <SectionTitle>Tell us about your space</SectionTitle>
+      <Subtitle>We use this to pre-filter creators by vibe and values — not follower count.</Subtitle>
+
+      {/* Google Maps / Yelp import */}
+      <div style={{ background: C.bgTan, borderRadius: 10, padding: 16, marginBottom: 22, border: `1.5px solid ${imported ? C.green : C.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <span style={{ fontSize: 16 }}>📍</span>
+          <span style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 13, color: C.dark }}>Quick Setup (optional)</span>
+        </div>
+        <p style={{ fontFamily: FONTS.body, fontSize: 12, color: C.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
+          Paste your Google Maps or Yelp link and we’ll auto-fill your vibe, values, and neighborhood from your listing.
+        </p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            value={linkValue}
+            onChange={e => { setLinkValue(e.target.value); setImported(false); }}
+            placeholder="e.g. google.com/maps/place/Colectivo+Coffee"
+            style={{ flex: 1, padding: "9px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, fontFamily: FONTS.body, fontSize: 13, color: C.dark, background: "#FFFFFF", boxSizing: "border-box" }}
+          />
+          <Btn
+            onClick={handleImport}
+            disabled={!linkValue.trim() || importing}
+            style={{ padding: "9px 18px", fontSize: 13, whiteSpace: "nowrap" }}
+          >
+            {importing ? "Importing…" : imported ? "Imported ✓" : "Import"}
+          </Btn>
+        </div>
+        {imported && brandProfile.importedName && (
+          <div style={{ marginTop: 10, padding: "8px 12px", background: C.greenBg, borderRadius: 8, fontFamily: FONTS.body, fontSize: 12, color: C.green, display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontWeight: 600 }}>✓ Imported from {brandProfile.importedName}</span>
+            <span style={{ color: C.muted }}>— review and adjust below</span>
+          </div>
+        )}
+      </div>
+
+      {/* Manual / editable fields */}
+      {sections.map(s => (
+        <div key={s.key} style={{ marginBottom: 18 }}>
+          <label style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 13, color: C.dark, display: "block", marginBottom: 7 }}>{s.label}</label>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>{s.options.map(v => <Chip key={v} label={v} selected={(brandProfile[s.key] || []).includes(v)} onClick={() => toggle(s.key, v)} />)}</div>
+        </div>
+      ))}
+      <div style={{ marginBottom: 22 }}>
+        <label style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 13, color: C.dark, display: "block", marginBottom: 7 }}>Neighborhood</label>
+        <select value={brandProfile.neighborhood || ""} onChange={e => setBrandProfile(p => ({ ...p, neighborhood: e.target.value }))} style={{ width: "100%", maxWidth: 280, padding: "9px 12px", borderRadius: 8, border: "1.5px solid #D5CBC4", fontFamily: FONTS.body, fontSize: 14, color: C.dark, background: C.bgWarm }}>
+          <option value="">Select neighborhood...</option>
+          {neighborhoods.map(n => <option key={n} value={n}>{n}</option>)}
+        </select>
+      </div>
+      <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={onBack}>Back</Btn><Btn onClick={onNext}>Find Matches</Btn></div>
+    </div>
+  );
+}
+
+function OpMatching({ onSelect, onBack }) {
+  return (
+    <div style={{ padding: "8px 24px" }}>
+      <SectionTitle>Your Matches</SectionTitle>
+      <Subtitle>Content is shown first — creator identity is revealed after you choose.</Subtitle>
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        {UGC_OPTIONS.map(opt => (
+          <div key={opt.id} onClick={() => onSelect(opt)} style={{ display: "flex", gap: 14, background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 14, cursor: "pointer", transition: "border-color 0.15s" }} onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; }} onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}>
+            <div style={{ minWidth: 100, height: 100, borderRadius: 8, background: "linear-gradient(135deg, #E8DDD6, #D5C8BE)", display: "flex", alignItems: "center", justifyContent: "center", color: "#A89688", fontSize: 10, fontFamily: FONTS.body, textAlign: "center", padding: 6 }}>{opt.type}<br />preview</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 5 }}>
+                <span style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: C.accent, textTransform: "uppercase", letterSpacing: 0.7 }}>{opt.type}</span>
+                <span style={{ background: opt.alignment >= 90 ? C.greenBg : opt.alignment >= 85 ? C.yellowBg : "#F0EDE8", color: opt.alignment >= 90 ? C.green : opt.alignment >= 85 ? C.yellowText : C.light, padding: "2px 9px", borderRadius: 12, fontSize: 11, fontWeight: 600, fontFamily: FONTS.body }}>{opt.alignment}% match</span>
+              </div>
+              <p style={{ fontFamily: FONTS.body, fontSize: 12, color: "#3D302A", margin: "0 0 6px", lineHeight: 1.45 }}>{opt.description}</p>
+              <div style={{ display: "flex", gap: 12, fontSize: 11, color: C.muted, fontFamily: FONTS.body }}><span>{opt.deliverables}</span><span>·</span><span>{opt.price}</span><span>·</span><span>{opt.timeline}</span></div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <Btn variant="secondary" onClick={onBack} style={{ marginTop: 16 }}>Back</Btn>
+    </div>
+  );
+}
+
+function OpDetail({ selected, onBack, onCommission }) {
+  if (!selected) return null;
+  return (
+    <div style={{ padding: "8px 24px" }}>
+      <SectionTitle>Review Content</SectionTitle>
+      <Subtitle>Deliverables, pricing, and usage rights — all upfront.</Subtitle>
+      <div style={{ background: "linear-gradient(135deg, #E8DDD6, #D5C8BE)", borderRadius: 12, height: 160, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, color: "#A89688", fontFamily: FONTS.body, fontSize: 13 }}>Content preview — {selected.type}</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+        {[["Content Type", selected.type], ["Alignment", `${selected.alignment}%`], ["Deliverables", selected.deliverables], ["Style", selected.style], ["Price", selected.price], ["Timeline", selected.timeline]].map(([l, v], i) => (
+          <div key={i} style={{ background: C.bgWarm, borderRadius: 8, padding: 12 }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{l}</div>
+            <div style={{ fontFamily: FONTS.body, fontSize: 14, color: C.dark, fontWeight: 500 }}>{v}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: C.bgTan, borderRadius: 10, padding: 14, marginBottom: 20, borderLeft: `3px solid ${C.accent}` }}>
+        <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: C.accent, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Usage Rights</div>
+        <div style={{ fontFamily: FONTS.body, fontSize: 13, color: "#3D302A", lineHeight: 1.5 }}>{selected.usage}</div>
+      </div>
+      <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={onBack}>Back to Matches</Btn><Btn onClick={onCommission}>Commission This Content</Btn></div>
+    </div>
+  );
+}
+
+function OpConfirm({ selected, onBack, onConfirm }) {
+  if (!selected) return null;
+  return (
+    <div style={{ padding: "8px 24px" }}>
+      <SectionTitle>Confirm Commission</SectionTitle>
+      <Subtitle>No contracts, no negotiations — just clear terms.</Subtitle>
+      <div style={{ background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${C.border}` }}>
+          <div><div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>Content</div><div style={{ fontFamily: FONTS.body, fontSize: 15, color: C.dark, fontWeight: 500, marginTop: 3 }}>{selected.type}</div></div>
+          <div style={{ textAlign: "right" }}><div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5 }}>Total</div><div style={{ fontFamily: FONTS.body, fontSize: 20, color: C.accent, fontWeight: 700, marginTop: 2 }}>{selected.price}</div></div>
+        </div>
+        {[["Deliverables", selected.deliverables], ["Timeline", selected.timeline], ["Usage Rights", selected.usage], ["Style", selected.style]].map(([l, v], i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", fontFamily: FONTS.body, fontSize: 13 }}>
+            <span style={{ color: C.muted }}>{l}</span><span style={{ color: C.dark, fontWeight: 500, textAlign: "right", maxWidth: "58%" }}>{v}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ background: C.yellowBg, borderRadius: 8, padding: 12, marginBottom: 20, fontFamily: FONTS.body, fontSize: 12, color: "#7A6200", lineHeight: 1.5 }}>Creator identity will be shared after commission is confirmed.</div>
+      <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={onBack}>Back</Btn><Btn onClick={onConfirm} color={C.green}>Confirm & Pay {selected.price}</Btn></div>
+    </div>
+  );
+}
+
+function OpDone({ selected, onReset }) {
+  return (
+    <div style={{ textAlign: "center", padding: "40px 24px" }}>
+      <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.greenBg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 24, color: C.green }}>✓</div>
+      <h2 style={{ fontFamily: FONTS.display, fontSize: 26, color: C.dark, margin: "0 0 8px" }}>Commission Confirmed</h2>
+      <p style={{ fontFamily: FONTS.body, fontSize: 14, color: C.light, maxWidth: 380, margin: "0 auto 28px", lineHeight: 1.6 }}>Your {selected?.type?.toLowerCase()} content is in progress. Delivery within {selected?.timeline}.</p>
+      <div style={{ background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, maxWidth: 340, margin: "0 auto 28px", textAlign: "left" }}>
+        <div style={{ fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, color: C.dark, marginBottom: 10 }}>What happens next</div>
+        {["Creator receives your brief", "Draft content delivered for review", "Request revisions or approve", "Download — you own the usage rights"].map((t, i) => (
+          <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, fontFamily: FONTS.body, fontSize: 12, color: C.mid, lineHeight: 1.4 }}>
+            <span style={{ minWidth: 20, height: 20, borderRadius: "50%", background: C.bgTan, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: C.accent }}>{i + 1}</span>
+            <span style={{ paddingTop: 2 }}>{t}</span>
+          </div>
+        ))}
+      </div>
+      <Btn onClick={onReset}>Start Another Request</Btn>
+    </div>
+  );
+}
+
+function OperatorFirstUse({ showAnnotations }) {
+  const [step, setStep] = useState(0);
+  const [bp, setBp] = useState({});
+  const [sel, setSel] = useState(null);
+  const steps = ["Home", "Brand Setup", "Matches", "Review", "Commission", "Confirmed"];
+  return (
+    <div>
+      {showAnnotations && <AnnotationBar label={`Step ${step + 1}:`} text={OP_ANNOTATIONS[step]} />}
+      {step > 0 && step < 5 && <div style={{ padding: "14px 0 0" }}><ProgressBar steps={steps} currentStep={step} /></div>}
+      {step === 0 && <OpWelcome onNext={() => setStep(1)} />}
+      {step === 1 && <OpBrandSetup brandProfile={bp} setBrandProfile={setBp} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
+      {step === 2 && <OpMatching onSelect={o => { setSel(o); setStep(3); }} onBack={() => setStep(1)} />}
+      {step === 3 && <OpDetail selected={sel} onBack={() => setStep(2)} onCommission={() => setStep(4)} />}
+      {step === 4 && <OpConfirm selected={sel} onBack={() => setStep(3)} onConfirm={() => setStep(5)} />}
+      {step === 5 && <OpDone selected={sel} onReset={() => { setStep(0); setBp({}); setSel(null); }} />}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// OPERATOR RETURNING
+// ═══════════════════════════════════════════
+
+const ACTIVE_COMMISSIONS = [
+  { id: 1, type: "Ambiance / Interior", creator: "Maya R.", status: "Draft Ready", submitted: "Jan 30", deliverables: "3 photos + 1 Reel", price: "$180" },
+  { id: 2, type: "Seasonal Specials", creator: "Pending match", status: "In Progress", submitted: "Feb 1", deliverables: "4 photos + 1 Story set", price: "$220" },
+];
+
+const PAST_CONTENT = [
+  { id: 1, type: "Food & Drink", creator: "Lena K.", date: "Jan 15", items: "4 photos, 1 Reel", posted: true },
+  { id: 2, type: "Community / Culture", creator: "Dex M.", date: "Dec 28", items: "3 photos, 1 Reel", posted: true },
+  { id: 3, type: "Ambiance / Interior", creator: "Maya R.", date: "Dec 10", items: "3 photos", posted: false },
+];
+
+const DASH_ANNOTATIONS = [
+  "The returning operator sees active commissions, content library, and a quick-start button. No re-onboarding. The three stats map directly to our Lean Canvas key metrics.",
+  "Draft review: operators preview content, add revision notes, or approve and download in one step. No email chains, no external tools. This is the ‘time to content approval’ metric in action.",
+  "The content library stores all approved UGC with posted/not-posted tracking. Drives both ‘repeat usage per location’ and ‘UGC posting rate’ metrics.",
+];
+
+function OperatorReturning({ showAnnotations }) {
+  const [reviewing, setReviewing] = useState(null);
+
+  if (reviewing) {
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar label="Review:" text={DASH_ANNOTATIONS[1]} />}
+        <div style={{ padding: "16px 24px" }}>
+          <SectionTitle>Review Draft</SectionTitle>
+          <Subtitle>Draft from {reviewing.creator} — {reviewing.type}</Subtitle>
+          <div style={{ background: "linear-gradient(135deg, #E8DDD6, #D5C8BE)", borderRadius: 12, height: 200, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, color: "#A89688", fontFamily: FONTS.body, fontSize: 13 }}>Draft content preview — {reviewing.deliverables}</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            {[["Creator", reviewing.creator], ["Content Type", reviewing.type], ["Deliverables", reviewing.deliverables], ["Submitted", reviewing.submitted]].map(([l, v], i) => (
+              <div key={i} style={{ background: C.bgWarm, borderRadius: 8, padding: 12 }}>
+                <div style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{l}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 14, color: C.dark, fontWeight: 500 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: C.bgTan, borderRadius: 10, padding: 14, marginBottom: 20 }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, color: C.dark, marginBottom: 6 }}>Revision Notes (optional)</div>
+            <textarea placeholder="Add specific feedback for the creator..." style={{ width: "100%", minHeight: 60, padding: 10, borderRadius: 8, border: `1.5px solid ${C.border}`, fontFamily: FONTS.body, fontSize: 13, resize: "vertical", boxSizing: "border-box" }} />
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn variant="secondary" onClick={() => setReviewing(null)}>Back</Btn>
+            <Btn onClick={() => setReviewing(null)} color="#D97706">Request Revision</Btn>
+            <Btn onClick={() => setReviewing(null)} color={C.green}>Approve & Download</Btn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {showAnnotations && <AnnotationBar label="Dashboard:" text={DASH_ANNOTATIONS[0]} />}
+      <div style={{ padding: "16px 24px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+          <div>
+            <h2 style={{ fontFamily: FONTS.display, fontSize: 24, color: C.dark, margin: "0 0 4px" }}>Welcome back, Colectivo ☕</h2>
+            <p style={{ fontFamily: FONTS.body, fontSize: 13, color: C.muted, margin: 0 }}>Evanston · 2 active commissions · 5 pieces in your library</p>
+          </div>
+          <Btn onClick={() => {}} style={{ padding: "10px 20px", fontSize: 13 }}>+ New Request</Btn>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+          {[["2", "Active", "commissions"], ["5", "Content", "in library"], ["80%", "Posted", "rate"]].map(([val, l1, l2], i) => (
+            <div key={i} style={{ background: C.bgWarm, borderRadius: 10, padding: 14, textAlign: "center" }}>
+              <div style={{ fontFamily: FONTS.body, fontSize: 24, fontWeight: 700, color: C.dark }}>{val}</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{l1}<br />{l2}</div>
+            </div>
+          ))}
+        </div>
+        <h3 style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: C.dark, margin: "0 0 12px" }}>Active Commissions</h3>
+        {ACTIVE_COMMISSIONS.map(c => (
+          <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
+            <div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 600, color: C.dark }}>{c.type}</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 12, color: C.muted, marginTop: 2 }}>{c.creator} · {c.deliverables}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <StatusBadge status={c.status} />
+              {c.status === "Draft Ready" && <Btn onClick={() => setReviewing(c)} style={{ padding: "6px 14px", fontSize: 12 }}>Review</Btn>}
+            </div>
+          </div>
+        ))}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 20, marginBottom: 12 }}>
+          <h3 style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: C.dark, margin: 0 }}>Content Library</h3>
+          {showAnnotations && <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.accent, fontStyle: "italic" }}>Drives repeat usage + posting rate metrics ↗</span>}
+        </div>
+        {PAST_CONTENT.map(c => (
+          <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.border}` }}>
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <div style={{ width: 44, height: 44, borderRadius: 8, background: "linear-gradient(135deg, #E8DDD6, #D5C8BE)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: "#A89688", fontFamily: FONTS.body }}>IMG</div>
+              <div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 500, color: C.dark }}>{c.type}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{c.creator} · {c.date} · {c.items}</div>
+              </div>
+            </div>
+            {c.posted ? <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.green, fontWeight: 600 }}>Posted ✓</span> : <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted }}>Not posted</span>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// CREATOR FIRST USE
+// ═══════════════════════════════════════════
+
+const CR_FIRST_ANNOTATIONS = [
+  "Creator landing emphasizes what creators care about: fair pay, clear terms, and being valued for content quality over follower count. Directly addresses Shaurya’s pain points.",
+  "Profile setup captures the creator’s style, content strengths, and neighborhood — plus a ‘dream brands’ list. No follower count entry. The platform evaluates portfolio, not metrics.",
+  "Portfolio upload is the final onboarding step. The platform evaluates content quality and style from actual work — not follower counts or engagement rates.",
+  "Confirmation screen shows what happens next: the platform matches based on their portfolio, and briefs arrive when aligned brands post requests. No cold outreach needed.",
+];
+
+function CreatorFirstUse({ showAnnotations }) {
+  const [crStep, setCrStep] = useState(0);
+  const [profile, setProfile] = useState({});
+  const color = C.creatorAccent;
+  const toggle = (key, value) => setProfile(p => { const a = p[key] || []; return { ...p, [key]: a.includes(value) ? a.filter(v => v !== value) : [...a, value] }; });
+  const annotBg = "#0F2E26";
+  const annotText = "#C8E6DD";
+
+  // Landing
+  if (crStep === 0) {
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Creator Landing:" text={CR_FIRST_ANNOTATIONS[0]} />}
+        <div style={{ textAlign: "center", padding: "40px 24px" }}>
+          <div style={{ fontSize: 44, marginBottom: 8 }}>📸</div>
+          <h1 style={{ fontFamily: FONTS.display, fontSize: 32, color: C.dark, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.2 }}>Get Paid for Content<br />That Matches Your Style</h1>
+          <p style={{ fontFamily: FONTS.body, fontSize: 15, color: C.light, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.6 }}>Local brands find you based on your content, not your follower count. Clear pay, clear terms, no ghosting.</p>
+          <Btn onClick={() => setCrStep(1)} color={color}>Create Your Profile</Btn>
+          <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 36, color: C.muted, fontSize: 13, fontFamily: FONTS.body }}>
+            {[["$180–250", "per commission"], ["Clear terms", "before you commit"], ["0", "follower requirements"]].map(([val, label], i) => (
+              <div key={i}><div style={{ fontSize: 20, fontWeight: 700, color: C.dark }}>{val}</div><div>{label}</div></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Profile setup
+  if (crStep === 1) {
+    const styles = ["Warm & Editorial", "Bright & Clean", "Moody & Cinematic", "Candid & Documentary", "Playful & Colorful"];
+    const strengths = ["Food & Drink", "Interiors & Ambiance", "People & Culture", "Lifestyle & Street"];
+    const neighborhoods = ["Wicker Park", "Logan Square", "West Loop", "Hyde Park", "Evanston", "Uptown", "Andersonville"];
+    const dreamBrands = ["Coffee shops", "Bakeries & pastry", "Brunch spots", "Fine dining", "Casual restaurants", "Bars & cocktail", "Food trucks"];
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Profile Setup:" text={CR_FIRST_ANNOTATIONS[1]} />}
+        <div style={{ padding: "14px 0 0" }}><ProgressBar steps={["Profile", "Portfolio", "Done"]} currentStep={0} color={color} /></div>
+        <div style={{ padding: "4px 24px" }}>
+          <SectionTitle>Build Your Creator Profile</SectionTitle>
+          <Subtitle>We match you to brands based on your content style — not your follower count.</Subtitle>
+          {[
+            { key: "styles", label: "Your content style", options: styles },
+            { key: "strengths", label: "Content strengths", options: strengths },
+            { key: "neighborhoods", label: "Your neighborhood(s)", options: neighborhoods },
+            { key: "dreamBrands", label: "Dream brands to work with", options: dreamBrands },
+          ].map(s => (
+            <div key={s.key} style={{ marginBottom: 18 }}>
+              <label style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 13, color: C.dark, display: "block", marginBottom: 7 }}>{s.label}</label>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>{s.options.map(v => <Chip key={v} label={v} selected={(profile[s.key] || []).includes(v)} onClick={() => toggle(s.key, v)} color={color} />)}</div>
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={() => setCrStep(0)}>Back</Btn><Btn onClick={() => setCrStep(2)} color={color}>Next: Portfolio</Btn></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Portfolio upload
+  if (crStep === 2) {
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Portfolio:" text={CR_FIRST_ANNOTATIONS[2]} />}
+        <div style={{ padding: "14px 0 0" }}><ProgressBar steps={["Profile", "Portfolio", "Done"]} currentStep={1} color={color} /></div>
+        <div style={{ padding: "4px 24px" }}>
+          <SectionTitle>Share Your Work</SectionTitle>
+          <Subtitle>We evaluate your content quality and style — not your follower count.</Subtitle>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 13, color: C.dark, display: "block", marginBottom: 7 }}>Instagram handle</label>
+            <input placeholder="@yourhandle" style={{ width: "100%", maxWidth: 340, padding: "9px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, fontFamily: FONTS.body, fontSize: 14, color: C.dark, background: C.bgWarm, boxSizing: "border-box" }} />
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontFamily: FONTS.body, fontWeight: 600, fontSize: 13, color: C.dark, display: "block", marginBottom: 7 }}>Portfolio URL (optional)</label>
+            <input placeholder="behance.net/you or your website" style={{ width: "100%", maxWidth: 340, padding: "9px 12px", borderRadius: 8, border: `1.5px solid ${C.border}`, fontFamily: FONTS.body, fontSize: 14, color: C.dark, background: C.bgWarm, boxSizing: "border-box" }} />
+          </div>
+
+          <div style={{ background: C.bgTan, borderRadius: 10, padding: 16, marginBottom: 20, border: `1.5px dashed ${C.border}` }}>
+            <div style={{ textAlign: "center", padding: "20px 0" }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>🖼️</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 600, color: C.dark, marginBottom: 4 }}>Upload sample work</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 12, color: C.muted }}>Drag & drop or click to upload 3–6 of your best pieces</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted, marginTop: 4 }}>JPG, PNG, or MP4 · Max 10MB each</div>
+            </div>
+          </div>
+
+          <div style={{ background: C.creatorLight, borderRadius: 8, padding: 12, marginBottom: 20, fontFamily: FONTS.body, fontSize: 12, color: C.creator, lineHeight: 1.5 }}>
+            🔒 Your portfolio is only shared with brands after you accept a brief. We use it for matching, not public display.
+          </div>
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn variant="secondary" onClick={() => setCrStep(1)}>Back</Btn>
+            <Btn onClick={() => setCrStep(3)} color={color}>Complete Profile</Btn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Done
+  if (crStep === 3) {
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Done:" text={CR_FIRST_ANNOTATIONS[3]} />}
+        <div style={{ textAlign: "center", padding: "40px 24px" }}>
+          <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.creatorLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 24, color: C.creator }}>✓</div>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 26, color: C.dark, margin: "0 0 8px" }}>Profile Complete</h2>
+          <p style={{ fontFamily: FONTS.body, fontSize: 14, color: C.light, maxWidth: 380, margin: "0 auto 28px", lineHeight: 1.6 }}>
+            You’re in the network. When a brand in your area posts a brief that matches your style, you’ll see it in your dashboard.
+          </p>
+          <div style={{ background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, maxWidth: 340, margin: "0 auto 28px", textAlign: "left" }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, color: C.dark, marginBottom: 10 }}>How it works from here</div>
+            {["We match you to brands by your content style", "You receive briefs with clear terms & pay upfront", "Accept briefs that fit — decline ones that don’t", "Submit content, get paid. No negotiations."].map((t, i) => (
+              <div key={i} style={{ display: "flex", gap: 10, marginBottom: 8, fontFamily: FONTS.body, fontSize: 12, color: C.mid, lineHeight: 1.4 }}>
+                <span style={{ minWidth: 20, height: 20, borderRadius: "50%", background: C.creatorLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 600, color: C.creator }}>{i + 1}</span>
+                <span style={{ paddingTop: 2 }}>{t}</span>
+              </div>
+            ))}
+          </div>
+          <Btn onClick={() => setCrStep(0)} color={color}>Back to Home</Btn>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// ═══════════════════════════════════════════
+// CREATOR RETURNING
+// ═══════════════════════════════════════════
+
+const INCOMING_BRIEFS = [
+  { id: 1, brand: "Neighborhood Coffee Shop", neighborhood: "Evanston", type: "Ambiance / Interior", match: 94, deliverables: "3 photos + 1 Reel (15s)", pay: "$180", timeline: "5 business days", usage: "Organic social + in-store, 12 mo", brief: "Warm morning atmosphere — natural light, latte art, cozy seating. Capture the ‘third place’ feeling. Authentic, not staged." },
+  { id: 2, brand: "New Brunch Spot", neighborhood: "Logan Square", type: "Food & Drink", match: 87, deliverables: "4 photos + 1 Story set", pay: "$220", timeline: "7 business days", usage: "Organic social, 12 mo", brief: "Seasonal menu launch — colorful plating, ingredient details, final presentation. Bright, appetizing, lifestyle feel." },
+];
+
+const CREATOR_PROJECTS = [
+  { id: 1, brand: "Artisan Bakery", type: "Community / Culture", status: "Revision Requested", pay: "$200", submitted: "Jan 29", note: "Could we get one more close-up of the pastry case?" },
+  { id: 2, brand: "Corner Cafe", type: "Ambiance / Interior", status: "Pending Review", pay: "$180", submitted: "Jan 26", note: null },
+  { id: 3, brand: "Neighborhood Bistro", type: "Food & Drink", status: "Completed", pay: "$220", submitted: "Jan 15", note: null },
+];
+
+const CR_RETURN_ANNOTATIONS = [
+  "The returning creator sees earnings, active projects, and new briefs at a glance. Pay is always front and center — addressing Shaurya’s concern about being undervalued. The dashboard signals transparency.",
+  "Brief detail shows exactly what the brand needs, pay rate, timeline, and usage rights BEFORE the creator commits. No surprises, no renegotiation. This addresses the ‘mental load of collaboration management’ from interviews.",
+  "Active project detail shows submission status and any revision notes from the brand. The creator knows exactly what to fix, reducing back-and-forth. Clear structure replaces vague DM threads.",
+];
+
+function CreatorReturning({ showAnnotations }) {
+  const [selectedBrief, setSelectedBrief] = useState(null);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const color = C.creatorAccent;
+  const annotBg = "#0F2E26";
+  const annotText = "#C8E6DD";
+
+  // Brief detail
+  if (selectedBrief) {
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Brief Detail:" text={CR_RETURN_ANNOTATIONS[1]} />}
+        <div style={{ padding: "16px 24px" }}>
+          <SectionTitle>Brief Details</SectionTitle>
+          <Subtitle>Review everything before you commit — no surprises.</Subtitle>
+          <div style={{ background: C.creatorLight, borderRadius: 10, padding: 16, marginBottom: 18, borderLeft: `3px solid ${color}` }}>
+            <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: color, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Creative Brief</div>
+            <div style={{ fontFamily: FONTS.body, fontSize: 14, color: C.dark, lineHeight: 1.6 }}>{selectedBrief.brief}</div>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            {[["Brand", selectedBrief.brand], ["Neighborhood", selectedBrief.neighborhood], ["Content Type", selectedBrief.type], ["Match Score", `${selectedBrief.match}%`], ["Deliverables", selectedBrief.deliverables], ["Timeline", selectedBrief.timeline], ["Pay", selectedBrief.pay], ["Usage Rights", selectedBrief.usage]].map(([l, v], i) => (
+              <div key={i} style={{ background: C.bgWarm, borderRadius: 8, padding: 12 }}>
+                <div style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{l}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 14, color: l === "Pay" ? C.creator : C.dark, fontWeight: l === "Pay" ? 700 : 500 }}>{v}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background: C.yellowBg, borderRadius: 8, padding: 12, marginBottom: 20, fontFamily: FONTS.body, fontSize: 12, color: "#7A6200", lineHeight: 1.5 }}>Brand identity is revealed after you accept. You’ll message through the platform.</div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn variant="secondary" onClick={() => setSelectedBrief(null)}>Back</Btn>
+            <Btn variant="secondary" onClick={() => setSelectedBrief(null)}>Decline</Btn>
+            <Btn onClick={() => setSelectedBrief(null)} color={C.green}>Accept Brief — {selectedBrief.pay}</Btn>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Project detail
+  if (selectedProject) {
+    return (
+      <div>
+        {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Project Detail:" text={CR_RETURN_ANNOTATIONS[2]} />}
+        <div style={{ padding: "16px 24px" }}>
+          <SectionTitle>Project Details</SectionTitle>
+          <Subtitle>{selectedProject.brand} — {selectedProject.type}</Subtitle>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
+            {[["Brand", selectedProject.brand], ["Content Type", selectedProject.type], ["Pay", selectedProject.pay], ["Submitted", selectedProject.submitted], ["Status", selectedProject.status]].map(([l, v], i) => (
+              <div key={i} style={{ background: C.bgWarm, borderRadius: 8, padding: 12 }}>
+                <div style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{l}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 14, color: C.dark, fontWeight: 500 }}>{l === "Status" ? <StatusBadge status={v} /> : v}</div>
+              </div>
+            ))}
+          </div>
+
+          {selectedProject.note && (
+            <div style={{ background: "#FEF0E0", borderRadius: 10, padding: 14, marginBottom: 20, borderLeft: "3px solid #D97706" }}>
+              <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: "#B85C00", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 6 }}>Revision Note from Brand</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, color: C.dark, lineHeight: 1.5 }}>{selectedProject.note}</div>
+            </div>
+          )}
+
+          {selectedProject.status === "Revision Requested" && (
+            <div style={{ background: C.bgTan, borderRadius: 10, padding: 16, marginBottom: 20, border: `1.5px dashed ${C.border}` }}>
+              <div style={{ textAlign: "center", padding: "14px 0" }}>
+                <div style={{ fontSize: 24, marginBottom: 6 }}>📤</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 600, color: C.dark }}>Upload revised content</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 12, color: C.muted, marginTop: 4 }}>Drag & drop or click to upload</div>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "flex", gap: 10 }}>
+            <Btn variant="secondary" onClick={() => setSelectedProject(null)}>Back</Btn>
+            {selectedProject.status === "Revision Requested" && <Btn onClick={() => setSelectedProject(null)} color={color}>Submit Revision</Btn>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard
+  return (
+    <div>
+      {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Dashboard:" text={CR_RETURN_ANNOTATIONS[0]} />}
+      <div style={{ padding: "16px 24px" }}>
+        <div style={{ marginBottom: 24 }}>
+          <h2 style={{ fontFamily: FONTS.display, fontSize: 24, color: C.dark, margin: "0 0 4px" }}>Hey, Shaurya 📸</h2>
+          <p style={{ fontFamily: FONTS.body, fontSize: 13, color: C.muted, margin: 0 }}>Evanston · Warm & Editorial · 2 new briefs</p>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
+          {[["$600", "Earned", "this month"], ["3", "Active", "projects"], ["2", "New", "briefs"]].map(([val, l1, l2], i) => (
+            <div key={i} style={{ background: C.creatorLight, borderRadius: 10, padding: 14, textAlign: "center" }}>
+              <div style={{ fontFamily: FONTS.body, fontSize: 22, fontWeight: 700, color: C.dark }}>{val}</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{l1}<br />{l2}</div>
+            </div>
+          ))}
+        </div>
+
+        <h3 style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: C.dark, margin: "0 0 12px" }}>Incoming Briefs</h3>
+        {INCOMING_BRIEFS.map(b => (
+          <div key={b.id} onClick={() => setSelectedBrief(b)} style={{ background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: 14, marginBottom: 10, cursor: "pointer", transition: "border-color 0.15s" }} onMouseEnter={e => { e.currentTarget.style.borderColor = color; }} onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+              <div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 600, color: C.dark }}>{b.brand}</div>
+                <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{b.neighborhood} · {b.type}</div>
+              </div>
+              <span style={{ background: C.creatorLight, color: C.creator, padding: "2px 9px", borderRadius: 12, fontSize: 11, fontWeight: 600, fontFamily: FONTS.body }}>{b.match}% match</span>
+            </div>
+            <div style={{ display: "flex", gap: 12, fontSize: 12, color: C.mid, fontFamily: FONTS.body }}>
+              <span style={{ fontWeight: 600, color: C.creator }}>{b.pay}</span><span>·</span><span>{b.deliverables}</span><span>·</span><span>{b.timeline}</span>
+            </div>
+          </div>
+        ))}
+
+        <h3 style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: C.dark, margin: "20px 0 12px" }}>Active Projects</h3>
+        {CREATOR_PROJECTS.map(p => (
+          <div key={p.id} onClick={() => setSelectedProject(p)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 0", borderBottom: `1px solid ${C.border}`, cursor: "pointer" }}>
+            <div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 13, fontWeight: 500, color: C.dark }}>{p.brand}</div>
+              <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{p.type} · {p.pay}</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <StatusBadge status={p.status} />
+              <span style={{ fontSize: 12, color: C.muted }}>›</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════
+// MAIN APP
+// ═══════════════════════════════════════════
+
+const VIEWS = [
+  { id: "op-first", label: "Operator: First Use", icon: "☕", group: "operator" },
+  { id: "op-return", label: "Operator: Returning", icon: "📊", group: "operator" },
+  { id: "cr-first", label: "Creator: First Use", icon: "📸", group: "creator" },
+  { id: "cr-return", label: "Creator: Returning", icon: "🎨", group: "creator" },
+];
+
+function App() {
+  const [activeView, setActiveView] = useState("op-first");
+  const [showAnnotations, setShowAnnotations] = useState(true);
+  const isCreator = activeView.startsWith("cr");
+
+  return (
+    <div style={{ maxWidth: 640, margin: "0 auto", fontFamily: FONTS.body, minHeight: "100vh", background: "#FFFFFF" }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+
+      {/* Top nav */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: C.dark }}>Locale</span>
+          <span style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginLeft: 2 }}>prototype</span>
+        </div>
+        <button onClick={() => setShowAnnotations(!showAnnotations)} style={{ padding: "5px 12px", borderRadius: 6, border: showAnnotations ? `1.5px solid ${C.accent}` : `1.5px solid #D5CBC4`, background: showAnnotations ? C.accentLight : "transparent", color: showAnnotations ? C.accent : C.muted, fontFamily: FONTS.body, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+          {showAnnotations ? "Hide" : "Show"} Annotations
+        </button>
+      </div>
+
+      {/* View switcher — 2 rows */}
+      <div style={{ background: C.bgWarm, borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", gap: 0 }}>
+          {VIEWS.slice(0, 2).map(v => (
+            <button key={v.id} onClick={() => setActiveView(v.id)} style={{ flex: 1, padding: "10px 8px 8px", border: "none", borderBottom: activeView === v.id ? `2.5px solid ${C.accent}` : "2.5px solid transparent", background: "transparent", fontFamily: FONTS.body, fontSize: 11, fontWeight: activeView === v.id ? 600 : 400, color: activeView === v.id ? C.dark : C.muted, cursor: "pointer" }}>
+              <span style={{ marginRight: 3 }}>{v.icon}</span>{v.label}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 0, borderTop: `1px solid ${C.border}` }}>
+          {VIEWS.slice(2).map(v => (
+            <button key={v.id} onClick={() => setActiveView(v.id)} style={{ flex: 1, padding: "10px 8px 8px", border: "none", borderBottom: activeView === v.id ? `2.5px solid ${C.creatorAccent}` : "2.5px solid transparent", background: "transparent", fontFamily: FONTS.body, fontSize: 11, fontWeight: activeView === v.id ? 600 : 400, color: activeView === v.id ? C.dark : C.muted, cursor: "pointer" }}>
+              <span style={{ marginRight: 3 }}>{v.icon}</span>{v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Content */}
+      {activeView === "op-first" && <OperatorFirstUse showAnnotations={showAnnotations} />}
+      {activeView === "op-return" && <OperatorReturning showAnnotations={showAnnotations} />}
+      {activeView === "cr-first" && <CreatorFirstUse showAnnotations={showAnnotations} />}
+      {activeView === "cr-return" && <CreatorReturning showAnnotations={showAnnotations} />}
+
+      {/* Footer */}
+      <div style={{ textAlign: "center", padding: "20px 24px", color: "#A89688", fontSize: 10, fontFamily: FONTS.body, borderTop: `1px solid ${C.border}`, marginTop: 24 }}>
+        Nuvention · Team 5 · Interactive Prototype · Four flows: Operator First Use, Operator Returning, Creator First Use, Creator Returning
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
