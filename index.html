@@ -114,12 +114,12 @@ function AnnotationBar({ text, bg = C.dark, textColor = "#E8DDD6", labelColor = 
 // ═══════════════════════════════════════════
 
 const OP_ANNOTATIONS = [
-  "The landing screen communicates the core value proposition: on-brand UGC, fast, no negotiations. Key stats reinforce simplicity.",
+  "The landing screen communicates the core value proposition: on-brand content, fast, no negotiations. Key stats reinforce simplicity.",
   "Brand setup offers an optional Google Maps / Yelp link to auto-populate vibe, values, and neighborhood. This reduces setup to seconds for operators who already have an online presence. Manual chip-select remains available.",
   "Operators see max 3 content options evaluated for fit before creator identity is revealed. Decisions happen in seconds based on content, not follower count.",
   "Full detail view shows everything upfront: deliverables, style, pricing, timeline, and usage rights. No hidden terms.",
-  "Final confirmation — clear cost, clear terms. Creator identity is only revealed after commission, preventing follower-count bias.",
-  "Post-commission flow: draft → review → approve → download. The operator stays in control throughout delivery.",
+  "Final confirmation — clear cost, clear terms. Creator identity is only revealed after project confirmation, preventing follower-count bias.",
+  "Post-confirmation flow: draft → review → approve → download. The operator stays in control throughout delivery.",
 ];
 
 const UGC_OPTIONS = [
@@ -139,11 +139,11 @@ function OpWelcome({ onNext }) {
   return (
     <div style={{ textAlign: "center", padding: "40px 24px" }}>
       <div style={{ fontSize: 44, marginBottom: 8 }}>☕</div>
-      <h1 style={{ fontFamily: FONTS.display, fontSize: 34, color: C.dark, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.2 }}>Source On-Brand UGC</h1>
-      <p style={{ fontFamily: FONTS.body, fontSize: 15, color: C.light, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.6 }}>Find neighborhood-aligned creators who already get your vibe. No negotiations, no follower thresholds — just content that fits.</p>
-      <Btn onClick={onNext}>Start New Request</Btn>
+      <h1 style={{ fontFamily: FONTS.display, fontSize: 34, color: C.dark, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.2 }}>Fresh Content for Your Feed — Without Managing a Single Creator</h1>
+      <p style={{ fontFamily: FONTS.body, fontSize: 15, color: C.light, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.6 }}>We match you with local creators who already shoot your kind of vibe. Pick from 3 options, approve what you like, and post. That's it.</p>
+      <Btn onClick={onNext}>Get Started</Btn>
       <div style={{ marginTop: 40, display: "flex", justifyContent: "center", gap: 36, color: C.muted, fontSize: 13, fontFamily: FONTS.body }}>
-        {[["3", "curated matches"], ["<2 min", "to review & decide"], ["100%", "usage rights included"]].map(([val, label], i) => (
+        {[["3", "curated options"], ["<2 min", "to review & decide"], ["100%", "usage rights included"]].map(([val, label], i) => (
           <div key={i}><div style={{ fontSize: 22, fontWeight: 700, color: C.dark }}>{val}</div><div>{label}</div></div>
         ))}
       </div>
@@ -274,7 +274,7 @@ function OpDetail({ selected, onBack, onCommission }) {
       <Subtitle>Deliverables, pricing, and usage rights — all upfront.</Subtitle>
       <div style={{ background: "linear-gradient(135deg, #E8DDD6, #D5C8BE)", borderRadius: 12, height: 160, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 18, color: "#A89688", fontFamily: FONTS.body, fontSize: 13 }}>Content preview — {selected.type}</div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 20 }}>
-        {[["Content Type", selected.type], ["Alignment", `${selected.alignment}%`], ["Deliverables", selected.deliverables], ["Style", selected.style], ["Price", selected.price], ["Timeline", selected.timeline]].map(([l, v], i) => (
+        {[["Content Type", selected.type], ["Match Score", `${selected.alignment}%`], ["Deliverables", selected.deliverables], ["Style", selected.style], ["Price", selected.price], ["Timeline", selected.timeline]].map(([l, v], i) => (
           <div key={i} style={{ background: C.bgWarm, borderRadius: 8, padding: 12 }}>
             <div style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 3 }}>{l}</div>
             <div style={{ fontFamily: FONTS.body, fontSize: 14, color: C.dark, fontWeight: 500 }}>{v}</div>
@@ -285,7 +285,7 @@ function OpDetail({ selected, onBack, onCommission }) {
         <div style={{ fontFamily: FONTS.body, fontSize: 11, fontWeight: 600, color: C.accent, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>Usage Rights</div>
         <div style={{ fontFamily: FONTS.body, fontSize: 13, color: "#3D302A", lineHeight: 1.5 }}>{selected.usage}</div>
       </div>
-      <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={onBack}>Back to Matches</Btn><Btn onClick={onCommission}>Commission This Content</Btn></div>
+      <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={onBack}>Back to Matches</Btn><Btn onClick={onCommission}>Start This Project</Btn></div>
     </div>
   );
 }
@@ -294,7 +294,7 @@ function OpConfirm({ selected, onBack, onConfirm }) {
   if (!selected) return null;
   return (
     <div style={{ padding: "8px 24px" }}>
-      <SectionTitle>Confirm Commission</SectionTitle>
+      <SectionTitle>Confirm Project</SectionTitle>
       <Subtitle>No contracts, no negotiations — just clear terms.</Subtitle>
       <div style={{ background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 20, marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14, paddingBottom: 14, borderBottom: `1px solid ${C.border}` }}>
@@ -307,7 +307,7 @@ function OpConfirm({ selected, onBack, onConfirm }) {
           </div>
         ))}
       </div>
-      <div style={{ background: C.yellowBg, borderRadius: 8, padding: 12, marginBottom: 20, fontFamily: FONTS.body, fontSize: 12, color: "#7A6200", lineHeight: 1.5 }}>Creator identity will be shared after commission is confirmed.</div>
+      <div style={{ background: C.yellowBg, borderRadius: 8, padding: 12, marginBottom: 20, fontFamily: FONTS.body, fontSize: 12, color: "#7A6200", lineHeight: 1.5 }}>Creator identity will be shared after your project is confirmed.</div>
       <div style={{ display: "flex", gap: 10 }}><Btn variant="secondary" onClick={onBack}>Back</Btn><Btn onClick={onConfirm} color={C.green}>Confirm & Pay {selected.price}</Btn></div>
     </div>
   );
@@ -317,7 +317,7 @@ function OpDone({ selected, onReset }) {
   return (
     <div style={{ textAlign: "center", padding: "40px 24px" }}>
       <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.greenBg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px", fontSize: 24, color: C.green }}>✓</div>
-      <h2 style={{ fontFamily: FONTS.display, fontSize: 26, color: C.dark, margin: "0 0 8px" }}>Commission Confirmed</h2>
+      <h2 style={{ fontFamily: FONTS.display, fontSize: 26, color: C.dark, margin: "0 0 8px" }}>Project Confirmed</h2>
       <p style={{ fontFamily: FONTS.body, fontSize: 14, color: C.light, maxWidth: 380, margin: "0 auto 28px", lineHeight: 1.6 }}>Your {selected?.type?.toLowerCase()} content is in progress. Delivery within {selected?.timeline}.</p>
       <div style={{ background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 12, padding: 18, maxWidth: 340, margin: "0 auto 28px", textAlign: "left" }}>
         <div style={{ fontFamily: FONTS.body, fontSize: 12, fontWeight: 600, color: C.dark, marginBottom: 10 }}>What happens next</div>
@@ -337,7 +337,7 @@ function OperatorFirstUse({ showAnnotations }) {
   const [step, setStep] = useState(0);
   const [bp, setBp] = useState({});
   const [sel, setSel] = useState(null);
-  const steps = ["Home", "Brand Setup", "Matches", "Review", "Commission", "Confirmed"];
+  const steps = ["Home", "Brand Setup", "Matches", "Review", "Confirm", "Done"];
   return (
     <div>
       {showAnnotations && <AnnotationBar label={`Step ${step + 1}:`} text={OP_ANNOTATIONS[step]} />}
@@ -368,9 +368,9 @@ const PAST_CONTENT = [
 ];
 
 const DASH_ANNOTATIONS = [
-  "The returning operator sees active commissions, content library, and a quick-start button. No re-onboarding. The three stats map directly to our Lean Canvas key metrics.",
+  "The returning operator sees active projects, content library, and a quick-start button. No re-onboarding. The three stats map directly to our Lean Canvas key metrics.",
   "Draft review: operators preview content, add revision notes, or approve and download in one step. No email chains, no external tools. This is the ‘time to content approval’ metric in action.",
-  "The content library stores all approved UGC with posted/not-posted tracking. Drives both ‘repeat usage per location’ and ‘UGC posting rate’ metrics.",
+  "The content library stores all approved content with posted/ready-to-post tracking. Drives both 'repeat usage per location' and 'content posting rate' metrics.",
 ];
 
 function OperatorReturning({ showAnnotations }) {
@@ -413,19 +413,19 @@ function OperatorReturning({ showAnnotations }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
           <div>
             <h2 style={{ fontFamily: FONTS.display, fontSize: 24, color: C.dark, margin: "0 0 4px" }}>Welcome back, Colectivo ☕</h2>
-            <p style={{ fontFamily: FONTS.body, fontSize: 13, color: C.muted, margin: 0 }}>Evanston · 2 active commissions · 5 pieces in your library</p>
+            <p style={{ fontFamily: FONTS.body, fontSize: 13, color: C.muted, margin: 0 }}>Evanston · 2 active projects · 5 pieces in your library</p>
           </div>
           <Btn onClick={() => {}} style={{ padding: "10px 20px", fontSize: 13 }}>+ New Request</Btn>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 24 }}>
-          {[["2", "Active", "commissions"], ["5", "Content", "in library"], ["80%", "Posted", "rate"]].map(([val, l1, l2], i) => (
+          {[["2", "Active", "projects"], ["5", "Content", "in library"], ["80%", "Posted", "rate"]].map(([val, l1, l2], i) => (
             <div key={i} style={{ background: C.bgWarm, borderRadius: 10, padding: 14, textAlign: "center" }}>
               <div style={{ fontFamily: FONTS.body, fontSize: 24, fontWeight: 700, color: C.dark }}>{val}</div>
               <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{l1}<br />{l2}</div>
             </div>
           ))}
         </div>
-        <h3 style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: C.dark, margin: "0 0 12px" }}>Active Commissions</h3>
+        <h3 style={{ fontFamily: FONTS.body, fontSize: 14, fontWeight: 600, color: C.dark, margin: "0 0 12px" }}>Active Projects</h3>
         {ACTIVE_COMMISSIONS.map(c => (
           <div key={c.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: C.bgWarm, border: `1.5px solid ${C.border}`, borderRadius: 10, padding: 14, marginBottom: 10 }}>
             <div>
@@ -451,7 +451,7 @@ function OperatorReturning({ showAnnotations }) {
                 <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.muted }}>{c.creator} · {c.date} · {c.items}</div>
               </div>
             </div>
-            {c.posted ? <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.green, fontWeight: 600 }}>Posted ✓</span> : <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted }}>Not posted</span>}
+            {c.posted ? <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.green, fontWeight: 600 }}>Posted ✓</span> : <span style={{ fontFamily: FONTS.body, fontSize: 10, color: C.muted }}>Ready to post</span>}
           </div>
         ))}
       </div>
@@ -467,7 +467,7 @@ const CR_FIRST_ANNOTATIONS = [
   "Creator landing emphasizes what creators care about: fair pay, clear terms, and being valued for content quality over follower count. Directly addresses Shaurya’s pain points.",
   "Profile setup captures the creator’s style, content strengths, and neighborhood — plus a ‘dream brands’ list. No follower count entry. The platform evaluates portfolio, not metrics.",
   "Portfolio upload is the final onboarding step. The platform evaluates content quality and style from actual work — not follower counts or engagement rates.",
-  "Confirmation screen shows what happens next: the platform matches based on their portfolio, and briefs arrive when aligned brands post requests. No cold outreach needed.",
+  "Confirmation screen shows what happens next: the platform matches based on their portfolio, and briefs arrive when matching brands post requests. No cold outreach needed.",
 ];
 
 function CreatorFirstUse({ showAnnotations }) {
@@ -485,11 +485,11 @@ function CreatorFirstUse({ showAnnotations }) {
         {showAnnotations && <AnnotationBar bg={annotBg} textColor={annotText} labelColor={color} label="Creator Landing:" text={CR_FIRST_ANNOTATIONS[0]} />}
         <div style={{ textAlign: "center", padding: "40px 24px" }}>
           <div style={{ fontSize: 44, marginBottom: 8 }}>📸</div>
-          <h1 style={{ fontFamily: FONTS.display, fontSize: 32, color: C.dark, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.2 }}>Get Paid for Content<br />That Matches Your Style</h1>
-          <p style={{ fontFamily: FONTS.body, fontSize: 15, color: C.light, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.6 }}>Local brands find you based on your content, not your follower count. Clear pay, clear terms, no ghosting.</p>
+          <h1 style={{ fontFamily: FONTS.display, fontSize: 32, color: C.dark, fontWeight: 700, margin: "0 0 12px", lineHeight: 1.2 }}>Brands Pay You for Your Style —<br />Not Your Follower Count</h1>
+          <p style={{ fontFamily: FONTS.body, fontSize: 15, color: C.light, maxWidth: 420, margin: "0 auto 28px", lineHeight: 1.6 }}>Local brands come to you with paid briefs that match your aesthetic. Every project has a clear budget, clear deliverables, and zero cold DMs.</p>
           <Btn onClick={() => setCrStep(1)} color={color}>Create Your Profile</Btn>
           <div style={{ marginTop: 32, display: "flex", justifyContent: "center", gap: 36, color: C.muted, fontSize: 13, fontFamily: FONTS.body }}>
-            {[["$180–250", "per commission"], ["Clear terms", "before you commit"], ["0", "follower requirements"]].map(([val, label], i) => (
+            {[["$180–250", "per project"], ["Clear terms", "before you commit"], ["0", "follower requirements"]].map(([val, label], i) => (
               <div key={i}><div style={{ fontSize: 20, fontWeight: 700, color: C.dark }}>{val}</div><div>{label}</div></div>
             ))}
           </div>
@@ -604,8 +604,8 @@ function CreatorFirstUse({ showAnnotations }) {
 // ═══════════════════════════════════════════
 
 const INCOMING_BRIEFS = [
-  { id: 1, brand: "Neighborhood Coffee Shop", neighborhood: "Evanston", type: "Ambiance / Interior", match: 94, deliverables: "3 photos + 1 Reel (15s)", pay: "$180", timeline: "5 business days", usage: "Organic social + in-store, 12 mo", brief: "Warm morning atmosphere — natural light, latte art, cozy seating. Capture the ‘third place’ feeling. Authentic, not staged." },
-  { id: 2, brand: "New Brunch Spot", neighborhood: "Logan Square", type: "Food & Drink", match: 87, deliverables: "4 photos + 1 Story set", pay: "$220", timeline: "7 business days", usage: "Organic social, 12 mo", brief: "Seasonal menu launch — colorful plating, ingredient details, final presentation. Bright, appetizing, lifestyle feel." },
+  { id: 1, brand: "Neighborhood Coffee Shop", neighborhood: "Evanston", type: "Ambiance / Interior", match: 94, rationale: "Similar to your warm coffee portfolio + Evanston neighborhood", deliverables: "3 photos + 1 Reel (15s)", pay: "$180", timeline: "5 business days", usage: "Organic social + in-store, 12 mo", brief: "Warm morning atmosphere — natural light, latte art, cozy seating. Capture the 'third place' feeling. Authentic, not staged." },
+  { id: 2, brand: "New Brunch Spot", neighborhood: "Logan Square", type: "Food & Drink", match: 87, rationale: "Food & drink focus + warm editorial tones", deliverables: "4 photos + 1 Story set", pay: "$220", timeline: "7 business days", usage: "Organic social, 12 mo", brief: "Seasonal menu launch — colorful plating, ingredient details, final presentation. Bright, appetizing, lifestyle feel." },
 ];
 
 const CREATOR_PROJECTS = [
@@ -730,6 +730,7 @@ function CreatorReturning({ showAnnotations }) {
               </div>
               <span style={{ background: C.creatorLight, color: C.creator, padding: "2px 9px", borderRadius: 12, fontSize: 11, fontWeight: 600, fontFamily: FONTS.body }}>{b.match}% match</span>
             </div>
+            {b.rationale && <div style={{ fontFamily: FONTS.body, fontSize: 11, color: C.creator, marginBottom: 6, fontStyle: "italic" }}>{b.match}% match — {b.rationale}</div>}
             <div style={{ display: "flex", gap: 12, fontSize: 12, color: C.mid, fontFamily: FONTS.body }}>
               <span style={{ fontWeight: 600, color: C.creator }}>{b.pay}</span><span>·</span><span>{b.deliverables}</span><span>·</span><span>{b.timeline}</span>
             </div>
