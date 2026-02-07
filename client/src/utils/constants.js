@@ -1,0 +1,108 @@
+export const VIBE_OPTIONS = [
+  'Cozy & Warm',
+  'Minimalist & Clean',
+  'Energetic & Bold',
+  'Rustic & Raw',
+  'Polished & Editorial',
+];
+
+export const VALUE_OPTIONS = [
+  'Community-first',
+  'Sustainability',
+  'Quality-obsessed',
+  'Inclusive',
+  'Design-forward',
+];
+
+export const CONTENT_COMFORT_ZONES = [
+  'Ambiance / Interior',
+  'Food & Drink',
+  'Staff & Culture',
+  'Community / Events',
+  'Behind the Scenes',
+];
+
+export const CONTENT_STYLES = [
+  'Warm & Editorial',
+  'Documentary & Candid',
+  'Clean & Minimal',
+  'Bold & Energetic',
+  'Moody & Cinematic',
+];
+
+export const CREATOR_STRENGTHS = [
+  'Food Photography',
+  'Reels/Short Video',
+  'Ambiance Shots',
+  'Lifestyle',
+  'Portraits',
+  'Behind the Scenes',
+];
+
+export const NEIGHBORHOODS = [
+  'Evanston',
+  'Rogers Park',
+  'Wicker Park',
+  'Logan Square',
+  'West Loop',
+  'Hyde Park',
+  'Lincoln Park',
+  'Uptown',
+];
+
+export const CONTENT_TYPES = [
+  'Ambiance / Interior',
+  'Food & Drink',
+  'Community / Culture',
+  'Behind the Scenes',
+  'Seasonal Special',
+];
+
+export const PROJECT_STATUS_LABELS = {
+  BRIEF_SENT: 'Brief Sent',
+  DRAFT_SUBMITTED: 'Draft Submitted',
+  REVISION_REQUESTED: 'Revision Requested',
+  APPROVED: 'Approved',
+  DELIVERED: 'Delivered',
+};
+
+export const PROJECT_STATUS_STEPS = [
+  'BRIEF_SENT',
+  'DRAFT_SUBMITTED',
+  'REVISION_REQUESTED',
+  'APPROVED',
+  'DELIVERED',
+];
+
+export const REQUEST_STATUS_LABELS = {
+  MATCHING: 'Matching',
+  PRESENTED: 'Options Ready',
+  SELECTED: 'Creator Selected',
+  COMPLETED: 'Completed',
+  CANCELLED: 'Cancelled',
+};
+
+export function formatCents(cents) {
+  return `$${(cents / 100).toFixed(0)}`;
+}
+
+export function formatDate(dateStr) {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+export function formatRelativeDate(dateStr) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = now - date;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+  return formatDate(dateStr);
+}

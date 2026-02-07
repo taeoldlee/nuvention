@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply text-dark bg-bgTan;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-body font-semibold text-white bg-accent hover:bg-accent/90 transition-colors duration-200 shadow-sm;
+  }
+
+  .btn-primary-creator {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-body font-semibold text-white bg-creatorAccent hover:bg-creatorAccent/90 transition-colors duration-200 shadow-sm;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl font-body font-semibold text-mid border-2 border-border bg-white hover:bg-bgWarm transition-colors duration-200;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-body font-medium text-muted hover:text-dark hover:bg-bgWarm transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl border border-border p-6 shadow-sm;
+  }
+
+  .chip {
+    @apply inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-border bg-white text-mid cursor-pointer transition-all duration-200 hover:border-accent/50;
+  }
+
+  .chip-selected {
+    @apply border-accent bg-accentLight text-accent;
+  }
+
+  .chip-creator {
+    @apply hover:border-creator/50;
+  }
+
+  .chip-creator-selected {
+    @apply border-creator bg-creatorLight text-creator;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border border-border bg-white text-dark placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200;
+  }
+
+  .input-creator {
+    @apply focus:ring-creator/20 focus:border-creator;
+  }
+
+  .label {
+    @apply block text-sm font-semibold text-mid mb-2;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}

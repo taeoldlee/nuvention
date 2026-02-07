@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── USERS ───
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      UserRole
+  isDemo    Boolean  @default(false)
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  brandProfile   BrandProfile?
+  creatorProfile CreatorProfile?
+}
+
+enum UserRole {
+  OPERATOR
+  CREATOR
+}
+
+// ─── BRAND (OPERATOR) PROFILE ───
+
+model BrandProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  businessName String
+  neighborhood String
+  city         String @default("Evanston")
+  state        String @default("IL")
+
+  googleMapsUrl String?
+  yelpUrl       String?
+
+  vibe                Json // ["Cozy & Warm", "Minimalist"]
+  values              Json // ["Community-first", "Sustainability"]
+  contentComfortZones Json // ["Ambiance / Interior", "Food & Drink"]
+
+  budgetMin Int? // cents
+  budgetMax Int? // cents
+
+  vibeAnalysis    Json?
+  profilePhotoUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  contentRequests ContentRequest[]
+  projects        Project[]
+}
+
+// ─── CREATOR PROFILE ───
+
+model CreatorProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  displayName     String
+  bio             String?
+  instagramHandle String?
+  tiktokHandle    String?
+
+  contentStyles Json // ["Warm & Editorial", "Documentary"]
+  strengths     Json // ["Food photography", "Reels", "Ambiance"]
+  neighborhoods Json // ["Evanston", "Logan Square"]
+  dreamBrands   Json? // ["Colectivo", "Metric Coffee"]
+
+  vibeTags Json? // ["warm-light", "minimalist", "community-feel"]
+
+  profilePhotoUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  portfolioItems PortfolioItem[]
+  matches        Match[]
+  projects       Project[]
+}
+
+// ─── PORTFOLIO ───
+
+model PortfolioItem {
+  id               String         @id @default(uuid())
+  creatorProfileId String
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id])
+
+  imageUrl    String
+  caption     String?
+  contentType String?
+  vibeTags    Json?
+
+  createdAt DateTime @default(now())
+}
+
+// ─── CONTENT REQUESTS ───
+
+model ContentRequest {
+  id             String       @id @default(uuid())
+  brandProfileId String
+  brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id])
+
+  contentType      String
+  description      String?
+  stylePreferences Json?
+  budgetRange      String?
+
+  status RequestStatus @default(MATCHING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matches Match[]
+}
+
+enum RequestStatus {
+  MATCHING
+  PRESENTED
+  SELECTED
+  COMPLETED
+  CANCELLED
+}
+
+// ─── MATCHES (max 3 per request) ───
+
+model Match {
+  id               String         @id @default(uuid())
+  contentRequestId String
+  contentRequest   ContentRequest @relation(fields: [contentRequestId], references: [id])
+  creatorProfileId String
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id])
+
+  matchScore     Int
+  matchRationale String
+
+  contentPreview String
+  deliverables   String
+  price          Int // cents
+  timeline       String
+  usageRights    String
+  style          String
+
+  status MatchStatus @default(PRESENTED)
+
+  createdAt DateTime @default(now())
+
+  project Project?
+}
+
+enum MatchStatus {
+  PRESENTED
+  SELECTED
+  DECLINED
+}
+
+// ─── PROJECTS ───
+
+model Project {
+  id               String         @id @default(uuid())
+  matchId          String         @unique
+  match            Match          @relation(fields: [matchId], references: [id])
+  brandProfileId   String
+  brandProfile     BrandProfile   @relation(fields: [brandProfileId], references: [id])
+  creatorProfileId String
+  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id])
+
+  status ProjectStatus @default(BRIEF_SENT)
+
+  deliverables String
+  price        Int // cents
+  timeline     String
+  usageRights  String
+  briefText    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  drafts      ProjectDraft[]
+  transaction Transaction?
+}
+
+enum ProjectStatus {
+  BRIEF_SENT
+  DRAFT_SUBMITTED
+  REVISION_REQUESTED
+  APPROVED
+  DELIVERED
+}
+
+// ─── DRAFTS ───
+
+model ProjectDraft {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id])
+
+  version  Int         @default(1)
+  fileUrls Json // ["https://s3.../draft1.jpg", ...]
+  notes    String?
+  feedback String?
+  status   DraftStatus @default(SUBMITTED)
+
+  createdAt DateTime @default(now())
+}
+
+enum DraftStatus {
+  SUBMITTED
+  REVISION_REQUESTED
+  APPROVED
+}
+
+// ─── TRANSACTIONS ───
+
+model Transaction {
+  id        String  @id @default(uuid())
+  projectId String  @unique
+  project   Project @relation(fields: [projectId], references: [id])
+
+  amount        Int // cents
+  platformFee   Int // cents
+  creatorPayout Int // cents
+
+  type   TransactionType
+  status TransactionStatus @default(PENDING)
+
+  stripePaymentIntentId String?
+  stripeTransferId      String?
+
+  demoMode Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TransactionType {
+  COMMISSION
+  PAYOUT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
