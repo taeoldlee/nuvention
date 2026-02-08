@@ -34,7 +34,7 @@ Return a JSON object with:
 Only return the JSON, no other text.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
       max_tokens: 800,
@@ -102,7 +102,7 @@ async function analyzeCreatorPortfolio(imageUrls) {
     }));
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
@@ -157,7 +157,7 @@ async function generateMatchRationale(brand, creator, contentType, matchScore) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
@@ -202,7 +202,7 @@ async function generateContentPreview(brand, creator, contentType) {
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "user",
