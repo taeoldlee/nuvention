@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBriefs, acceptBrief, declineBrief } from '../../api';
-import { formatCents } from '../../utils/constants';
-import MatchScoreBadge from '../../components/common/MatchScoreBadge';
+import { formatCompensation } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import MatchSignals from '../../components/common/MatchSignals';
+import useBriefDisplayData from '../../hooks/useBriefDisplayData';
 
 export default function BriefDetail() {
   const { matchId } = useParams();
@@ -161,46 +162,11 @@ export default function BriefDetail() {
     );
   }
 
-  // Brief data extraction
-  const contentType =
-    brief.contentRequest?.contentType ||
-    brief.contentType || brief.request?.contentType || 'Content Project';
-  const styleDirection =
-    brief.style ||
-    brief.styleDirection ||
-    brief.request?.styleDirection ||
-    brief.request?.vibe ||
-    '';
-  const deliverables =
-    brief.deliverables || brief.request?.deliverables || [];
-  const pay = brief.price ?? brief.pay ?? brief.request?.budget ?? brief.budget ?? 0;
-  const timeline = brief.timeline || brief.request?.timeline || '';
-  const usageRights =
-    brief.usageRights || brief.request?.usageRights || '100% usage rights included';
-  const matchScore = brief.matchScore ?? brief.score ?? 0;
-  const matchRationale =
-    brief.matchRationale ||
-    brief.rationale ||
-    'Matched based on your style, neighborhood, and portfolio.';
-
-  // Brand identity hidden -- show vibe clues
-  const neighborhood =
-    brief.brand?.neighborhood ||
-    brief.neighborhood ||
-    brief.request?.neighborhood ||
-    '';
-  const brandVibe =
-    brief.brand?.vibe?.[0] ||
-    brief.brandVibe ||
-    brief.request?.vibe ||
-    '';
-  const brandValues =
-    brief.brandValues ||
-    brief.brand?.values?.[0] ||
-    '';
-  const identityHints = [neighborhood, brandVibe, brandValues]
-    .filter(Boolean)
-    .join(' \u00B7 ');
+  const {
+    contentType, styleDirection, deliverables, pay,
+    compensationType, compensationDetails, timeline, usageRights,
+    matchRationale, matchSignals, identityHints,
+  } = useBriefDisplayData(brief);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -269,7 +235,7 @@ export default function BriefDetail() {
               <ul className="space-y-2">
                 {deliverables.map((d, i) => (
                   <li
-                    key={i}
+                    key={typeof d === 'string' ? d : i}
                     className="flex items-center gap-2 font-body text-sm text-dark"
                   >
                     <svg
@@ -315,30 +281,26 @@ export default function BriefDetail() {
           </div>
         </div>
 
-        {/* Pay — center, large, bold */}
+        {/* Compensation */}
         <div className="text-center py-6 border-y border-border mb-6">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-            Your Pay
+            Compensation
           </p>
-          <p className="font-display text-5xl font-bold text-dark">
-            {formatCents(pay)}
+          <p className="font-display text-4xl font-bold text-dark">
+            {formatCompensation(compensationType, compensationDetails, pay)}
           </p>
         </div>
 
-        {/* Match rationale */}
-        {matchScore > 0 && (
-          <div className="flex items-start gap-4 bg-creatorLight/50 rounded-xl p-5">
-            <MatchScoreBadge score={matchScore} size="md" />
-            <div className="flex-1 min-w-0">
-              <p className="font-body text-sm font-semibold text-dark mb-1">
-                {matchScore}% match
-              </p>
-              <p className="font-body text-sm text-muted leading-relaxed">
-                {matchRationale}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Why you were selected */}
+        <div className="bg-creatorLight/50 rounded-xl p-5">
+          <p className="font-body text-sm font-semibold text-dark mb-2">
+            Why you were selected
+          </p>
+          <p className="font-body text-sm text-muted leading-relaxed mb-4">
+            {matchRationale}
+          </p>
+          <MatchSignals signals={matchSignals} />
+        </div>
       </div>
 
       {/* Error */}

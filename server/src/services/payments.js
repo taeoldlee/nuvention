@@ -24,7 +24,8 @@ async function createCharge(projectId, amount) {
       platformFee,
       creatorPayout,
       type: "COMMISSION",
-      status: "COMPLETED",
+      status: "PENDING",
+      escrowStatus: "HELD",
       demoMode: true,
     },
   });
@@ -51,7 +52,7 @@ async function createPayout(projectId, creatorPayout) {
   if (existingTransaction) {
     const updated = await prisma.transaction.update({
       where: { id: existingTransaction.id },
-      data: { status: "COMPLETED" },
+      data: { status: "COMPLETED", escrowStatus: "RELEASED" },
     });
     return updated;
   }
@@ -65,6 +66,7 @@ async function createPayout(projectId, creatorPayout) {
       creatorPayout,
       type: "PAYOUT",
       status: "COMPLETED",
+      escrowStatus: "RELEASED",
       demoMode: true,
     },
   });

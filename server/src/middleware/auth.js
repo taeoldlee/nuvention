@@ -60,4 +60,26 @@ async function optionalAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, optionalAuth };
+function requireOperatorWithBrand(req, res, next) {
+  if (req.user.role !== "OPERATOR") {
+    return res.status(403).json({ error: "Only operators can perform this action" });
+  }
+  if (!req.user.brandProfile) {
+    return res.status(404).json({ error: "Brand profile not found. Complete onboarding first." });
+  }
+  req.brandProfile = req.user.brandProfile;
+  next();
+}
+
+function requireCreatorWithProfile(req, res, next) {
+  if (req.user.role !== "CREATOR") {
+    return res.status(403).json({ error: "Only creators can perform this action" });
+  }
+  if (!req.user.creatorProfile) {
+    return res.status(404).json({ error: "Creator profile not found." });
+  }
+  req.creatorProfile = req.user.creatorProfile;
+  next();
+}
+
+module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorWithProfile };

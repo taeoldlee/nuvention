@@ -51,14 +51,16 @@ router.get("/", async (req, res, next) => {
     const briefs = matches.map((match) => ({
       matchId: match.id,
       status: match.status,
-      matchScore: match.matchScore,
       matchRationale: match.matchRationale,
+      matchSignals: match.matchSignals,
       contentPreview: match.contentPreview,
       deliverables: match.deliverables,
       price: match.price,
       timeline: match.timeline,
       usageRights: match.usageRights,
       style: match.style,
+      compensationType: match.contentRequest?.compensationType || "FLAT_FEE",
+      compensationDetails: match.contentRequest?.compensationDetails || null,
       contentRequest: {
         id: match.contentRequest.id,
         contentType: match.contentRequest.contentType,

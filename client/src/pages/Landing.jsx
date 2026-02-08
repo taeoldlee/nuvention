@@ -1,135 +1,382 @@
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import {
+  BadgeCheck,
+  ClipboardCheck,
+  Eye,
+  FileText,
+  Fingerprint,
+  Lock,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Wallet,
+} from 'lucide-react';
+
+import FadeIn from '../components/marketing/FadeIn';
+import Navbar from '../components/marketing/Navbar';
+import SectionHeader from '../components/marketing/SectionHeader';
+import FeatureCard from '../components/marketing/FeatureCard';
+import StepCard from '../components/marketing/StepCard';
+import PricingCard from '../components/marketing/PricingCard';
+import FAQItem from '../components/marketing/FAQItem';
+import Button from '../components/marketing/Button';
+
+const steps = [
+  {
+    step: '01',
+    title: 'Brand alignment intake',
+    description:
+      'Capture vibe sliders, values, guest‑experience keywords, and optional visual references so creators understand your brand before anything else.',
+  },
+  {
+    step: '02',
+    title: 'Evidence‑based shortlist',
+    description:
+      'Review a maximum of three creators with content previews first and clear evidence: venue similarity, aesthetic markers, and community signals.',
+  },
+  {
+    step: '03',
+    title: 'Commission with clarity',
+    description:
+      'Launch a standardized brief, review drafts in‑platform, allow one minor revision, and receive usage rights documentation with escrow protection.',
+  },
+];
+
+const features = [
+  {
+    icon: Fingerprint,
+    title: 'Anonymous creator evaluation',
+    description:
+      'Assess content quality before identity is revealed. Bias stays low and brand fit stays high.',
+  },
+  {
+    icon: MapPin,
+    title: 'Hyperlocal context',
+    description:
+      'Creators are matched based on real neighborhood proximity and venue similarity.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Clear creative direction',
+    description:
+      'Brief templates make it easy to specify goals, subject, and tone without writing from scratch.',
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'In‑platform review',
+    description:
+      'Approve drafts, request one revision, and track delivery without switching tools.',
+  },
+  {
+    icon: FileText,
+    title: 'Usage rights built‑in',
+    description:
+      'Every project includes a clean usage rights document you can file with confidence.',
+  },
+  {
+    icon: Wallet,
+    title: 'Payment protection',
+    description:
+      'Escrow‑style handling protects both sides and keeps projects on schedule.',
+  },
+];
+
+const trustPoints = [
+  {
+    title: 'Brand safety by design',
+    description:
+      'Creators are vetted and matched through evidence signals, not follower counts or popularity.',
+    icon: ShieldCheck,
+  },
+  {
+    title: 'Review before posting',
+    description:
+      'Nothing goes live without your approval, with one included round of minor revisions.',
+    icon: Eye,
+  },
+  {
+    title: 'Usage rights documented',
+    description:
+      'Clear documentation ensures everyone knows exactly how content can be used.',
+    icon: FileText,
+  },
+  {
+    title: 'Private by default',
+    description:
+      'Creator identity stays hidden until you select a match, minimizing risk and bias.',
+    icon: Lock,
+  },
+];
+
+const pricing = [
+  {
+    title: 'Per‑project commission',
+    price: 'Flat commission',
+    description: 'Pay only when you commission a creator.',
+    items: [
+      'Evidence‑based matching (max 3 creators)',
+      'Brief template + usage rights documentation',
+      'In‑platform review with one revision',
+      'Payment protection and escrow handling',
+    ],
+    highlight: true,
+  },
+  {
+    title: 'Multi‑location teams',
+    price: 'Transparent team plan',
+    description: 'Ideal for small brands managing multiple locations.',
+    items: [
+      'Centralized brand standards',
+      'Shared creator pool with locality controls',
+      'Consolidated billing and reporting',
+    ],
+  },
+];
+
+const faqs = [
+  {
+    question: 'How do you make sure creators fit our brand?',
+    answer:
+      'We capture your vibe, values, guest‑experience keywords, and references first, then match on evidence signals like venue similarity and aesthetic markers.',
+  },
+  {
+    question: 'Will we see creator profiles upfront?',
+    answer:
+      'No. You evaluate content first. Creator identity is revealed only after you select a match.',
+  },
+  {
+    question: 'What protects us from posting risk?',
+    answer:
+      'You review drafts in‑platform, request one minor revision, and approve before anything goes live. Usage rights are documented.',
+  },
+  {
+    question: 'Is this a marketplace or agency?',
+    answer:
+      'Neither. Locale is an opinionated commissioning product focused on brand safety, not bidding or creator discovery.',
+  },
+];
 
 export default function Landing() {
-  const navigate = useNavigate();
-  const { user, profile, isOperator, isCreator, hasProfile } = useAuth();
-
-  const handleOperatorClick = () => {
-    if (user && isOperator && hasProfile) {
-      navigate('/operator/dashboard');
-    } else {
-      navigate('/operator/onboarding');
-    }
-  };
-
-  const handleCreatorClick = () => {
-    if (user && isCreator && hasProfile) {
-      navigate('/creator/dashboard');
-    } else {
-      navigate('/creator/onboarding');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-bgWarm flex flex-col">
-      {/* Hero Section */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-16">
-        {/* Logo & Tagline */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
-            <span className="font-display text-2xl font-bold text-dark tracking-tight">Locale</span>
-          </div>
+    <div className="min-h-screen bg-[#0B0D12] text-white">
+      <Navbar />
 
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-dark mb-4 leading-tight">
-            Fresh content for<br />your feed
-          </h1>
-          <p className="font-body text-lg text-muted max-w-lg mx-auto leading-relaxed">
-            We match neighborhood businesses with local creators who already know
-            the vibe. Great content, no guesswork.
-          </p>
-        </div>
+      <main id="main-content" className="relative">
+        <section className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pb-20 pt-20 text-center sm:px-10 sm:pt-28 lg:px-16">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(93,115,255,0.25),transparent_60%)]" />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(77,212,166,0.18),transparent_45%)]" />
 
-        {/* Role Selection Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full mb-16">
-          {/* Business Card */}
-          <button
-            onClick={handleOperatorClick}
-            className="group card text-left hover:shadow-md hover:border-accent/30 transition-all duration-300"
-          >
-            <div className="w-12 h-12 rounded-xl bg-accentLight flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016A3.001 3.001 0 0021 9.349m-18 0V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25v4.1" />
-              </svg>
-            </div>
-            <h3 className="font-display text-xl font-semibold text-dark mb-2">
-              I'm a Business
-            </h3>
-            <p className="font-body text-sm text-muted mb-4 leading-relaxed">
-              Get matched with creators who understand your neighborhood and brand.
-              Receive curated content options in minutes.
+          <FadeIn className="flex flex-col items-center gap-6">
+            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300/80">
+              Brand‑safe commissioning
+            </span>
+            <h1 className="max-w-3xl font-display text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
+              Commission local UGC with confidence.
+            </h1>
+            <p className="max-w-2xl text-base text-slate-300/80 sm:text-lg">
+              Locale is an opinionated, hyperlocal UGC commissioning platform for restaurants and cafés. It helps you approve content fast because the match is brand‑safe and explainable.
             </p>
-            <div className="flex items-center text-accent font-semibold text-sm group-hover:gap-2 transition-all duration-300">
-              <span>{user && isOperator && hasProfile ? 'Go to Dashboard' : 'Get Started'}</span>
-              <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              <Button href="#cta">Create a brief</Button>
+              <Button href="#cta" variant="secondary">
+                Request demo
+              </Button>
             </div>
-          </button>
+          </FadeIn>
 
-          {/* Creator Card */}
-          <button
-            onClick={handleCreatorClick}
-            className="group card text-left hover:shadow-md hover:border-creatorAccent/30 transition-all duration-300"
-          >
-            <div className="w-12 h-12 rounded-xl bg-creatorLight flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-creator" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-              </svg>
+          <FadeIn className="flex flex-wrap items-center justify-center gap-3">
+            {[
+              'Brand‑safe process',
+              'Evidence‑based matching',
+              'Usage rights included',
+              'Escrow protection',
+            ].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300/80"
+              >
+                {item}
+              </span>
+            ))}
+          </FadeIn>
+        </section>
+
+        <section className="mx-auto max-w-6xl px-6 pb-16 sm:px-10 lg:px-16">
+          <FadeIn className="glass-panel gradient-border flex flex-col items-center justify-between gap-6 rounded-3xl p-6 text-center sm:flex-row sm:text-left">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Trust strip</p>
+              <p className="mt-3 text-lg text-white">
+                Built for operators who need confidence, not just speed.
+              </p>
+              <p className="mt-2 text-sm text-slate-300/70">
+                Locale prioritizes brand safety with evidence‑based matching and controlled identity disclosure.
+              </p>
             </div>
-            <h3 className="font-display text-xl font-semibold text-dark mb-2">
-              I'm a Creator
-            </h3>
-            <p className="font-body text-sm text-muted mb-4 leading-relaxed">
-              Get paid to shoot the spots you already love. We send you briefs
-              matched to your style and neighborhood.
-            </p>
-            <div className="flex items-center text-creatorAccent font-semibold text-sm group-hover:gap-2 transition-all duration-300">
-              <span>{user && isCreator && hasProfile ? 'Go to Dashboard' : 'Get Started'}</span>
-              <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-              </svg>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {['No follower bias', 'Max 3 options', 'Review before posting'].map((label) => (
+                <span key={label} className="rounded-full border border-white/10 px-4 py-2 text-xs text-slate-300/80">
+                  {label}
+                </span>
+              ))}
             </div>
-          </button>
+          </FadeIn>
+        </section>
+
+        <section id="how-it-works" className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-16">
+          <FadeIn>
+            <SectionHeader
+              eyebrow="How it works"
+              title="Three steps from brand alignment to approved content."
+              description="The flow is intentionally small so decision‑making stays fast and brand‑safe."
+            />
+          </FadeIn>
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <FadeIn key={step.step} delay={index * 0.1}>
+                <StepCard {...step} />
+              </FadeIn>
+            ))}
+          </div>
+        </section>
+
+        <section id="features" className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-16">
+          <FadeIn>
+            <SectionHeader
+              eyebrow="Core features"
+              title="Built for trust, clarity, and calm approvals."
+              description="No discovery feeds, no bidding. Just a clean commissioning workflow designed for local operators."
+            />
+          </FadeIn>
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, index) => (
+              <FadeIn key={feature.title} delay={index * 0.05}>
+                <FeatureCard {...feature} />
+              </FadeIn>
+            ))}
+          </div>
+        </section>
+
+        <section id="trust" className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-16">
+          <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+            <FadeIn>
+              <SectionHeader
+                eyebrow="Trust & safety"
+                title="Brand safety is the product, not an add‑on."
+                description="Every step prioritizes clear expectations, controlled exposure, and documented rights."
+              />
+              <div className="mt-8 space-y-5">
+                {trustPoints.map((item) => (
+                  <div key={item.title} className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">
+                      <item.icon className="h-5 w-5 text-emerald-300" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-white">{item.title}</h3>
+                      <p className="text-sm text-slate-300/80">{item.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </FadeIn>
+
+            <FadeIn className="glass-panel gradient-border rounded-3xl p-8">
+              <div className="flex items-center gap-3">
+                <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center">
+                  <BadgeCheck className="h-5 w-5 text-[#7D8BFF]" />
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Match evidence</p>
+                  <p className="text-base text-white">What you’ll see on every shortlist card</p>
+                </div>
+              </div>
+              <ul className="mt-6 space-y-4 text-sm text-slate-300/80">
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  Venue similarity and neighborhood overlap
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  Aesthetic markers aligned with your vibe
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  Community signals and creator tier context
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  Past outcomes and turnaround history
+                </li>
+              </ul>
+            </FadeIn>
+          </div>
+        </section>
+
+        <section id="pricing" className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-16">
+          <FadeIn>
+            <SectionHeader
+              eyebrow="Pricing"
+              title="Simple, transparent pricing for local teams."
+              description="Pay per project with a clear commission model, or consolidate multiple locations."
+              align="center"
+            />
+          </FadeIn>
+          <div className="mt-12 grid gap-6 md:grid-cols-2">
+            {pricing.map((plan, index) => (
+              <FadeIn key={plan.title} delay={index * 0.1}>
+                <PricingCard {...plan} />
+              </FadeIn>
+            ))}
+          </div>
+        </section>
+
+        <section id="faq" className="mx-auto max-w-5xl px-6 pb-24 sm:px-10 lg:px-16">
+          <FadeIn>
+            <SectionHeader
+              eyebrow="FAQ"
+              title="Short answers for busy operators."
+              description="If you need more detail, we’ll walk you through a live flow in minutes."
+              align="center"
+            />
+          </FadeIn>
+          <div className="mt-10 grid gap-4">
+            {faqs.map((faq) => (
+              <FAQItem key={faq.question} {...faq} />
+            ))}
+          </div>
+        </section>
+
+        <section id="cta" className="mx-auto max-w-6xl px-6 pb-24 sm:px-10 lg:px-16">
+          <FadeIn className="glass-panel gradient-border flex flex-col items-center justify-between gap-8 rounded-3xl p-10 text-center sm:flex-row sm:text-left">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Ready when you are</p>
+              <h2 className="mt-4 font-display text-3xl font-semibold text-white">
+                Commission your next UGC project with confidence.
+              </h2>
+              <p className="mt-3 text-sm text-slate-300/80">
+                We’ll guide your team through brand alignment, evidence‑based matching, and an in‑platform review flow.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Button href="#">Create a brief</Button>
+              <Button href="#" variant="secondary">Request demo</Button>
+            </div>
+          </FadeIn>
+        </section>
+      </main>
+
+      <footer className="mx-auto max-w-6xl px-6 pb-10 sm:px-10 lg:px-16">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-slate-300/60 sm:flex-row">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#7D8BFF] to-[#4DD4A6]" />
+            <span className="font-display text-white">Locale</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-5">
+            <a className="hover:text-white transition-colors" href="#how-it-works">How it works</a>
+            <a className="hover:text-white transition-colors" href="#features">Features</a>
+            <a className="hover:text-white transition-colors" href="#trust">Trust</a>
+            <a className="hover:text-white transition-colors" href="#pricing">Pricing</a>
+          </div>
+          <p>© 2026 Locale</p>
         </div>
-
-        {/* Stats Bar */}
-        <div className="flex items-center gap-6 text-sm text-muted font-body">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            <span>3 curated options</span>
-          </div>
-          <span className="text-border">|</span>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            <span>&lt;2 min setup</span>
-          </div>
-          <span className="text-border">|</span>
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-accent" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            <span>100% usage rights</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="text-center py-6 border-t border-border">
-        <p className="text-xs text-muted font-body">
-          Locale &mdash; connecting neighborhood businesses with local creators
-        </p>
       </footer>
     </div>
   );

@@ -1,9 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
-const { requireAuth } = require("../middleware/auth");
-const { generateMatches } = require("../services/matching");
+const { requireAuth, requireOperatorWithBrand } = require("../middleware/auth");
 const { createCharge } = require("../services/payments");
+const { generateUsageRightsDoc } = require("../services/documents");
+const { createRequestWithMatches } = require("../services/requests");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -13,114 +14,14 @@ router.use(requireAuth);
  * Create a content request and trigger the matching algorithm.
  * Returns the request with top 3 matches.
  */
-router.post("/", async (req, res, next) => {
+router.post("/", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "OPERATOR") {
-      return res.status(403).json({ error: "Only operators can create content requests" });
-    }
-
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile) {
-      return res.status(404).json({ error: "Brand profile not found. Complete onboarding first." });
-    }
-
-    const { contentType, description, stylePreferences, budgetRange } = req.body;
-
-    if (!contentType) {
+    if (!req.body.contentType) {
       return res.status(400).json({ error: "contentType is required" });
     }
 
-    // Create the content request
-    const contentRequest = await prisma.contentRequest.create({
-      data: {
-        brandProfileId: brandProfile.id,
-        contentType,
-        description: description || null,
-        stylePreferences: stylePreferences || null,
-        budgetRange: budgetRange || null,
-        status: "MATCHING",
-      },
-    });
-
-    // Fetch all creator profiles for matching
-    const allCreators = await prisma.creatorProfile.findMany({
-      include: {
-        portfolioItems: true,
-        user: {
-          select: { id: true, name: true, avatarUrl: true },
-        },
-      },
-    });
-
-    // Generate top 3 matches
-    const matchResults = generateMatches(brandProfile, contentRequest, allCreators);
-
-    // Save matches to DB
-    const createdMatches = [];
-    for (const match of matchResults) {
-      const created = await prisma.match.create({
-        data: {
-          contentRequestId: contentRequest.id,
-          creatorProfileId: match.creatorProfileId,
-          matchScore: match.matchScore,
-          matchRationale: match.matchRationale,
-          contentPreview: match.contentPreview,
-          deliverables: match.deliverables,
-          price: match.price,
-          timeline: match.timeline,
-          usageRights: match.usageRights,
-          style: match.style,
-          status: "PRESENTED",
-        },
-        include: {
-          creatorProfile: {
-            include: {
-              user: {
-                select: { id: true, name: true, avatarUrl: true },
-              },
-              portfolioItems: {
-                take: 3,
-                orderBy: { createdAt: "desc" },
-              },
-            },
-          },
-        },
-      });
-      createdMatches.push(created);
-    }
-
-    // Update request status
-    await prisma.contentRequest.update({
-      where: { id: contentRequest.id },
-      data: { status: "PRESENTED" },
-    });
-
-    const result = await prisma.contentRequest.findUnique({
-      where: { id: contentRequest.id },
-      include: {
-        matches: {
-          include: {
-            creatorProfile: {
-              include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
-                },
-                portfolioItems: {
-                  take: 3,
-                  orderBy: { createdAt: "desc" },
-                },
-              },
-            },
-          },
-          orderBy: { matchScore: "desc" },
-        },
-      },
-    });
-
-    res.status(201).json({ request: result });
+    const result = await createRequestWithMatches(req.brandProfile, req.body);
+    res.status(201).json({ request: anonymizeRequest(result) });
   } catch (err) {
     next(err);
   }
@@ -130,19 +31,9 @@ router.post("/", async (req, res, next) => {
  * GET /api/requests
  * List operator's content requests.
  */
-router.get("/", async (req, res, next) => {
+router.get("/", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "OPERATOR") {
-      return res.status(403).json({ error: "Only operators can view content requests" });
-    }
-
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile) {
-      return res.status(404).json({ error: "Brand profile not found." });
-    }
+    const { brandProfile } = req;
 
     const requests = await prisma.contentRequest.findMany({
       where: { brandProfileId: brandProfile.id },
@@ -150,9 +41,11 @@ router.get("/", async (req, res, next) => {
         matches: {
           include: {
             creatorProfile: {
-              include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
+              select: {
+                portfolioItems: {
+                  select: { id: true, imageUrl: true, verified: true },
+                  take: 3,
+                  orderBy: { createdAt: "desc" },
                 },
               },
             },
@@ -163,7 +56,7 @@ router.get("/", async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
-    res.json({ requests });
+    res.json({ requests: requests.map(anonymizeRequest) });
   } catch (err) {
     next(err);
   }
@@ -173,8 +66,10 @@ router.get("/", async (req, res, next) => {
  * GET /api/requests/:id
  * Get a single content request with matches.
  */
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireOperatorWithBrand, async (req, res, next) => {
   try {
+    const { brandProfile } = req;
+
     const request = await prisma.contentRequest.findUnique({
       where: { id: req.params.id },
       include: {
@@ -182,11 +77,9 @@ router.get("/:id", async (req, res, next) => {
         matches: {
           include: {
             creatorProfile: {
-              include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
-                },
+              select: {
                 portfolioItems: {
+                  select: { id: true, imageUrl: true, verified: true },
                   take: 4,
                   orderBy: { createdAt: "desc" },
                 },
@@ -202,16 +95,11 @@ router.get("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Content request not found" });
     }
 
-    // Verify the user owns this request
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile || request.brandProfileId !== brandProfile.id) {
+    if (request.brandProfileId !== brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    res.json({ request });
+    res.json({ request: anonymizeRequest(request) });
   } catch (err) {
     next(err);
   }
@@ -221,11 +109,9 @@ router.get("/:id", async (req, res, next) => {
  * POST /api/requests/:id/select/:matchId
  * Operator selects a match. Creates a project and a transaction.
  */
-router.post("/:id/select/:matchId", async (req, res, next) => {
+router.post("/:id/select/:matchId", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "OPERATOR") {
-      return res.status(403).json({ error: "Only operators can select matches" });
-    }
+    const { brandProfile } = req;
 
     const match = await prisma.match.findUnique({
       where: { id: req.params.matchId },
@@ -245,12 +131,7 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
       return res.status(400).json({ error: "Match does not belong to this request" });
     }
 
-    // Verify ownership
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile || match.contentRequest.brandProfileId !== brandProfile.id) {
+    if (match.contentRequest.brandProfileId !== brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
@@ -281,6 +162,13 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
     });
 
     // Create the project
+    const usageRightsDoc = generateUsageRightsDoc({
+      businessName: match.contentRequest?.brandProfile?.businessName,
+      contentType: match.contentRequest?.contentType,
+      usageRights: match.usageRights,
+      timeline: match.timeline,
+    });
+
     const project = await prisma.project.create({
       data: {
         matchId: match.id,
@@ -292,6 +180,9 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
         timeline: match.timeline,
         usageRights: match.usageRights,
         briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview}`,
+        usageRightsDoc,
+        compensationType: match.contentRequest.compensationType || "FLAT_FEE",
+        compensationDetails: match.contentRequest.compensationDetails || null,
       },
       include: {
         match: {
@@ -310,7 +201,9 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
     });
 
     // Create transaction (charge)
-    const transaction = await createCharge(project.id, match.price);
+    const transaction = match.price > 0
+      ? await createCharge(project.id, match.price)
+      : null;
 
     res.status(201).json({ project, transaction });
   } catch (err) {
@@ -319,3 +212,38 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
 });
 
 module.exports = router;
+
+function anonymizeRequest(request) {
+  if (!request) return request;
+  const matches = Array.isArray(request.matches) ? request.matches : [];
+  const anonymizedMatches = matches.map((match, idx) => {
+    const alias = `Creator ${String.fromCharCode(65 + idx)}`;
+    const portfolioSamples = (match.creatorProfile?.portfolioItems || []).map((p) => ({
+      id: p.id,
+      imageUrl: p.imageUrl,
+      verified: !!p.verified,
+    }));
+
+    return {
+      id: match.id,
+      creatorAlias: alias,
+      contentType: request.contentType,
+      contentPreview: match.contentPreview,
+      deliverables: match.deliverables,
+      price: match.price,
+      timeline: match.timeline,
+      usageRights: match.usageRights,
+      style: match.style,
+      matchRationale: match.matchRationale,
+      matchSignals: match.matchSignals,
+      portfolioSamples,
+      compensationType: request.compensationType,
+      compensationDetails: request.compensationDetails,
+    };
+  });
+
+  return {
+    ...request,
+    matches: anonymizedMatches,
+  };
+}
