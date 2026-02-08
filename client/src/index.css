@@ -6,6 +6,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
   }
 
   body {
@@ -74,5 +75,30 @@
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .glass-panel {
+    @apply bg-white/5 border border-white/10 backdrop-blur-xl;
+  }
+
+  .card-hover {
+    @apply transition-transform duration-300 hover:-translate-y-1 hover:shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)];
+  }
+
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(93, 115, 255, 0.45), rgba(77, 212, 166, 0.35));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }
