@@ -198,6 +198,7 @@ router.post("/portfolio", (req, res, next) => {
             imageUrl,
             caption: captions[i] || null,
             contentType: contentTypes[i] || null,
+            verified: true,
           },
         });
         portfolioItems.push(item);

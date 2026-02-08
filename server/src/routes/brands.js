@@ -148,12 +148,17 @@ router.post("/profile", async (req, res, next) => {
       googleMapsUrl,
       yelpUrl,
       vibe,
+      vibes,
       values,
       contentComfortZones,
       budgetMin,
       budgetMax,
       vibeAnalysis,
       profilePhotoUrl,
+      vibeScales,
+      guestExperienceKeywords,
+      visualRefUrls,
+      contentNoGos,
     } = req.body;
 
     if (!businessName || !neighborhood) {
@@ -169,13 +174,17 @@ router.post("/profile", async (req, res, next) => {
         state: state || "IL",
         googleMapsUrl: googleMapsUrl || null,
         yelpUrl: yelpUrl || null,
-        vibe: vibe || [],
+        vibe: vibe || vibes || [],
         values: values || [],
         contentComfortZones: contentComfortZones || [],
         budgetMin: budgetMin || null,
         budgetMax: budgetMax || null,
         vibeAnalysis: vibeAnalysis || null,
         profilePhotoUrl: profilePhotoUrl || null,
+        vibeScales: vibeScales || null,
+        guestExperienceKeywords: guestExperienceKeywords || null,
+        visualRefUrls: visualRefUrls || null,
+        contentNoGos: contentNoGos || null,
       },
     });
 
@@ -211,12 +220,17 @@ router.put("/profile", async (req, res, next) => {
       googleMapsUrl,
       yelpUrl,
       vibe,
+      vibes,
       values,
       contentComfortZones,
       budgetMin,
       budgetMax,
       vibeAnalysis,
       profilePhotoUrl,
+      vibeScales,
+      guestExperienceKeywords,
+      visualRefUrls,
+      contentNoGos,
     } = req.body;
 
     const profile = await prisma.brandProfile.update({
@@ -228,13 +242,17 @@ router.put("/profile", async (req, res, next) => {
         ...(state !== undefined && { state }),
         ...(googleMapsUrl !== undefined && { googleMapsUrl }),
         ...(yelpUrl !== undefined && { yelpUrl }),
-        ...(vibe !== undefined && { vibe }),
+        ...((vibe !== undefined || vibes !== undefined) && { vibe: vibe ?? vibes }),
         ...(values !== undefined && { values }),
         ...(contentComfortZones !== undefined && { contentComfortZones }),
         ...(budgetMin !== undefined && { budgetMin }),
         ...(budgetMax !== undefined && { budgetMax }),
         ...(vibeAnalysis !== undefined && { vibeAnalysis }),
         ...(profilePhotoUrl !== undefined && { profilePhotoUrl }),
+        ...(vibeScales !== undefined && { vibeScales }),
+        ...(guestExperienceKeywords !== undefined && { guestExperienceKeywords }),
+        ...(visualRefUrls !== undefined && { visualRefUrls }),
+        ...(contentNoGos !== undefined && { contentNoGos }),
       },
     });
 

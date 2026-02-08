@@ -68,6 +68,16 @@ const WEIGHTS = {
   portfolioQuality: 10,
 };
 
+function titleCase(value) {
+  return value
+    .toString()
+    .replace(/[-_]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 /**
  * Calculate vibe alignment score (0-1).
  * Compares brand vibe tags with creator vibe tags and content styles.
@@ -218,47 +228,125 @@ function buildMatchPackage(brand, request, creator, optionIndex) {
   const idx = optionIndex % templates.length;
 
   const contentPreview = templates[idx];
-  const deliverables = DELIVERABLE_OPTIONS[idx];
-  const timeline = TIMELINE_OPTIONS[idx];
-  const usageRights = USAGE_OPTIONS[idx];
-  const price = prices[idx];
+  const deliverables = request.deliverables || DELIVERABLE_OPTIONS[idx];
+  const timeline = request.timeline || TIMELINE_OPTIONS[idx];
+  const usageRights = request.usageRights || USAGE_OPTIONS[idx];
+
+  let price = prices[idx];
+  const compensationType = request.compensationType || "FLAT_FEE";
+  const compensationDetails = request.compensationDetails || {};
+  if (compensationType === "FREE_PRODUCT" || compensationType === "DISCOUNT_CODE") {
+    price = 0;
+  } else if (compensationType === "HYBRID" && compensationDetails.flatFeeCents) {
+    price = compensationDetails.flatFeeCents;
+  }
 
   // Determine style from creator's content styles
   const creatorStyles = Array.isArray(creator.contentStyles) ? creator.contentStyles : [];
   const style = creatorStyles[0] || "Warm & Editorial";
 
   // Generate rationale
-  const brandVibes = Array.isArray(brand.vibe) ? brand.vibe : [];
-  const creatorVibeTags = Array.isArray(creator.vibeTags) ? creator.vibeTags : [];
-  const creatorNeighborhoods = Array.isArray(creator.neighborhoods) ? creator.neighborhoods : [];
-
-  const vibeOverlap = brandVibes.filter((v) => {
-    const vLower = v.toLowerCase();
-    return creatorVibeTags.some((t) => vLower.includes(t) || t.includes(vLower.split(" ")[0]));
-  });
-
-  const neighborhoodMatch = creatorNeighborhoods.includes(brand.neighborhood);
-
-  let rationale = `${creator.displayName}'s ${style.toLowerCase()} approach `;
-  if (vibeOverlap.length > 0) {
-    rationale += `aligns naturally with your ${vibeOverlap[0]} aesthetic. `;
-  } else {
-    rationale += `brings a fresh perspective to your brand. `;
+  const matchSignals = buildMatchSignals(brand, request, creator);
+  const vibeLabel = Array.isArray(brand.vibe) && brand.vibe.length > 0 ? brand.vibe[0] : "local";
+  let rationale = `Strong fit for your ${vibeLabel.toLowerCase()} aesthetic and ${contentType.toLowerCase()} needs. `;
+  if (matchSignals.communitySignals?.[0]) {
+    rationale += `${matchSignals.communitySignals[0]}. `;
   }
-  if (neighborhoodMatch) {
-    rationale += `Based in ${brand.neighborhood}, they know your neighborhood intimately. `;
+  if (matchSignals.aestheticMarkers?.length) {
+    rationale += `Aesthetic markers: ${matchSignals.aestheticMarkers.join(", ")}.`;
   }
-  rationale += `Their strength in ${contentType.toLowerCase()} content will capture the authentic story of your space.`;
 
   return {
     contentPreview,
-    deliverables,
+    deliverables: Array.isArray(deliverables) ? deliverables.join(" · ") : deliverables,
     timeline,
     usageRights,
     price,
     style,
     matchRationale: rationale,
+    matchSignals,
   };
+}
+
+function buildMatchSignals(brand, request, creator) {
+  const signals = {
+    venueAlignment: [],
+    aestheticMarkers: [],
+    communitySignals: [],
+    pastOutcomes: [],
+    trustSignals: {},
+  };
+
+  const brandNeighborhood = (brand.neighborhood || "").toLowerCase();
+  const creatorNeighborhoods = Array.isArray(creator.neighborhoods)
+    ? creator.neighborhoods.map((n) => n.toLowerCase())
+    : [];
+
+  if (brandNeighborhood && creatorNeighborhoods.includes(brandNeighborhood)) {
+    signals.communitySignals.push(`Lives or shoots in ${titleCase(brand.neighborhood)}`);
+  }
+
+  const projects = Array.isArray(creator.projects) ? creator.projects : [];
+  const deliveredProjects = projects.filter((p) => p.status === "DELIVERED");
+  const uniqueVenues = new Set(projects.map((p) => p.brandProfileId)).size;
+  const venueNeighborhoods = new Set(
+    projects
+      .map((p) => p.brandProfile?.neighborhood)
+      .filter(Boolean)
+      .map((n) => n.toLowerCase())
+  );
+
+  if (venueNeighborhoods.size > 0) {
+    signals.venueAlignment.push(
+      `Posted at ${venueNeighborhoods.size} venues nearby`
+    );
+  }
+  if (brandNeighborhood && venueNeighborhoods.has(brandNeighborhood)) {
+    signals.venueAlignment.push(`Posted at venues in ${titleCase(brand.neighborhood)}`);
+  }
+
+  const vibeTags = new Set();
+  (Array.isArray(creator.vibeTags) ? creator.vibeTags : []).forEach((t) => vibeTags.add(t));
+  (Array.isArray(creator.portfolioItems) ? creator.portfolioItems : []).forEach((item) => {
+    if (Array.isArray(item.vibeTags)) {
+      item.vibeTags.forEach((t) => vibeTags.add(t));
+    }
+  });
+  signals.aestheticMarkers = Array.from(vibeTags).slice(0, 3).map(titleCase);
+
+  const totalProjects = projects.length;
+  if (totalProjects > 0) {
+    const postingRate = Math.round((deliveredProjects.length / totalProjects) * 100);
+    signals.pastOutcomes.push(`${postingRate}% posting rate across ${totalProjects} projects`);
+  }
+  if (deliveredProjects.length > 0) {
+    signals.pastOutcomes.push(`${deliveredProjects.length} businesses posted this creator's work`);
+  }
+
+  const verifiedSamples = (Array.isArray(creator.portfolioItems) ? creator.portfolioItems : []).filter(
+    (item) => item.verified
+  ).length;
+  const avgTurnaroundDays = (() => {
+    const completed = deliveredProjects.filter((p) => p.updatedAt && p.createdAt);
+    if (completed.length === 0) return null;
+    const totalDays = completed.reduce(
+      (sum, p) => sum + (p.updatedAt - p.createdAt) / (1000 * 60 * 60 * 24),
+      0
+    );
+    return Math.round(totalDays / completed.length);
+  })();
+
+  signals.trustSignals = {
+    verifiedVenues: uniqueVenues,
+    verifiedSamples,
+    avgTurnaroundDays,
+  };
+
+  if (creator.tier) {
+    signals.trustSignals.tier = titleCase(creator.tier.toString().toLowerCase());
+  }
+
+  return signals;
 }
 
 /**

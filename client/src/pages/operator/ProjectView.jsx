@@ -112,6 +112,20 @@ export default function ProjectView() {
   const contentType = project.match?.contentRequest?.contentType || project.contentType || 'Content Project';
   const creatorName = project.creatorProfile?.user?.name || project.creatorName || '';
   const creatorPhotoUrl = project.creatorProfile?.user?.avatarUrl || project.creatorPhotoUrl || null;
+  const compensationType = project.compensationType || 'FLAT_FEE';
+  const compensationDetails = project.compensationDetails || null;
+
+  const formatCompensation = (type, details, price) => {
+    if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
+    if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
+    if (type === 'HYBRID') {
+      const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
+      const note = details?.note ? details.note : 'product/benefit';
+      return `${cash} ${note}`;
+    }
+    if (price != null) return formatCents(price);
+    return 'Flat fee';
+  };
 
   const latestDraft =
     project.drafts?.length > 0
@@ -222,10 +236,10 @@ export default function ProjectView() {
               {project.price != null && (
                 <div>
                   <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
-                    Price
+                    Compensation
                   </p>
                   <p className="text-2xl font-bold text-dark font-body">
-                    {formatCents(project.price)}
+                    {formatCompensation(compensationType, compensationDetails, project.price)}
                   </p>
                 </div>
               )}
@@ -241,14 +255,25 @@ export default function ProjectView() {
                 </div>
               )}
 
-              {project.brief && (
+              {project.briefText && (
                 <div>
                   <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
                     Brief
                   </p>
                   <p className="text-sm text-dark font-body leading-relaxed">
-                    {project.brief}
+                    {project.briefText}
                   </p>
+                </div>
+              )}
+
+              {project.usageRightsDoc && (
+                <div>
+                  <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
+                    Usage Rights Document
+                  </p>
+                  <pre className="text-xs text-mid font-body whitespace-pre-wrap bg-bgWarm rounded-xl p-3 border border-border">
+                    {project.usageRightsDoc}
+                  </pre>
                 </div>
               )}
             </div>

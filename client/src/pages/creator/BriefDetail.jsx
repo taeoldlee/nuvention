@@ -2,10 +2,21 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBriefs, acceptBrief, declineBrief } from '../../api';
 import { formatCents } from '../../utils/constants';
-import MatchScoreBadge from '../../components/common/MatchScoreBadge';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import MatchSignals from '../../components/common/MatchSignals';
 
+function formatCompensation(type, details, pay) {
+  if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
+  if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
+  if (type === 'HYBRID') {
+    const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
+    const note = details?.note ? details.note : 'product/benefit';
+    return `${cash} ${note}`;
+  }
+  if (pay != null) return formatCents(pay);
+  return 'Flat fee';
+}
 export default function BriefDetail() {
   const { matchId } = useParams();
   const navigate = useNavigate();
@@ -174,14 +185,16 @@ export default function BriefDetail() {
   const deliverables =
     brief.deliverables || brief.request?.deliverables || [];
   const pay = brief.price ?? brief.pay ?? brief.request?.budget ?? brief.budget ?? 0;
+  const compensationType = brief.compensationType || brief.request?.compensationType || 'FLAT_FEE';
+  const compensationDetails = brief.compensationDetails || brief.request?.compensationDetails || null;
   const timeline = brief.timeline || brief.request?.timeline || '';
   const usageRights =
     brief.usageRights || brief.request?.usageRights || '100% usage rights included';
-  const matchScore = brief.matchScore ?? brief.score ?? 0;
   const matchRationale =
     brief.matchRationale ||
     brief.rationale ||
     'Matched based on your style, neighborhood, and portfolio.';
+  const matchSignals = brief.matchSignals || null;
 
   // Brand identity hidden -- show vibe clues
   const neighborhood =
@@ -315,30 +328,26 @@ export default function BriefDetail() {
           </div>
         </div>
 
-        {/* Pay — center, large, bold */}
+        {/* Compensation */}
         <div className="text-center py-6 border-y border-border mb-6">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
-            Your Pay
+            Compensation
           </p>
-          <p className="font-display text-5xl font-bold text-dark">
-            {formatCents(pay)}
+          <p className="font-display text-4xl font-bold text-dark">
+            {formatCompensation(compensationType, compensationDetails, pay)}
           </p>
         </div>
 
-        {/* Match rationale */}
-        {matchScore > 0 && (
-          <div className="flex items-start gap-4 bg-creatorLight/50 rounded-xl p-5">
-            <MatchScoreBadge score={matchScore} size="md" />
-            <div className="flex-1 min-w-0">
-              <p className="font-body text-sm font-semibold text-dark mb-1">
-                {matchScore}% match
-              </p>
-              <p className="font-body text-sm text-muted leading-relaxed">
-                {matchRationale}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Why you were selected */}
+        <div className="bg-creatorLight/50 rounded-xl p-5">
+          <p className="font-body text-sm font-semibold text-dark mb-2">
+            Why you were selected
+          </p>
+          <p className="font-body text-sm text-muted leading-relaxed mb-4">
+            {matchRationale}
+          </p>
+          <MatchSignals signals={matchSignals} />
+        </div>
       </div>
 
       {/* Error */}

@@ -5,7 +5,6 @@ import { getCreatorStats, getProjects, getBriefs } from '../../api';
 import { formatCents, PROJECT_STATUS_LABELS } from '../../utils/constants';
 import StatCard from '../../components/common/StatCard';
 import StatusBadge from '../../components/common/StatusBadge';
-import MatchScoreBadge from '../../components/common/MatchScoreBadge';
 import EmptyState from '../../components/common/EmptyState';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
@@ -201,7 +200,6 @@ export default function Dashboard() {
                 '';
               const pay =
                 brief.price ?? brief.pay ?? brief.request?.budget ?? brief.budget ?? 0;
-              const matchScore = brief.matchScore ?? brief.score ?? 0;
               const deliverables =
                 brief.deliverables ||
                 brief.request?.deliverables ||
@@ -228,9 +226,7 @@ export default function Dashboard() {
                         </p>
                       )}
                     </div>
-                    {matchScore > 0 && (
-                      <MatchScoreBadge score={matchScore} size="sm" />
-                    )}
+                    <span className="text-xs text-muted font-body">Why this brief?</span>
                   </div>
 
                   {/* Deliverables */}

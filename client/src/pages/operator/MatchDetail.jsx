@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getContentRequests, selectMatch } from '../../api';
-import { formatCents } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
-import MatchScoreBadge from '../../components/common/MatchScoreBadge';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import MatchSignals from '../../components/common/MatchSignals';
+
+function formatCompensation(type, details, price) {
+  if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
+  if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
+  if (type === 'HYBRID') {
+    const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
+    const note = details?.note ? details.note : 'product/benefit';
+    return `${cash} ${note}`;
+  }
+  if (price != null) return `$${(price / 100).toFixed(0)}`;
+  return 'Flat fee';
+}
 
 export default function MatchDetail() {
   const { matchId } = useParams();
@@ -67,10 +78,18 @@ export default function MatchDetail() {
       const project = res.data.project;
       // Extract creator info from the project's nested data
       const creator = project?.match?.creatorProfile?.user || project?.creatorProfile?.user || null;
-      setCreatorInfo(creator ? {
-        name: creator.name,
-        photoUrl: creator.avatarUrl,
-      } : null);
+      if (creator?.name) {
+        const parts = creator.name.trim().split(' ');
+        const first = parts[0];
+        const lastInitial = parts.length > 1 ? `${parts[parts.length - 1][0]}.` : '';
+        setCreatorInfo({
+          displayName: [first, lastInitial].filter(Boolean).join(' '),
+          fullName: creator.name,
+          photoUrl: creator.avatarUrl,
+        });
+      } else {
+        setCreatorInfo(null);
+      }
       setConfirmed(true);
 
       // Redirect to project after a short reveal
@@ -133,24 +152,22 @@ export default function MatchDetail() {
                 {creatorInfo.photoUrl ? (
                   <img
                     src={creatorInfo.photoUrl}
-                    alt={creatorInfo.name}
+                    alt={creatorInfo.displayName}
                     className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm mb-3"
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-accentLight flex items-center justify-center mb-3">
                     <span className="text-2xl font-bold text-accent">
-                      {creatorInfo.name?.charAt(0) || '?'}
+                      {creatorInfo.displayName?.charAt(0) || '?'}
                     </span>
                   </div>
                 )}
                 <p className="font-display text-lg font-semibold text-dark">
-                  {creatorInfo.name}
+                  {creatorInfo.displayName}
                 </p>
-                {creatorInfo.handle && (
-                  <p className="text-sm text-muted font-body">
-                    @{creatorInfo.handle}
-                  </p>
-                )}
+                <p className="text-xs text-muted font-body">
+                  Full profile available in your project
+                </p>
               </div>
             )}
 
@@ -181,13 +198,12 @@ export default function MatchDetail() {
         <div className="card">
           {/* Header */}
           <div className="flex items-start gap-5 mb-6">
-            <MatchScoreBadge
-              score={match.matchScore || match.score || 85}
-              size="lg"
-            />
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accentLight text-accent">
+                  {match.creatorAlias || 'Creator'}
+                </span>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-bgTan text-mid">
                   {match.contentType || 'Content'}
                 </span>
                 {match.style && (
@@ -202,12 +218,33 @@ export default function MatchDetail() {
             </div>
           </div>
 
+          {/* Content Samples */}
+          {match.portfolioSamples?.length > 0 && (
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              {match.portfolioSamples.slice(0, 3).map((item, i) => (
+                <div
+                  key={item.id || i}
+                  className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan"
+                >
+                  <img
+                    src={item.imageUrl}
+                    alt={`Sample ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Description */}
           {(match.contentPreview || match.description) && (
             <p className="text-dark font-body leading-relaxed mb-6">
               {match.contentPreview || match.description}
             </p>
           )}
+
+          {/* Evidence Signals */}
+          <MatchSignals signals={match.matchSignals} />
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6">
@@ -237,17 +274,15 @@ export default function MatchDetail() {
               </div>
             )}
 
-            {/* Price */}
-            {match.price != null && (
-              <div className="bg-bgWarm rounded-xl p-4">
-                <p className="text-xs text-muted font-body uppercase tracking-wide mb-2">
-                  Price
-                </p>
-                <p className="text-3xl font-bold text-dark font-body">
-                  {formatCents(match.price)}
-                </p>
-              </div>
-            )}
+            {/* Compensation */}
+            <div className="bg-bgWarm rounded-xl p-4">
+              <p className="text-xs text-muted font-body uppercase tracking-wide mb-2">
+                Compensation
+              </p>
+              <p className="text-2xl font-bold text-dark font-body">
+                {formatCompensation(match.compensationType, match.compensationDetails, match.price)}
+              </p>
+            </div>
 
             {/* Timeline */}
             {match.timeline && (

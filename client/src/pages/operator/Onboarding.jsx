@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { autoImportBrand, createBrandProfile } from '../../api';
+import { autoImportBrand, createBrandProfile, uploadImages } from '../../api';
 import {
   NEIGHBORHOODS,
   VIBE_OPTIONS,
@@ -14,6 +14,12 @@ import Chip from '../../components/common/Chip';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const STEPS = ['Import', 'Brand', 'Budget', 'Confirm'];
+const VIBE_SCALES = [
+  { key: 'cozyEnergetic', left: 'Cozy', right: 'Energetic' },
+  { key: 'quietBuzzy', left: 'Quiet', right: 'Buzzy' },
+  { key: 'classicModern', left: 'Classic', right: 'Modern' },
+  { key: 'casualElevated', left: 'Casual', right: 'Elevated' },
+];
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -25,6 +31,9 @@ export default function Onboarding() {
   const [importError, setImportError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [visualRefUploading, setVisualRefUploading] = useState(false);
+  const [visualRefError, setVisualRefError] = useState('');
+  const [keywordInput, setKeywordInput] = useState('');
 
   // Form state
   const [form, setForm] = useState({
@@ -33,6 +42,14 @@ export default function Onboarding() {
     vibes: [],
     values: [],
     contentComfortZones: [],
+    vibeScales: {
+      cozyEnergetic: 50,
+      quietBuzzy: 50,
+      classicModern: 50,
+      casualElevated: 50,
+    },
+    guestExperienceKeywords: [],
+    visualRefUrls: [],
     budgetMin: 100,
     budgetMax: 500,
     contentNoGos: '',
@@ -65,6 +82,37 @@ export default function Onboarding() {
     }));
   };
 
+  const updateVibeScale = (key, value) => {
+    setForm((prev) => ({
+      ...prev,
+      vibeScales: {
+        ...prev.vibeScales,
+        [key]: value,
+      },
+    }));
+  };
+
+  const addKeyword = () => {
+    const value = keywordInput.trim().toLowerCase();
+    if (!value) return;
+    setForm((prev) => {
+      if (prev.guestExperienceKeywords.includes(value)) return prev;
+      if (prev.guestExperienceKeywords.length >= 3) return prev;
+      return {
+        ...prev,
+        guestExperienceKeywords: [...prev.guestExperienceKeywords, value],
+      };
+    });
+    setKeywordInput('');
+  };
+
+  const removeKeyword = (keyword) => {
+    setForm((prev) => ({
+      ...prev,
+      guestExperienceKeywords: prev.guestExperienceKeywords.filter((k) => k !== keyword),
+    }));
+  };
+
   // ─── Auto-import ───
   const handleImport = async () => {
     if (!importUrl.trim()) return;
@@ -72,12 +120,12 @@ export default function Onboarding() {
     setImportError('');
     try {
       const res = await autoImportBrand(importUrl.trim());
-      const data = res.data;
+      const data = res.data?.data || res.data;
       setForm((prev) => ({
         ...prev,
         businessName: data.businessName || prev.businessName,
         neighborhood: data.neighborhood || prev.neighborhood,
-        vibes: data.vibes?.length ? data.vibes : prev.vibes,
+        vibes: (data.vibe?.length ? data.vibe : data.vibes) || prev.vibes,
         values: data.values?.length ? data.values : prev.values,
         contentComfortZones: data.contentComfortZones?.length
           ? data.contentComfortZones
@@ -93,6 +141,29 @@ export default function Onboarding() {
     }
   };
 
+  const handleVisualRefsSelected = async (files) => {
+    const selected = Array.from(files || []).slice(0, 5);
+    if (selected.length === 0) return;
+    setVisualRefUploading(true);
+    setVisualRefError('');
+    try {
+      const formData = new FormData();
+      selected.forEach((file) => formData.append('images', file));
+      const res = await uploadImages(formData);
+      const urls = (res.data.images || []).map((img) => img.url);
+      setForm((prev) => {
+        const merged = [...prev.visualRefUrls, ...urls].slice(0, 5);
+        return { ...prev, visualRefUrls: merged };
+      });
+    } catch (err) {
+      setVisualRefError(
+        err.response?.data?.error || 'Could not upload references. Try again.'
+      );
+    } finally {
+      setVisualRefUploading(false);
+    }
+  };
+
   // ─── Submit ───
   const handleSubmit = async () => {
     setSaving(true);
@@ -101,9 +172,13 @@ export default function Onboarding() {
       await createBrandProfile({
         businessName: form.businessName,
         neighborhood: form.neighborhood,
+        vibe: form.vibes,
         vibes: form.vibes,
         values: form.values,
         contentComfortZones: form.contentComfortZones,
+        vibeScales: form.vibeScales,
+        guestExperienceKeywords: form.guestExperienceKeywords,
+        visualRefUrls: form.visualRefUrls,
         budgetMin: form.budgetMin * 100,
         budgetMax: form.budgetMax * 100,
         contentNoGos: form.contentNoGos,
@@ -125,7 +200,9 @@ export default function Onboarding() {
     form.neighborhood &&
     form.vibes.length > 0 &&
     form.values.length > 0 &&
-    form.contentComfortZones.length > 0;
+    form.contentComfortZones.length > 0 &&
+    form.guestExperienceKeywords.length === 3 &&
+    form.visualRefUrls.length >= 3;
 
   const canProceedFromStep2 =
     form.budgetMin > 0 && form.budgetMax >= form.budgetMin;
@@ -256,6 +333,29 @@ export default function Onboarding() {
               </div>
             </div>
 
+            {/* Vibe Scales */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-dark font-body">
+                Vibe scales <span className="text-muted font-normal">(sliders)</span>
+              </label>
+              {VIBE_SCALES.map((scale) => (
+                <div key={scale.key}>
+                  <div className="flex items-center justify-between text-xs text-muted font-body mb-1">
+                    <span>{scale.left}</span>
+                    <span>{scale.right}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={form.vibeScales[scale.key] ?? 50}
+                    onChange={(e) => updateVibeScale(scale.key, Number(e.target.value))}
+                    className="w-full accent-accent"
+                  />
+                </div>
+              ))}
+            </div>
+
             {/* Values */}
             <div>
               <label className="block text-sm font-medium text-dark mb-2 font-body">
@@ -271,6 +371,51 @@ export default function Onboarding() {
                   />
                 ))}
               </div>
+            </div>
+
+            {/* Guest Experience Keywords */}
+            <div>
+              <label className="block text-sm font-medium text-dark mb-2 font-body">
+                Guest experience keywords <span className="text-muted font-normal">(3 words)</span>
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={keywordInput}
+                  onChange={(e) => setKeywordInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addKeyword();
+                    }
+                  }}
+                  placeholder="e.g. warm, neighborhood, slow"
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+                />
+                <Btn size="sm" onClick={addKeyword} disabled={form.guestExperienceKeywords.length >= 3}>
+                  Add
+                </Btn>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {form.guestExperienceKeywords.map((k) => (
+                  <span
+                    key={k}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-bgTan text-mid border border-border"
+                  >
+                    {k}
+                    <button
+                      type="button"
+                      onClick={() => removeKeyword(k)}
+                      className="hover:text-dark"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-muted mt-2 font-body">
+                {form.guestExperienceKeywords.length}/3 selected
+              </p>
             </div>
 
             {/* Content Comfort Zones */}
@@ -289,6 +434,42 @@ export default function Onboarding() {
                   />
                 ))}
               </div>
+            </div>
+
+            {/* Visual References */}
+            <div>
+              <label className="block text-sm font-medium text-dark mb-2 font-body">
+                Visual references <span className="text-muted font-normal">(upload 3–5)</span>
+              </label>
+              <div className="border border-dashed border-border rounded-xl p-4 bg-bgWarm text-center">
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => handleVisualRefsSelected(e.target.files)}
+                  className="hidden"
+                  id="visual-refs-input"
+                />
+                <label htmlFor="visual-refs-input" className="cursor-pointer text-sm text-accent font-body">
+                  {visualRefUploading ? 'Uploading...' : 'Click to upload images'}
+                </label>
+                <p className="text-xs text-muted mt-1 font-body">JPG/PNG, up to 5 images</p>
+              </div>
+              {visualRefError && (
+                <p className="text-sm text-red-600 font-body mt-2">{visualRefError}</p>
+              )}
+              {form.visualRefUrls.length > 0 && (
+                <div className="grid grid-cols-3 gap-2 mt-3">
+                  {form.visualRefUrls.map((url, idx) => (
+                    <div key={url + idx} className="aspect-square rounded-lg overflow-hidden border border-border bg-bgTan">
+                      <img src={url} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted mt-2 font-body">
+                {form.visualRefUrls.length}/5 uploaded
+              </p>
             </div>
 
             {/* Navigation */}
@@ -473,6 +654,55 @@ export default function Onboarding() {
                     </span>
                   ))}
                 </div>
+              </div>
+
+              {/* Vibe Scales */}
+              <div>
+                <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
+                  Vibe scales
+                </p>
+                <div className="space-y-2">
+                  {VIBE_SCALES.map((scale) => (
+                    <div key={scale.key} className="text-sm text-dark font-body">
+                      {scale.left} ↔ {scale.right}: {form.vibeScales[scale.key]}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Guest Experience Keywords */}
+              <div>
+                <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
+                  Guest experience
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {form.guestExperienceKeywords.map((k) => (
+                    <span
+                      key={k}
+                      className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-bgTan text-mid border border-border"
+                    >
+                      {k}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Visual References */}
+              <div>
+                <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
+                  Visual references
+                </p>
+                {form.visualRefUrls.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {form.visualRefUrls.map((url, idx) => (
+                      <div key={url + idx} className="aspect-square rounded-lg overflow-hidden border border-border bg-bgTan">
+                        <img src={url} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted font-body">No references uploaded</p>
+                )}
               </div>
 
               {/* Budget */}

@@ -7,6 +7,18 @@ import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 
+function formatCompensation(type, details, pay) {
+  if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
+  if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
+  if (type === 'HYBRID') {
+    const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
+    const note = details?.note ? details.note : 'product/benefit';
+    return `${cash} ${note}`;
+  }
+  if (pay != null) return formatCents(pay);
+  return 'Flat fee';
+}
+
 export default function ProjectView() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -155,6 +167,8 @@ export default function ProjectView() {
     project.contentType || project.request?.contentType || 'Content Project';
   const status = project.status || 'BRIEF_SENT';
   const pay = project.price ?? project.pay ?? project.budget ?? 0;
+  const compensationType = project.compensationType || project.request?.compensationType || 'FLAT_FEE';
+  const compensationDetails = project.compensationDetails || project.request?.compensationDetails || null;
   const deliverables =
     project.deliverables || project.match?.deliverables || project.request?.deliverables || [];
   const timeline =
@@ -242,10 +256,10 @@ export default function ProjectView() {
         {/* Pay — prominent */}
         <div className="text-center py-5 bg-creatorLight/30 rounded-xl mb-5">
           <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">
-            Your Pay
+            Compensation
           </p>
-          <p className="font-display text-4xl font-bold text-dark">
-            {formatCents(pay)}
+          <p className="font-display text-3xl font-bold text-dark">
+            {formatCompensation(compensationType, compensationDetails, pay)}
           </p>
         </div>
 

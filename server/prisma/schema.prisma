@@ -46,6 +46,10 @@ model BrandProfile {
   vibe                Json // ["Cozy & Warm", "Minimalist"]
   values              Json // ["Community-first", "Sustainability"]
   contentComfortZones Json // ["Ambiance / Interior", "Food & Drink"]
+  vibeScales           Json? // { cozyEnergetic: 0-100, quietBuzzy: 0-100, classicModern: 0-100, casualElevated: 0-100 }
+  guestExperienceKeywords Json? // ["warm", "neighborhood", "slow"]
+  visualRefUrls        Json? // ["https://..."]
+  contentNoGos         String?
 
   budgetMin Int? // cents
   budgetMax Int? // cents
@@ -78,6 +82,7 @@ model CreatorProfile {
   dreamBrands   Json? // ["Colectivo", "Metric Coffee"]
 
   vibeTags Json? // ["warm-light", "minimalist", "community-feel"]
+  tier CreatorTier? @default(NEW)
 
   profilePhotoUrl String?
 
@@ -87,6 +92,12 @@ model CreatorProfile {
   portfolioItems PortfolioItem[]
   matches        Match[]
   projects       Project[]
+}
+
+enum CreatorTier {
+  NEW
+  VERIFIED
+  PRO
 }
 
 // ─── PORTFOLIO ───
@@ -100,6 +111,7 @@ model PortfolioItem {
   caption     String?
   contentType String?
   vibeTags    Json?
+  verified    Boolean @default(false)
 
   createdAt DateTime @default(now())
 }
@@ -115,6 +127,15 @@ model ContentRequest {
   description      String?
   stylePreferences Json?
   budgetRange      String?
+  contentGoal      String?
+  subject          String?
+  creativeDirection String?
+  deliverables     Json?
+  timeline         String?
+  usageRights      String?
+  briefTemplate    Json?
+  compensationType CompensationType @default(FLAT_FEE)
+  compensationDetails Json?
 
   status RequestStatus @default(MATCHING)
 
@@ -122,6 +143,13 @@ model ContentRequest {
   updatedAt DateTime @updatedAt
 
   matches Match[]
+}
+
+enum CompensationType {
+  FLAT_FEE
+  FREE_PRODUCT
+  DISCOUNT_CODE
+  HYBRID
 }
 
 enum RequestStatus {
@@ -143,6 +171,7 @@ model Match {
 
   matchScore     Int
   matchRationale String
+  matchSignals   Json?
 
   contentPreview String
   deliverables   String
@@ -182,6 +211,9 @@ model Project {
   timeline     String
   usageRights  String
   briefText    String?
+  usageRightsDoc String?
+  compensationType CompensationType @default(FLAT_FEE)
+  compensationDetails Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -233,6 +265,7 @@ model Transaction {
 
   type   TransactionType
   status TransactionStatus @default(PENDING)
+  escrowStatus EscrowStatus @default(HELD)
 
   stripePaymentIntentId String?
   stripeTransferId      String?
@@ -241,6 +274,12 @@ model Transaction {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum EscrowStatus {
+  HELD
+  RELEASED
+  CANCELLED
 }
 
 enum TransactionType {

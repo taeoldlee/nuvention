@@ -242,6 +242,18 @@ router.post("/:id/drafts/:draftId/approve", async (req, res, next) => {
       return res.status(400).json({ error: "Draft has already been reviewed" });
     }
 
+    const priorRevision = await prisma.projectDraft.findFirst({
+      where: {
+        projectId: project.id,
+        feedback: { not: null },
+      },
+    });
+    if (priorRevision) {
+      return res.status(400).json({
+        error: "Only one revision round is included for this project",
+      });
+    }
+
     // Approve the draft
     const updatedDraft = await prisma.projectDraft.update({
       where: { id: draft.id },

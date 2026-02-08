@@ -199,6 +199,7 @@ async function main() {
       neighborhoods: ['Evanston', 'Rogers Park'],
       dreamBrands: ['Colectivo Coffee', 'Metric Coffee', 'Daisies Chicago'],
       vibeTags: ['warm-light', 'community-feel', 'editorial', 'cozy-spaces'],
+      tier: 'VERIFIED',
     },
   });
   console.log('  Created creator profile: Shaurya G.');
@@ -214,6 +215,7 @@ async function main() {
       neighborhoods: ['Evanston', 'Lincoln Park'],
       dreamBrands: ['Patisserie Coralie', 'New Coffee Lab'],
       vibeTags: ['energetic', 'candid', 'lifestyle', 'gen-z-aesthetic'],
+      tier: 'PRO',
     },
   });
   console.log('  Created creator profile: Katelyn L.');
@@ -230,6 +232,7 @@ async function main() {
       caption: 'Warm cafe interior with morning light',
       contentType: 'ambiance',
       vibeTags: ['warm-light', 'interior', 'cozy'],
+      verified: true,
     },
     {
       creatorProfileId: shauryaProfile.id,
@@ -237,6 +240,7 @@ async function main() {
       caption: 'Latte art close-up',
       contentType: 'food',
       vibeTags: ['latte-art', 'close-up', 'warm-tones'],
+      verified: true,
     },
     {
       creatorProfileId: shauryaProfile.id,
@@ -244,6 +248,7 @@ async function main() {
       caption: 'Cozy reading corner',
       contentType: 'ambiance',
       vibeTags: ['cozy', 'natural-light', 'lifestyle'],
+      verified: true,
     },
     {
       creatorProfileId: shauryaProfile.id,
@@ -251,6 +256,7 @@ async function main() {
       caption: 'Food plating detail',
       contentType: 'food',
       vibeTags: ['editorial', 'plating', 'natural-light'],
+      verified: true,
     },
     {
       creatorProfileId: shauryaProfile.id,
@@ -258,6 +264,7 @@ async function main() {
       caption: 'Coffee shop community',
       contentType: 'community',
       vibeTags: ['community', 'candid', 'warm'],
+      verified: true,
     },
   ];
 
@@ -274,6 +281,7 @@ async function main() {
       caption: 'Lifestyle food moment',
       contentType: 'lifestyle',
       vibeTags: ['lifestyle', 'bold', 'energetic'],
+      verified: true,
     },
     {
       creatorProfileId: katelynProfile.id,
@@ -281,6 +289,7 @@ async function main() {
       caption: 'Candid cafe moment',
       contentType: 'lifestyle',
       vibeTags: ['candid', 'lifestyle', 'natural'],
+      verified: true,
     },
     {
       creatorProfileId: katelynProfile.id,
@@ -288,6 +297,7 @@ async function main() {
       caption: 'Close-up food detail',
       contentType: 'food',
       vibeTags: ['close-up', 'vibrant', 'appetizing'],
+      verified: true,
     },
     {
       creatorProfileId: katelynProfile.id,
@@ -295,6 +305,7 @@ async function main() {
       caption: 'Behind the scenes',
       contentType: 'behind-the-scenes',
       vibeTags: ['bts', 'candid', 'authentic'],
+      verified: true,
     },
   ];
 

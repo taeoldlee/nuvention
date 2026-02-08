@@ -27,7 +27,23 @@ router.post("/", async (req, res, next) => {
       return res.status(404).json({ error: "Brand profile not found. Complete onboarding first." });
     }
 
-    const { contentType, description, stylePreferences, budgetRange } = req.body;
+    const {
+      contentType,
+      description,
+      brief,
+      briefText,
+      stylePreferences,
+      budgetRange,
+      contentGoal,
+      subject,
+      creativeDirection,
+      deliverables,
+      timeline,
+      usageRights,
+      briefTemplate,
+      compensationType,
+      compensationDetails,
+    } = req.body;
 
     if (!contentType) {
       return res.status(400).json({ error: "contentType is required" });
@@ -38,9 +54,18 @@ router.post("/", async (req, res, next) => {
       data: {
         brandProfileId: brandProfile.id,
         contentType,
-        description: description || null,
+        description: description || briefText || brief || null,
         stylePreferences: stylePreferences || null,
         budgetRange: budgetRange || null,
+        contentGoal: contentGoal || null,
+        subject: subject || null,
+        creativeDirection: creativeDirection || null,
+        deliverables: deliverables || null,
+        timeline: timeline || null,
+        usageRights: usageRights || null,
+        briefTemplate: briefTemplate || null,
+        compensationType: compensationType || "FLAT_FEE",
+        compensationDetails: compensationDetails || null,
         status: "MATCHING",
       },
     });
@@ -51,6 +76,13 @@ router.post("/", async (req, res, next) => {
         portfolioItems: true,
         user: {
           select: { id: true, name: true, avatarUrl: true },
+        },
+        projects: {
+          include: {
+            brandProfile: {
+              select: { id: true, neighborhood: true },
+            },
+          },
         },
       },
     });
@@ -78,9 +110,6 @@ router.post("/", async (req, res, next) => {
         include: {
           creatorProfile: {
             include: {
-              user: {
-                select: { id: true, name: true, avatarUrl: true },
-              },
               portfolioItems: {
                 take: 3,
                 orderBy: { createdAt: "desc" },
@@ -105,9 +134,6 @@ router.post("/", async (req, res, next) => {
           include: {
             creatorProfile: {
               include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
-                },
                 portfolioItems: {
                   take: 3,
                   orderBy: { createdAt: "desc" },
@@ -120,7 +146,7 @@ router.post("/", async (req, res, next) => {
       },
     });
 
-    res.status(201).json({ request: result });
+    res.status(201).json({ request: anonymizeRequest(result) });
   } catch (err) {
     next(err);
   }
@@ -151,8 +177,9 @@ router.get("/", async (req, res, next) => {
           include: {
             creatorProfile: {
               include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
+                portfolioItems: {
+                  take: 3,
+                  orderBy: { createdAt: "desc" },
                 },
               },
             },
@@ -163,7 +190,7 @@ router.get("/", async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
-    res.json({ requests });
+    res.json({ requests: requests.map(anonymizeRequest) });
   } catch (err) {
     next(err);
   }
@@ -183,9 +210,6 @@ router.get("/:id", async (req, res, next) => {
           include: {
             creatorProfile: {
               include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
-                },
                 portfolioItems: {
                   take: 4,
                   orderBy: { createdAt: "desc" },
@@ -211,7 +235,7 @@ router.get("/:id", async (req, res, next) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    res.json({ request });
+    res.json({ request: anonymizeRequest(request) });
   } catch (err) {
     next(err);
   }
@@ -281,6 +305,13 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
     });
 
     // Create the project
+    const usageRightsDoc = generateUsageRightsDoc({
+      businessName: match.contentRequest?.brandProfile?.businessName,
+      contentType: match.contentRequest?.contentType,
+      usageRights: match.usageRights,
+      timeline: match.timeline,
+    });
+
     const project = await prisma.project.create({
       data: {
         matchId: match.id,
@@ -292,6 +323,9 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
         timeline: match.timeline,
         usageRights: match.usageRights,
         briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview}`,
+        usageRightsDoc,
+        compensationType: match.contentRequest.compensationType || "FLAT_FEE",
+        compensationDetails: match.contentRequest.compensationDetails || null,
       },
       include: {
         match: {
@@ -310,7 +344,9 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
     });
 
     // Create transaction (charge)
-    const transaction = await createCharge(project.id, match.price);
+    const transaction = match.price > 0
+      ? await createCharge(project.id, match.price)
+      : null;
 
     res.status(201).json({ project, transaction });
   } catch (err) {
@@ -319,3 +355,52 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
 });
 
 module.exports = router;
+
+function generateUsageRightsDoc({ businessName, contentType, usageRights, timeline }) {
+  const brand = businessName || "Brand";
+  const rights = usageRights || "Organic social + in-store, 12 months";
+  const timing = timeline || "Standard timeline";
+  return [
+    `Usage Rights Agreement`,
+    `Brand: ${brand}`,
+    `Content Type: ${contentType || "UGC content"}`,
+    `Rights: ${rights}`,
+    `Timeline: ${timing}`,
+    `This agreement grants the brand non-exclusive usage rights as specified above.`,
+  ].join("\n");
+}
+
+function anonymizeRequest(request) {
+  if (!request) return request;
+  const matches = Array.isArray(request.matches) ? request.matches : [];
+  const anonymizedMatches = matches.map((match, idx) => {
+    const alias = `Creator ${String.fromCharCode(65 + idx)}`;
+    const portfolioSamples = (match.creatorProfile?.portfolioItems || []).map((p) => ({
+      id: p.id,
+      imageUrl: p.imageUrl,
+      verified: !!p.verified,
+    }));
+
+    return {
+      id: match.id,
+      creatorAlias: alias,
+      contentType: request.contentType,
+      contentPreview: match.contentPreview,
+      deliverables: match.deliverables,
+      price: match.price,
+      timeline: match.timeline,
+      usageRights: match.usageRights,
+      style: match.style,
+      matchRationale: match.matchRationale,
+      matchSignals: match.matchSignals,
+      portfolioSamples,
+      compensationType: request.compensationType,
+      compensationDetails: request.compensationDetails,
+    };
+  });
+
+  return {
+    ...request,
+    matches: anonymizedMatches,
+  };
+}
