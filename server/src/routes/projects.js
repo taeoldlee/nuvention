@@ -197,38 +197,52 @@ router.post("/:id/drafts", requireCreatorWithProfile, async (req, res, next) => 
 });
 
 /**
+ * Shared guard: load project + draft, verify ownership + submitted status.
+ */
+async function findDraftForAction(req, res) {
+  const { brandProfile } = req;
+
+  const project = await prisma.project.findUnique({
+    where: { id: req.params.id },
+  });
+
+  if (!project) {
+    res.status(404).json({ error: "Project not found" });
+    return null;
+  }
+
+  if (project.brandProfileId !== brandProfile.id) {
+    res.status(403).json({ error: "Access denied" });
+    return null;
+  }
+
+  const draft = await prisma.projectDraft.findUnique({
+    where: { id: req.params.draftId },
+  });
+
+  if (!draft || draft.projectId !== project.id) {
+    res.status(404).json({ error: "Draft not found" });
+    return null;
+  }
+
+  if (draft.status !== "SUBMITTED") {
+    res.status(400).json({ error: "Draft has already been reviewed" });
+    return null;
+  }
+
+  return { project, draft };
+}
+
+/**
  * POST /api/projects/:id/drafts/:draftId/approve
  * Operator approves a draft.
  */
 router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const { brandProfile } = req;
+    const result = await findDraftForAction(req, res);
+    if (!result) return;
+    const { project, draft } = result;
 
-    const project = await prisma.project.findUnique({
-      where: { id: req.params.id },
-    });
-
-    if (!project) {
-      return res.status(404).json({ error: "Project not found" });
-    }
-
-    if (project.brandProfileId !== brandProfile.id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const draft = await prisma.projectDraft.findUnique({
-      where: { id: req.params.draftId },
-    });
-
-    if (!draft || draft.projectId !== project.id) {
-      return res.status(404).json({ error: "Draft not found" });
-    }
-
-    if (draft.status !== "SUBMITTED") {
-      return res.status(400).json({ error: "Draft has already been reviewed" });
-    }
-
-    // Approve the draft
     const updatedDraft = await prisma.projectDraft.update({
       where: { id: draft.id },
       data: {
@@ -237,7 +251,6 @@ router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req
       },
     });
 
-    // Update project status
     await prisma.project.update({
       where: { id: project.id },
       data: { status: "APPROVED" },
@@ -256,31 +269,9 @@ router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req
  */
 router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const { brandProfile } = req;
-
-    const project = await prisma.project.findUnique({
-      where: { id: req.params.id },
-    });
-
-    if (!project) {
-      return res.status(404).json({ error: "Project not found" });
-    }
-
-    if (project.brandProfileId !== brandProfile.id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    const draft = await prisma.projectDraft.findUnique({
-      where: { id: req.params.draftId },
-    });
-
-    if (!draft || draft.projectId !== project.id) {
-      return res.status(404).json({ error: "Draft not found" });
-    }
-
-    if (draft.status !== "SUBMITTED") {
-      return res.status(400).json({ error: "Draft has already been reviewed" });
-    }
+    const result = await findDraftForAction(req, res);
+    if (!result) return;
+    const { project, draft } = result;
 
     const priorRevision = await prisma.projectDraft.findFirst({
       where: {
@@ -300,7 +291,6 @@ router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (re
       return res.status(400).json({ error: "feedback is required for revision requests" });
     }
 
-    // Mark draft as revision requested
     const updatedDraft = await prisma.projectDraft.update({
       where: { id: draft.id },
       data: {
@@ -309,7 +299,6 @@ router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (re
       },
     });
 
-    // Update project status
     await prisma.project.update({
       where: { id: project.id },
       data: { status: "REVISION_REQUESTED" },

@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProject, submitDraft, uploadImages } from '../../api';
+import { getProject } from '../../api';
+import { brandDisplayName, brandPhotoUrl } from '../../utils/extractors';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ProjectHeader from '../../components/creator/ProjectHeader';
 import ProjectDetailsCard from '../../components/creator/ProjectDetailsCard';
 import DraftUploadSection from '../../components/creator/DraftUploadSection';
 import { DraftSubmittedView, ApprovedView } from '../../components/creator/DraftStatusView';
+import useDraftSubmission from '../../hooks/useDraftSubmission';
 
 export default function ProjectView() {
   const { id } = useParams();
@@ -16,72 +18,21 @@ export default function ProjectView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Draft submission state
-  const [draftFiles, setDraftFiles] = useState([]);
-  const [draftPreviews, setDraftPreviews] = useState([]);
-  const [draftNotes, setDraftNotes] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const loadProject = async () => {
+    const res = await getProject(id);
+    setProject(res.data.project);
+  };
+
+  const draftActions = useDraftSubmission(id, loadProject);
 
   useEffect(() => {
-    async function fetchProject() {
-      setLoading(true);
-      try {
-        const res = await getProject(id);
-        setProject(res.data.project);
-      } catch {
-        setError('Failed to load project.');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchProject();
+    setLoading(true);
+    loadProject()
+      .catch(() => setError('Failed to load project.'))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  /* ── File handling ── */
-  const handleFilesSelected = (files) => {
-    const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
-    const combined = [...draftFiles, ...newFiles].slice(0, 10);
-    setDraftFiles(combined);
-    const newPreviews = combined.map((file) => URL.createObjectURL(file));
-    draftPreviews.forEach((url) => URL.revokeObjectURL(url));
-    setDraftPreviews(newPreviews);
-  };
-
-  const removeDraftFile = (index) => {
-    URL.revokeObjectURL(draftPreviews[index]);
-    setDraftFiles((prev) => prev.filter((_, i) => i !== index));
-    setDraftPreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  /* ── Submit draft ── */
-  const handleSubmitDraft = async () => {
-    if (draftFiles.length === 0) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const formData = new FormData();
-      draftFiles.forEach((file) => formData.append('images', file));
-      const uploadRes = await uploadImages(formData);
-      const fileUrls = (uploadRes.data.images || []).map((img) => img.url);
-      await submitDraft(id, { fileUrls, notes: draftNotes.trim() || undefined });
-      setSubmitSuccess(true);
-      const res = await getProject(id);
-      setProject(res.data.project);
-      setDraftFiles([]);
-      draftPreviews.forEach((url) => URL.revokeObjectURL(url));
-      setDraftPreviews([]);
-      setDraftNotes('');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to submit draft. Please try again.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (loading) {
-    return <LoadingSpinner message="Loading project..." creator />;
-  }
+  if (loading) return <LoadingSpinner message="Loading project..." creator />;
 
   if (error && !project) {
     return (
@@ -92,19 +43,13 @@ export default function ProjectView() {
           </svg>
         </div>
         <h2 className="font-display text-xl font-bold text-dark mb-2">{error}</h2>
-        <Btn creator variant="secondary" onClick={() => navigate('/creator/dashboard')}>
-          Back to Dashboard
-        </Btn>
+        <Btn creator variant="secondary" onClick={() => navigate('/creator/dashboard')}>Back to Dashboard</Btn>
       </div>
     );
   }
 
-  // Derive display fields
-  const brandName = project.brandProfile?.user?.name || project.brandProfile?.businessName || project.brand?.name || project.brandName || 'Brand';
-  const brandPhoto = project.brandProfile?.user?.avatarUrl || project.brandProfile?.profilePhotoUrl || project.brand?.profilePhoto || project.brand?.photo || null;
-  const contentType = project.match?.contentRequest?.contentType || project.contentType || project.request?.contentType || 'Content Project';
   const status = project.status || 'BRIEF_SENT';
-  const pay = project.price ?? project.pay ?? project.budget ?? 0;
+  const contentType = project.match?.contentRequest?.contentType || project.contentType || project.request?.contentType || 'Content Project';
   const compensationType = project.compensationType || project.request?.compensationType || 'FLAT_FEE';
   const compensationDetails = project.compensationDetails || project.request?.compensationDetails || null;
   const deliverables = project.deliverables || project.match?.deliverables || project.request?.deliverables || [];
@@ -114,43 +59,22 @@ export default function ProjectView() {
   const drafts = project.drafts || [];
   const latestDraft = drafts.length > 0 ? drafts[0] : null;
   const revisionNotes = project.revisionNotes || project.revisionFeedback || latestDraft?.revisionFeedback || latestDraft?.feedback || '';
-
   const canSubmitDraft = status === 'BRIEF_SENT' || status === 'REVISION_REQUESTED';
   const isRevisionRequested = status === 'REVISION_REQUESTED';
-  const isApproved = status === 'APPROVED';
-  const isDelivered = status === 'DELIVERED';
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
-      {/* Back link */}
-      <button
-        onClick={() => navigate('/creator/dashboard')}
-        className="flex items-center gap-1.5 text-muted hover:text-dark font-body text-sm font-medium mb-6 transition-colors duration-200"
-      >
+      <button onClick={() => navigate('/creator/dashboard')} className="flex items-center gap-1.5 text-muted hover:text-dark font-body text-sm font-medium mb-6 transition-colors duration-200">
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
         </svg>
         Back to Dashboard
       </button>
 
-      <ProjectHeader
-        brandName={brandName}
-        brandPhoto={brandPhoto}
-        contentType={contentType}
-        status={status}
-        compensationType={compensationType}
-        compensationDetails={compensationDetails}
-        pay={pay}
-      />
+      <ProjectHeader brandName={brandDisplayName(project)} brandPhoto={brandPhotoUrl(project)} contentType={contentType} status={status} compensationType={compensationType} compensationDetails={compensationDetails} pay={project.price ?? project.pay ?? project.budget ?? 0} />
 
-      <ProjectDetailsCard
-        briefText={briefText}
-        deliverables={deliverables}
-        timeline={timeline}
-        usageRights={usageRights}
-      />
+      <ProjectDetailsCard briefText={briefText} deliverables={deliverables} timeline={timeline} usageRights={usageRights} />
 
-      {/* Revision notes banner */}
       {isRevisionRequested && revisionNotes && (
         <div className="card mb-6 border-orange-200 bg-orange-50/50">
           <div className="flex items-start gap-3">
@@ -167,29 +91,11 @@ export default function ProjectView() {
         </div>
       )}
 
-      {canSubmitDraft && (
-        <DraftUploadSection
-          isRevisionRequested={isRevisionRequested}
-          draftFiles={draftFiles}
-          draftPreviews={draftPreviews}
-          draftNotes={draftNotes}
-          setDraftNotes={setDraftNotes}
-          submitting={submitting}
-          submitSuccess={submitSuccess}
-          error={error}
-          onFilesSelected={handleFilesSelected}
-          onRemoveFile={removeDraftFile}
-          onSubmit={handleSubmitDraft}
-        />
-      )}
+      {canSubmitDraft && <DraftUploadSection draftActions={draftActions} isRevisionRequested={isRevisionRequested} />}
 
-      {status === 'DRAFT_SUBMITTED' && latestDraft && (
-        <DraftSubmittedView latestDraft={latestDraft} />
-      )}
+      {status === 'DRAFT_SUBMITTED' && latestDraft && <DraftSubmittedView latestDraft={latestDraft} />}
 
-      {(isApproved || isDelivered) && (
-        <ApprovedView isDelivered={isDelivered} latestDraft={latestDraft} navigate={navigate} />
-      )}
+      {(status === 'APPROVED' || status === 'DELIVERED') && <ApprovedView isDelivered={status === 'DELIVERED'} latestDraft={latestDraft} navigate={navigate} />}
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   formatCompensation,
   formatDate,
 } from '../../utils/constants';
+import { creatorDisplayName, creatorPhotoUrl } from '../../utils/extractors';
 import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
 import StatusBadge from '../../components/common/StatusBadge';
 import Btn from '../../components/common/Btn';
@@ -105,8 +106,8 @@ export default function ProjectView() {
   }
 
   const contentType = project.match?.contentRequest?.contentType || project.contentType || 'Content Project';
-  const creatorName = project.creatorProfile?.user?.name || project.creatorName || '';
-  const creatorPhotoUrl = project.creatorProfile?.user?.avatarUrl || project.creatorPhotoUrl || null;
+  const creatorName = creatorDisplayName(project);
+  const creatorPhoto = creatorPhotoUrl(project);
   const compensationType = project.compensationType || 'FLAT_FEE';
   const compensationDetails = project.compensationDetails || null;
   const latestDraft = project.drafts?.length > 0 ? project.drafts[0] : null;
@@ -130,8 +131,8 @@ export default function ProjectView() {
         <div className="card mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
-              {creatorPhotoUrl ? (
-                <img src={creatorPhotoUrl} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+              {creatorPhoto ? (
+                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-accentLight flex items-center justify-center">
                   <span className="text-lg font-bold text-accent">{creatorName?.charAt(0) || '?'}</span>
@@ -169,7 +170,7 @@ export default function ProjectView() {
                   {Array.isArray(project.deliverables) ? (
                     <ul className="space-y-1">
                       {project.deliverables.map((d, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm text-dark font-body">
+                        <li key={typeof d === 'string' ? d : i} className="flex items-center gap-2 text-sm text-dark font-body">
                           <svg className="w-3.5 h-3.5 text-green flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>

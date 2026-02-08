@@ -5,6 +5,7 @@ import { formatCompensation } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MatchSignals from '../../components/common/MatchSignals';
+import useBriefDisplayData from '../../hooks/useBriefDisplayData';
 
 export default function BriefDetail() {
   const { matchId } = useParams();
@@ -161,48 +162,11 @@ export default function BriefDetail() {
     );
   }
 
-  // Brief data extraction
-  const contentType =
-    brief.contentRequest?.contentType ||
-    brief.contentType || brief.request?.contentType || 'Content Project';
-  const styleDirection =
-    brief.style ||
-    brief.styleDirection ||
-    brief.request?.styleDirection ||
-    brief.request?.vibe ||
-    '';
-  const deliverables =
-    brief.deliverables || brief.request?.deliverables || [];
-  const pay = brief.price ?? brief.pay ?? brief.request?.budget ?? brief.budget ?? 0;
-  const compensationType = brief.compensationType || brief.request?.compensationType || 'FLAT_FEE';
-  const compensationDetails = brief.compensationDetails || brief.request?.compensationDetails || null;
-  const timeline = brief.timeline || brief.request?.timeline || '';
-  const usageRights =
-    brief.usageRights || brief.request?.usageRights || '100% usage rights included';
-  const matchRationale =
-    brief.matchRationale ||
-    brief.rationale ||
-    'Matched based on your style, neighborhood, and portfolio.';
-  const matchSignals = brief.matchSignals || null;
-
-  // Brand identity hidden -- show vibe clues
-  const neighborhood =
-    brief.brand?.neighborhood ||
-    brief.neighborhood ||
-    brief.request?.neighborhood ||
-    '';
-  const brandVibe =
-    brief.brand?.vibe?.[0] ||
-    brief.brandVibe ||
-    brief.request?.vibe ||
-    '';
-  const brandValues =
-    brief.brandValues ||
-    brief.brand?.values?.[0] ||
-    '';
-  const identityHints = [neighborhood, brandVibe, brandValues]
-    .filter(Boolean)
-    .join(' \u00B7 ');
+  const {
+    contentType, styleDirection, deliverables, pay,
+    compensationType, compensationDetails, timeline, usageRights,
+    matchRationale, matchSignals, identityHints,
+  } = useBriefDisplayData(brief);
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-8">
@@ -271,7 +235,7 @@ export default function BriefDetail() {
               <ul className="space-y-2">
                 {deliverables.map((d, i) => (
                   <li
-                    key={i}
+                    key={typeof d === 'string' ? d : i}
                     className="flex items-center gap-2 font-body text-sm text-dark"
                   >
                     <svg

@@ -102,7 +102,7 @@ function ImageGrid({ images, label }) {
       <p className="text-sm font-medium text-dark font-body mb-3">{label} content</p>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {images.map((img, i) => (
-          <div key={i} className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan">
+          <div key={typeof img === 'string' ? img : img.url || i} className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan">
             <img
               src={typeof img === 'string' ? img : img.url}
               alt={`${label} ${i + 1}`}

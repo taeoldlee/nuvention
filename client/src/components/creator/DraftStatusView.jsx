@@ -5,7 +5,7 @@ function DraftImageGrid({ images, label }) {
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
       {images.map((img, i) => (
-        <div key={i} className="aspect-square rounded-xl overflow-hidden">
+        <div key={typeof img === 'string' ? img : img.url || i} className="aspect-square rounded-xl overflow-hidden">
           <img
             src={typeof img === 'string' ? img : img.url}
             alt={`${label} ${i + 1}`}

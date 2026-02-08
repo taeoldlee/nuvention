@@ -7,7 +7,7 @@ export default function Chip({
   className = '',
 }) {
   const base =
-    'inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border cursor-pointer transition-all duration-200 select-none';
+    'inline-flex items-center px-4 py-2 min-h-[44px] rounded-full text-sm font-medium border cursor-pointer transition-all duration-200 select-none focus:outline-none focus:ring-2 focus:ring-accent/30';
 
   const selectedClass = creator
     ? 'border-creator bg-creatorLight text-creator'

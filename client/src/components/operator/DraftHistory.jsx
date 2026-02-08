@@ -25,7 +25,7 @@ export default function DraftHistory({ drafts }) {
               <div className="flex gap-2 overflow-x-auto">
                 {(draft.fileUrls || draft.images).map((img, j) => (
                   <img
-                    key={j}
+                    key={typeof img === 'string' ? img : img.url || j}
                     src={typeof img === 'string' ? img : img.url}
                     alt={`Draft ${drafts.length - 1 - i} - ${j + 1}`}
                     className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-border"
