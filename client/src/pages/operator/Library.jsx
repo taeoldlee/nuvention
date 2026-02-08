@@ -6,6 +6,7 @@ import Btn from '../../components/common/Btn';
 import Chip from '../../components/common/Chip';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function Library() {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ export default function Library() {
     <div className="min-h-screen bg-bgWarm">
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
+        <FadeIn>
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">
           <div>
             <button
@@ -76,7 +78,8 @@ export default function Library() {
               </svg>
               Dashboard
             </button>
-            <h1 className="font-display text-3xl font-bold text-dark mb-1">
+            <p className="section-label mb-2">Library</p>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-1">
               Content Library
             </h1>
             <p className="font-body text-muted">
@@ -91,6 +94,7 @@ export default function Library() {
             New Request
           </Btn>
         </div>
+        </FadeIn>
 
         {/* Filter Chips */}
         {availableTypes.length > 0 && (
@@ -118,6 +122,7 @@ export default function Library() {
         )}
 
         {/* Content Grid */}
+        <FadeIn delay={0.1}>
         {filteredProjects.length === 0 ? (
           <EmptyState
             icon={
@@ -160,7 +165,7 @@ export default function Library() {
                 <button
                   key={project.id}
                   onClick={() => navigate(`/operator/project/${project.id}`)}
-                  className="group text-left"
+                  className="group text-left hover:-translate-y-1 transition-transform duration-300"
                 >
                   {/* Thumbnail */}
                   <div className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan mb-3">
@@ -215,6 +220,7 @@ export default function Library() {
             })}
           </div>
         )}
+        </FadeIn>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import EmptyState from '../../components/common/EmptyState';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import CreatorBriefCard from '../../components/creator/CreatorBriefCard';
 import CreatorProjectCard from '../../components/creator/CreatorProjectCard';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -64,8 +65,10 @@ export default function Dashboard() {
       )}
 
       {/* Greeting */}
+      <FadeIn>
       <div className="mb-8">
-        <h1 className="font-display text-3xl font-bold text-dark mb-1">
+        <p className="section-label mb-2">Dashboard</p>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-1">
           Hey, {displayName}
         </h1>
         {subtitle && (
@@ -78,9 +81,11 @@ export default function Dashboard() {
           </p>
         )}
       </div>
+      </FadeIn>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+      <FadeIn delay={0.1}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         <StatCard
           label="Monthly Earnings"
           value={formatCents(monthlyEarnings)}
@@ -100,8 +105,10 @@ export default function Dashboard() {
           icon={<svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>}
         />
       </div>
+      </FadeIn>
 
       {/* Incoming Briefs */}
+      <FadeIn delay={0.2}>
       <section className="mb-10">
         <h2 className="font-display text-xl font-bold text-dark mb-4">
           Incoming Briefs
@@ -127,8 +134,10 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+      </FadeIn>
 
       {/* Active Projects */}
+      <FadeIn delay={0.3}>
       <section>
         <h2 className="font-display text-xl font-bold text-dark mb-4">
           Active Projects
@@ -154,6 +163,7 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+      </FadeIn>
     </div>
   );
 }

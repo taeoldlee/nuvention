@@ -21,7 +21,7 @@ export default function ProjectHeader({ brandName, brandPhoto, contentType, stat
         )}
 
         <div className="flex-1 min-w-0">
-          <h1 className="font-display text-2xl font-bold text-dark mb-0.5 truncate">
+          <h1 className="font-display text-xl sm:text-2xl font-bold text-dark mb-0.5 truncate">
             {brandName}
           </h1>
           <p className="font-body text-muted text-sm">{contentType}</p>
@@ -36,7 +36,7 @@ export default function ProjectHeader({ brandName, brandPhoto, contentType, stat
         <p className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">
           Compensation
         </p>
-        <p className="font-display text-3xl font-bold text-dark">
+        <p className="font-display text-2xl sm:text-3xl font-bold text-dark">
           {formatCompensation(compensationType, compensationDetails, pay)}
         </p>
       </div>

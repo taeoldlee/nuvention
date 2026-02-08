@@ -359,10 +359,12 @@ router.post("/:id/deliver", requireOperatorWithBrand, async (req, res, next) => 
     }
 
     // Update the content request status
-    await prisma.contentRequest.update({
-      where: { id: updatedProject.match.contentRequestId },
-      data: { status: "COMPLETED" },
-    });
+    if (updatedProject.match?.contentRequestId) {
+      await prisma.contentRequest.update({
+        where: { id: updatedProject.match.contentRequestId },
+        data: { status: "COMPLETED" },
+      });
+    }
 
     res.json({ project: updatedProject });
   } catch (err) {

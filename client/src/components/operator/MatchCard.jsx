@@ -10,10 +10,10 @@ export default function MatchCard({ match, idx, requestId, requestContext }) {
   const thumbs = (match.portfolioSamples || []).slice(1, 3);
 
   return (
-    <div className="card hover:shadow-md hover:border-accent/20 transition-all duration-200">
-      <div className="flex items-start gap-5">
-        <div className="w-24">
-          <div className="w-24 h-24 rounded-xl bg-bgTan border border-border overflow-hidden">
+    <div className="card hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-accent/20 hover:-translate-y-0.5 transition-all duration-300">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5">
+        <div className="w-full sm:w-24">
+          <div className="w-full h-40 sm:w-24 sm:h-24 rounded-xl bg-bgTan border border-border overflow-hidden">
             {hero ? (
               <img src={hero} alt="UGC sample" className="w-full h-full object-cover" />
             ) : (

@@ -6,6 +6,7 @@ import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MatchSignals from '../../components/common/MatchSignals';
 import useBriefDisplayData from '../../hooks/useBriefDisplayData';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function BriefDetail() {
   const { matchId } = useParams();
@@ -192,6 +193,7 @@ export default function BriefDetail() {
       </button>
 
       {/* Brief card */}
+      <FadeIn>
       <div className="card mb-6">
         {/* Content type heading */}
         <div className="mb-6">
@@ -302,6 +304,7 @@ export default function BriefDetail() {
           <MatchSignals signals={matchSignals} />
         </div>
       </div>
+      </FadeIn>
 
       {/* Error */}
       {error && (

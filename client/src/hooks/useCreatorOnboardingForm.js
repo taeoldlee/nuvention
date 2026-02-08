@@ -1,7 +1,8 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export default function useCreatorOnboardingForm() {
   const fileInputRef = useRef(null);
+  const previewsRef = useRef([]);
 
   // Step 0 — Profile
   const [displayName, setDisplayName] = useState('');
@@ -19,6 +20,16 @@ export default function useCreatorOnboardingForm() {
   // Step 2 — Portfolio
   const [portfolioFiles, setPortfolioFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
+
+  // Keep ref in sync and revoke all URLs on unmount
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
+  useEffect(() => {
+    return () => {
+      previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const toggleItem = (arr, setArr, item) => {
     setArr((prev) =>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProject } from '../../api';
 import { brandDisplayName, brandPhotoUrl } from '../../utils/extractors';
@@ -9,6 +9,7 @@ import ProjectDetailsCard from '../../components/creator/ProjectDetailsCard';
 import DraftUploadSection from '../../components/creator/DraftUploadSection';
 import { DraftSubmittedView, ApprovedView } from '../../components/creator/DraftStatusView';
 import useDraftSubmission from '../../hooks/useDraftSubmission';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function ProjectView() {
   const { id } = useParams();
@@ -18,10 +19,10 @@ export default function ProjectView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     const res = await getProject(id);
     setProject(res.data.project);
-  };
+  }, [id]);
 
   const draftActions = useDraftSubmission(id, loadProject);
 
@@ -30,7 +31,7 @@ export default function ProjectView() {
     loadProject()
       .catch(() => setError('Failed to load project.'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [loadProject]);
 
   if (loading) return <LoadingSpinner message="Loading project..." creator />;
 
@@ -71,10 +72,13 @@ export default function ProjectView() {
         Back to Dashboard
       </button>
 
+      <FadeIn>
       <ProjectHeader brandName={brandDisplayName(project)} brandPhoto={brandPhotoUrl(project)} contentType={contentType} status={status} compensationType={compensationType} compensationDetails={compensationDetails} pay={project.price ?? project.pay ?? project.budget ?? 0} />
 
       <ProjectDetailsCard briefText={briefText} deliverables={deliverables} timeline={timeline} usageRights={usageRights} />
+      </FadeIn>
 
+      <FadeIn delay={0.15}>
       {isRevisionRequested && revisionNotes && (
         <div className="card mb-6 border-orange-200 bg-orange-50/50">
           <div className="flex items-start gap-3">
@@ -96,6 +100,7 @@ export default function ProjectView() {
       {status === 'DRAFT_SUBMITTED' && latestDraft && <DraftSubmittedView latestDraft={latestDraft} />}
 
       {(status === 'APPROVED' || status === 'DELIVERED') && <ApprovedView isDelivered={status === 'DELIVERED'} latestDraft={latestDraft} navigate={navigate} />}
+      </FadeIn>
     </div>
   );
 }

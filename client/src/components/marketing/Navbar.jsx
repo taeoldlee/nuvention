@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Button from './Button';
 
 const links = [
@@ -9,6 +10,8 @@ const links = [
 ];
 
 export default function Navbar() {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0B0D12]/70 backdrop-blur-xl">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-dark">
@@ -26,13 +29,56 @@ export default function Navbar() {
             </a>
           ))}
         </div>
+
         <div className="flex items-center gap-3">
-          <Button href="#cta" variant="secondary" className="hidden sm:inline-flex">
-            Request demo
-          </Button>
-          <Button href="#cta">Create a brief</Button>
+          {/* Hamburger button — visible below md */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-slate-300 hover:text-white transition-colors"
+            aria-label="Toggle navigation menu"
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            )}
+          </button>
+
+          <div className="hidden md:flex items-center gap-3">
+            <Button href="#cta" variant="secondary">
+              Request demo
+            </Button>
+            <Button href="#cta">Create a brief</Button>
+          </div>
         </div>
       </nav>
+
+      {/* Mobile menu panel */}
+      {mobileOpen && (
+        <div className="md:hidden border-t border-white/5 bg-[#0B0D12]/95 backdrop-blur-xl">
+          <div className="px-6 py-4 space-y-1">
+            {links.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className="block py-3 text-base text-slate-300/90 hover:text-white transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+            <div className="pt-4 flex flex-col gap-3">
+              <Button href="#cta" variant="secondary">Request demo</Button>
+              <Button href="#cta">Create a brief</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

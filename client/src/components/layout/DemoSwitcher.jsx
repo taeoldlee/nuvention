@@ -62,7 +62,7 @@ export default function DemoSwitcher() {
             className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed bottom-20 right-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden">
+          <div className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:w-80 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden">
             <div className="p-4 border-b border-border bg-bgWarm">
               <h3 className="font-display text-lg font-bold text-dark">Demo Accounts</h3>
               <p className="text-xs text-muted mt-0.5">

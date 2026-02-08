@@ -6,6 +6,7 @@ import Btn from '../../components/common/Btn';
 import Chip from '../../components/common/Chip';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MatchResults from '../../components/operator/MatchResults';
+import FadeIn from '../../components/marketing/FadeIn';
 
 const CONTENT_GOALS = [
   'Menu item spotlight',
@@ -164,6 +165,7 @@ export default function NewRequest() {
   return (
     <div className="min-h-screen bg-bgWarm">
       <div className="max-w-3xl mx-auto px-4 py-8">
+        <FadeIn>
         <div className="mb-8">
           <button
             onClick={() => navigate('/operator/dashboard')}
@@ -174,12 +176,15 @@ export default function NewRequest() {
             </svg>
             Dashboard
           </button>
-          <h1 className="font-display text-3xl font-bold text-dark mb-2">New content request</h1>
+          <p className="section-label mb-2">New request</p>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-2">New content request</h1>
           <p className="font-body text-muted">
             Build a brief in minutes. We'll match on evidence and neighborhood fit.
           </p>
         </div>
+        </FadeIn>
 
+        <FadeIn delay={0.1}>
         <div className="card space-y-6">
           <div>
             <label className="block text-sm font-medium text-dark mb-2 font-body">
@@ -275,7 +280,7 @@ export default function NewRequest() {
               ))}
             </div>
             {(compensationType === 'FLAT_FEE' || compensationType === 'HYBRID') && (
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex-1">
                   <label className="block text-xs text-muted mb-1 font-body">Min</label>
                   <input
@@ -340,6 +345,7 @@ export default function NewRequest() {
             </Btn>
           </div>
         </div>
+        </FadeIn>
       </div>
     </div>
   );

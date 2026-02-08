@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
+const { generateUsageRightsDoc } = require("../services/documents");
+const { createCharge } = require("../services/payments");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -130,7 +132,61 @@ router.post("/:matchId/accept", async (req, res, next) => {
       return res.json({ message: "Brief already accepted", project: match.project });
     }
 
-    res.json({ message: "Brief accepted", match });
+    // Update match status to ACCEPTED
+    await prisma.match.update({
+      where: { id: match.id },
+      data: { status: "ACCEPTED" },
+    });
+
+    // Update content request status
+    await prisma.contentRequest.update({
+      where: { id: match.contentRequestId },
+      data: { status: "IN_PROGRESS" },
+    });
+
+    // Create the project
+    const usageRightsDoc = generateUsageRightsDoc({
+      businessName: match.contentRequest?.brandProfile?.businessName,
+      contentType: match.contentRequest?.contentType,
+      usageRights: match.usageRights,
+      timeline: match.timeline,
+    });
+
+    const project = await prisma.project.create({
+      data: {
+        matchId: match.id,
+        brandProfileId: match.contentRequest.brandProfileId,
+        creatorProfileId: creatorProfile.id,
+        status: "BRIEF_SENT",
+        deliverables: match.deliverables,
+        price: match.price,
+        timeline: match.timeline,
+        usageRights: match.usageRights,
+        briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview || ""}`.trim(),
+        usageRightsDoc,
+        compensationType: match.contentRequest.compensationType || "FLAT_FEE",
+        compensationDetails: match.contentRequest.compensationDetails || null,
+      },
+      include: {
+        brandProfile: {
+          include: {
+            user: { select: { id: true, name: true, avatarUrl: true } },
+          },
+        },
+      },
+    });
+
+    // Create transaction if there's a price
+    if (match.price > 0) {
+      await createCharge(project.id, match.price);
+    }
+
+    res.json({
+      message: "Brief accepted",
+      project,
+      brandName: project.brandProfile?.businessName || project.brandProfile?.user?.name,
+      projectId: project.id,
+    });
   } catch (err) {
     next(err);
   }

@@ -36,7 +36,7 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
         onClick={() => fileInputRef.current?.click()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="border-2 border-dashed border-creator/30 rounded-2xl p-8 text-center cursor-pointer hover:border-creator/60 hover:bg-creatorLight/30 transition-all duration-200 mb-5"
+        className="border-2 border-dashed border-creator/30 rounded-2xl p-5 sm:p-8 text-center cursor-pointer hover:border-creator/60 hover:bg-creatorLight/30 transition-all duration-200 mb-5"
       >
         <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={(e) => handleFilesSelected(e.target.files)} className="hidden" />
         <div className="w-12 h-12 rounded-xl bg-creatorLight mx-auto mb-3 flex items-center justify-center">
@@ -53,7 +53,7 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
           <p className="text-sm font-semibold text-mid mb-3">
             {draftPreviews.length} image{draftPreviews.length !== 1 ? 's' : ''} selected
           </p>
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {draftPreviews.map((src, i) => (
               <div key={`preview-${i}`} className="relative aspect-square rounded-xl overflow-hidden group">
                 <img src={src} alt={`Draft ${i + 1}`} className="w-full h-full object-cover" />

@@ -69,6 +69,7 @@ async function createRequestWithMatches(brandProfile, body) {
         creatorProfileId: match.creatorProfileId,
         matchScore: match.matchScore,
         matchRationale: match.matchRationale,
+        matchSignals: match.matchSignals || undefined,
         contentPreview: match.contentPreview,
         deliverables: match.deliverables,
         price: match.price,

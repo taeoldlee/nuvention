@@ -11,6 +11,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -73,25 +74,29 @@ export default function Dashboard() {
     <div className="min-h-screen bg-bgWarm">
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-bold text-dark mb-1">
-              Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
-            </h1>
-            {profile?.businessName && (
-              <p className="font-body text-muted">{profile.businessName}</p>
-            )}
+        <FadeIn>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">
+            <div>
+              <p className="section-label mb-2">Dashboard</p>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-1">
+                Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+              </h1>
+              {profile?.businessName && (
+                <p className="font-body text-muted">{profile.businessName}</p>
+              )}
+            </div>
+            <Btn onClick={() => navigate('/operator/request/new')}>
+              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Content Request
+            </Btn>
           </div>
-          <Btn onClick={() => navigate('/operator/request/new')}>
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            New Content Request
-          </Btn>
-        </div>
+        </FadeIn>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        <FadeIn delay={0.1}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           <StatCard
             label="Active Projects"
             value={stats?.activeProjects ?? activeProjects.length}
@@ -120,8 +125,10 @@ export default function Dashboard() {
             }
           />
         </div>
+        </FadeIn>
 
         {/* Active Projects */}
+        <FadeIn delay={0.2}>
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-dark">
@@ -155,7 +162,7 @@ export default function Dashboard() {
                 <button
                   key={project.id}
                   onClick={() => navigate(`/operator/project/${project.id}`)}
-                  className="card w-full text-left hover:shadow-md hover:border-accent/20 transition-all duration-200"
+                  className="card w-full text-left hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-accent/20 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -188,8 +195,10 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+        </FadeIn>
 
         {/* Recent Content */}
+        <FadeIn delay={0.3}>
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-dark">
@@ -252,6 +261,7 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+        </FadeIn>
       </div>
     </div>
   );

@@ -20,9 +20,9 @@ export default function CreatorBriefCard({ brief, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="card text-left hover:shadow-md hover:border-creatorAccent/30 transition-all duration-200 group"
+      className="card text-left hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-creatorAccent/30 hover:-translate-y-0.5 transition-all duration-300 group"
     >
-      <div className="flex items-start justify-between mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3 gap-1">
         <div className="flex-1 min-w-0">
           <p className="font-display text-lg font-semibold text-dark truncate">
             {neighborhood ? `${neighborhood} \u00B7 ` : ''}
@@ -32,7 +32,7 @@ export default function CreatorBriefCard({ brief, onClick }) {
             <p className="font-body text-xs text-muted mt-0.5">{timeline}</p>
           )}
         </div>
-        <span className="text-xs text-muted font-body">Why this brief?</span>
+        <span className="text-xs text-muted font-body shrink-0">Why this brief?</span>
       </div>
 
       {deliverables && (
@@ -62,7 +62,7 @@ export default function CreatorBriefCard({ brief, onClick }) {
       )}
 
       <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
-        <span className="font-display text-2xl font-bold text-dark">
+        <span className="font-display text-xl sm:text-2xl font-bold text-dark">
           {formatCents(pay)}
         </span>
         <span className="font-body text-sm text-creatorAccent font-semibold flex items-center gap-1 group-hover:gap-2 transition-all duration-200">

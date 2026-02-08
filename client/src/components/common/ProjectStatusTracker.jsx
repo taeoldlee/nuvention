@@ -20,7 +20,7 @@ export default function ProjectStatusTracker({ status, creator = false, classNam
           <div key={step.key} className="flex items-center flex-1 last:flex-none">
             <div className="flex flex-col items-center">
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all duration-300 ${
+                className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold transition-all duration-300 ${
                   i < currentIdx
                     ? `${activeColor} text-white`
                     : i === currentIdx
@@ -41,7 +41,7 @@ export default function ProjectStatusTracker({ status, creator = false, classNam
                 )}
               </div>
               <span
-                className={`text-xs mt-1.5 font-medium text-center max-w-[80px] ${
+                className={`text-[10px] sm:text-xs mt-1 sm:mt-1.5 font-medium text-center max-w-[60px] sm:max-w-[80px] ${
                   i <= currentIdx ? 'text-dark' : 'text-muted'
                 }`}
               >
@@ -53,7 +53,7 @@ export default function ProjectStatusTracker({ status, creator = false, classNam
             </div>
             {i < STEPS.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-3 mt-[-1.2rem] transition-all duration-300 ${
+                className={`flex-1 h-0.5 mx-1 sm:mx-3 mt-[-1.2rem] transition-all duration-300 ${
                   i < currentIdx ? activeColor : 'bg-border/60'
                 }`}
               />

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { submitDraft, uploadImages } from '../api';
 
 export default function useDraftSubmission(projectId, onSuccess) {
@@ -8,6 +8,15 @@ export default function useDraftSubmission(projectId, onSuccess) {
   const [submitting, setSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const previewsRef = useRef(draftPreviews);
+  previewsRef.current = draftPreviews;
+
+  // Revoke all object URLs on unmount
+  useEffect(() => {
+    return () => {
+      previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
 
   const handleFilesSelected = (files) => {
     const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));

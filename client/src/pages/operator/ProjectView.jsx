@@ -23,6 +23,7 @@ import {
   DeliveredSection,
 } from '../../components/operator/ProjectStatusSection';
 import DraftHistory from '../../components/operator/DraftHistory';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function ProjectView() {
   const { id } = useParams();
@@ -128,6 +129,7 @@ export default function ProjectView() {
         </button>
 
         {/* Project Header */}
+        <FadeIn>
         <div className="card mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
@@ -157,7 +159,9 @@ export default function ProjectView() {
         <div className="card mb-6">
           <ProjectStatusTracker status={project.status} />
         </div>
+        </FadeIn>
 
+        <FadeIn delay={0.15}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Details */}
           <div className="lg:col-span-1 space-y-6">
@@ -210,7 +214,7 @@ export default function ProjectView() {
               {project.usageRightsDoc && (
                 <div>
                   <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">Usage Rights Document</p>
-                  <pre className="text-xs text-mid font-body whitespace-pre-wrap bg-bgWarm rounded-xl p-3 border border-border">
+                  <pre className="text-xs text-mid font-body whitespace-pre-wrap break-words overflow-x-auto bg-bgWarm rounded-xl p-3 border border-border">
                     {project.usageRightsDoc}
                   </pre>
                 </div>
@@ -248,6 +252,7 @@ export default function ProjectView() {
             <DraftHistory drafts={project.drafts} />
           </div>
         </div>
+        </FadeIn>
       </div>
     </div>
   );
