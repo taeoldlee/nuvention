@@ -4,6 +4,7 @@ const prisma = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
 const { generateMatches } = require("../services/matching");
 const { createCharge } = require("../services/payments");
+const { generateUsageRightsDoc } = require("../services/documents");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -133,8 +134,9 @@ router.post("/", async (req, res, next) => {
         matches: {
           include: {
             creatorProfile: {
-              include: {
+              select: {
                 portfolioItems: {
+                  select: { id: true, imageUrl: true, verified: true },
                   take: 3,
                   orderBy: { createdAt: "desc" },
                 },
@@ -176,8 +178,9 @@ router.get("/", async (req, res, next) => {
         matches: {
           include: {
             creatorProfile: {
-              include: {
+              select: {
                 portfolioItems: {
+                  select: { id: true, imageUrl: true, verified: true },
                   take: 3,
                   orderBy: { createdAt: "desc" },
                 },
@@ -209,8 +212,9 @@ router.get("/:id", async (req, res, next) => {
         matches: {
           include: {
             creatorProfile: {
-              include: {
+              select: {
                 portfolioItems: {
+                  select: { id: true, imageUrl: true, verified: true },
                   take: 4,
                   orderBy: { createdAt: "desc" },
                 },
@@ -355,20 +359,6 @@ router.post("/:id/select/:matchId", async (req, res, next) => {
 });
 
 module.exports = router;
-
-function generateUsageRightsDoc({ businessName, contentType, usageRights, timeline }) {
-  const brand = businessName || "Brand";
-  const rights = usageRights || "Organic social + in-store, 12 months";
-  const timing = timeline || "Standard timeline";
-  return [
-    `Usage Rights Agreement`,
-    `Brand: ${brand}`,
-    `Content Type: ${contentType || "UGC content"}`,
-    `Rights: ${rights}`,
-    `Timeline: ${timing}`,
-    `This agreement grants the brand non-exclusive usage rights as specified above.`,
-  ].join("\n");
-}
 
 function anonymizeRequest(request) {
   if (!request) return request;

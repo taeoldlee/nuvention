@@ -268,43 +268,26 @@ function buildMatchPackage(brand, request, creator, optionIndex) {
   };
 }
 
-function buildMatchSignals(brand, request, creator) {
-  const signals = {
-    venueAlignment: [],
-    aestheticMarkers: [],
-    communitySignals: [],
-    pastOutcomes: [],
-    trustSignals: {},
-  };
-
+function buildVenueAlignment(brand, creator) {
   const brandNeighborhood = (brand.neighborhood || "").toLowerCase();
-  const creatorNeighborhoods = Array.isArray(creator.neighborhoods)
-    ? creator.neighborhoods.map((n) => n.toLowerCase())
-    : [];
-
-  if (brandNeighborhood && creatorNeighborhoods.includes(brandNeighborhood)) {
-    signals.communitySignals.push(`Lives or shoots in ${titleCase(brand.neighborhood)}`);
-  }
-
   const projects = Array.isArray(creator.projects) ? creator.projects : [];
-  const deliveredProjects = projects.filter((p) => p.status === "DELIVERED");
-  const uniqueVenues = new Set(projects.map((p) => p.brandProfileId)).size;
   const venueNeighborhoods = new Set(
     projects
       .map((p) => p.brandProfile?.neighborhood)
       .filter(Boolean)
       .map((n) => n.toLowerCase())
   );
-
+  const signals = [];
   if (venueNeighborhoods.size > 0) {
-    signals.venueAlignment.push(
-      `Posted at ${venueNeighborhoods.size} venues nearby`
-    );
+    signals.push(`Posted at ${venueNeighborhoods.size} venues nearby`);
   }
   if (brandNeighborhood && venueNeighborhoods.has(brandNeighborhood)) {
-    signals.venueAlignment.push(`Posted at venues in ${titleCase(brand.neighborhood)}`);
+    signals.push(`Posted at venues in ${titleCase(brand.neighborhood)}`);
   }
+  return signals;
+}
 
+function buildAestheticMarkers(creator) {
   const vibeTags = new Set();
   (Array.isArray(creator.vibeTags) ? creator.vibeTags : []).forEach((t) => vibeTags.add(t));
   (Array.isArray(creator.portfolioItems) ? creator.portfolioItems : []).forEach((item) => {
@@ -312,41 +295,64 @@ function buildMatchSignals(brand, request, creator) {
       item.vibeTags.forEach((t) => vibeTags.add(t));
     }
   });
-  signals.aestheticMarkers = Array.from(vibeTags).slice(0, 3).map(titleCase);
+  return Array.from(vibeTags).slice(0, 3).map(titleCase);
+}
 
-  const totalProjects = projects.length;
-  if (totalProjects > 0) {
-    const postingRate = Math.round((deliveredProjects.length / totalProjects) * 100);
-    signals.pastOutcomes.push(`${postingRate}% posting rate across ${totalProjects} projects`);
+function buildCommunitySignals(brand, creator) {
+  const brandNeighborhood = (brand.neighborhood || "").toLowerCase();
+  const creatorNeighborhoods = Array.isArray(creator.neighborhoods)
+    ? creator.neighborhoods.map((n) => n.toLowerCase())
+    : [];
+  const signals = [];
+  if (brandNeighborhood && creatorNeighborhoods.includes(brandNeighborhood)) {
+    signals.push(`Lives or shoots in ${titleCase(brand.neighborhood)}`);
+  }
+  return signals;
+}
+
+function buildPastOutcomes(creator) {
+  const projects = Array.isArray(creator.projects) ? creator.projects : [];
+  const deliveredProjects = projects.filter((p) => p.status === "DELIVERED");
+  const signals = [];
+  if (projects.length > 0) {
+    const postingRate = Math.round((deliveredProjects.length / projects.length) * 100);
+    signals.push(`${postingRate}% posting rate across ${projects.length} projects`);
   }
   if (deliveredProjects.length > 0) {
-    signals.pastOutcomes.push(`${deliveredProjects.length} businesses posted this creator's work`);
+    signals.push(`${deliveredProjects.length} businesses posted this creator's work`);
   }
+  return signals;
+}
 
+function buildTrustSignals(creator) {
+  const projects = Array.isArray(creator.projects) ? creator.projects : [];
+  const deliveredProjects = projects.filter((p) => p.status === "DELIVERED");
+  const uniqueVenues = new Set(projects.map((p) => p.brandProfileId)).size;
   const verifiedSamples = (Array.isArray(creator.portfolioItems) ? creator.portfolioItems : []).filter(
     (item) => item.verified
   ).length;
-  const avgTurnaroundDays = (() => {
-    const completed = deliveredProjects.filter((p) => p.updatedAt && p.createdAt);
-    if (completed.length === 0) return null;
-    const totalDays = completed.reduce(
-      (sum, p) => sum + (p.updatedAt - p.createdAt) / (1000 * 60 * 60 * 24),
-      0
-    );
-    return Math.round(totalDays / completed.length);
-  })();
-
-  signals.trustSignals = {
-    verifiedVenues: uniqueVenues,
-    verifiedSamples,
-    avgTurnaroundDays,
-  };
-
+  const completed = deliveredProjects.filter((p) => p.updatedAt && p.createdAt);
+  const avgTurnaroundDays = completed.length === 0
+    ? null
+    : Math.round(
+        completed.reduce((sum, p) => sum + (p.updatedAt - p.createdAt) / (1000 * 60 * 60 * 24), 0) /
+          completed.length
+      );
+  const signals = { verifiedVenues: uniqueVenues, verifiedSamples, avgTurnaroundDays };
   if (creator.tier) {
-    signals.trustSignals.tier = titleCase(creator.tier.toString().toLowerCase());
+    signals.tier = titleCase(creator.tier.toString().toLowerCase());
   }
-
   return signals;
+}
+
+function buildMatchSignals(brand, request, creator) {
+  return {
+    venueAlignment: buildVenueAlignment(brand, creator),
+    aestheticMarkers: buildAestheticMarkers(creator),
+    communitySignals: buildCommunitySignals(brand, creator),
+    pastOutcomes: buildPastOutcomes(creator),
+    trustSignals: buildTrustSignals(creator),
+  };
 }
 
 /**

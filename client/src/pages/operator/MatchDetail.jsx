@@ -1,21 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getContentRequests, selectMatch } from '../../api';
+import { formatCompensation } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MatchSignals from '../../components/common/MatchSignals';
-
-function formatCompensation(type, details, price) {
-  if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
-  if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
-  if (type === 'HYBRID') {
-    const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
-    const note = details?.note ? details.note : 'product/benefit';
-    return `${cash} ${note}`;
-  }
-  if (price != null) return `$${(price / 100).toFixed(0)}`;
-  return 'Flat fee';
-}
 
 export default function MatchDetail() {
   const { matchId } = useParams();

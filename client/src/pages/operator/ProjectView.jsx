@@ -8,6 +8,7 @@ import {
 } from '../../api';
 import {
   formatCents,
+  formatCompensation,
   formatDate,
   PROJECT_STATUS_LABELS,
 } from '../../utils/constants';
@@ -114,18 +115,6 @@ export default function ProjectView() {
   const creatorPhotoUrl = project.creatorProfile?.user?.avatarUrl || project.creatorPhotoUrl || null;
   const compensationType = project.compensationType || 'FLAT_FEE';
   const compensationDetails = project.compensationDetails || null;
-
-  const formatCompensation = (type, details, price) => {
-    if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
-    if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
-    if (type === 'HYBRID') {
-      const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
-      const note = details?.note ? details.note : 'product/benefit';
-      return `${cash} ${note}`;
-    }
-    if (price != null) return formatCents(price);
-    return 'Flat fee';
-  };
 
   const latestDraft =
     project.drafts?.length > 0

@@ -201,8 +201,7 @@ export default function Onboarding() {
     form.vibes.length > 0 &&
     form.values.length > 0 &&
     form.contentComfortZones.length > 0 &&
-    form.guestExperienceKeywords.length === 3 &&
-    form.visualRefUrls.length >= 3;
+    form.guestExperienceKeywords.length > 0;
 
   const canProceedFromStep2 =
     form.budgetMin > 0 && form.budgetMax >= form.budgetMin;
@@ -376,7 +375,7 @@ export default function Onboarding() {
             {/* Guest Experience Keywords */}
             <div>
               <label className="block text-sm font-medium text-dark mb-2 font-body">
-                Guest experience keywords <span className="text-muted font-normal">(3 words)</span>
+                Guest experience keywords <span className="text-muted font-normal">(1–3 words)</span>
               </label>
               <div className="flex gap-2 mb-2">
                 <input
@@ -439,7 +438,7 @@ export default function Onboarding() {
             {/* Visual References */}
             <div>
               <label className="block text-sm font-medium text-dark mb-2 font-body">
-                Visual references <span className="text-muted font-normal">(upload 3–5)</span>
+                Visual references <span className="text-muted font-normal">(optional, up to 5)</span>
               </label>
               <div className="border border-dashed border-border rounded-xl p-4 bg-bgWarm text-center">
                 <input

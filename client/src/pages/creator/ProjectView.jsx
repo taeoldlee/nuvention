@@ -1,23 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProject, submitDraft, uploadImages } from '../../api';
-import { formatCents, PROJECT_STATUS_LABELS } from '../../utils/constants';
+import { formatCompensation, PROJECT_STATUS_LABELS } from '../../utils/constants';
 import StatusBadge from '../../components/common/StatusBadge';
 import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
-
-function formatCompensation(type, details, pay) {
-  if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
-  if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
-  if (type === 'HYBRID') {
-    const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
-    const note = details?.note ? details.note : 'product/benefit';
-    return `${cash} ${note}`;
-  }
-  if (pay != null) return formatCents(pay);
-  return 'Flat fee';
-}
 
 export default function ProjectView() {
   const { id } = useParams();

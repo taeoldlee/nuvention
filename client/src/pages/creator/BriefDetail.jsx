@@ -1,22 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBriefs, acceptBrief, declineBrief } from '../../api';
-import { formatCents } from '../../utils/constants';
+import { formatCompensation } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MatchSignals from '../../components/common/MatchSignals';
 
-function formatCompensation(type, details, pay) {
-  if (type === 'FREE_PRODUCT') return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
-  if (type === 'DISCOUNT_CODE') return details?.note ? `Discount: ${details.note}` : 'Discount code';
-  if (type === 'HYBRID') {
-    const cash = details?.minCents ? `$${(details.minCents / 100).toFixed(0)}+` : '$';
-    const note = details?.note ? details.note : 'product/benefit';
-    return `${cash} ${note}`;
-  }
-  if (pay != null) return formatCents(pay);
-  return 'Flat fee';
-}
 export default function BriefDetail() {
   const { matchId } = useParams();
   const navigate = useNavigate();

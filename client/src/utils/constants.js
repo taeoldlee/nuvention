@@ -86,6 +86,25 @@ export function formatCents(cents) {
   return `$${(cents / 100).toFixed(0)}`;
 }
 
+export function formatCompensation(type, details, fallbackPrice) {
+  if (type === 'FREE_PRODUCT') {
+    return details?.note ? `Free product: ${details.note}` : 'Free product/meal';
+  }
+  if (type === 'DISCOUNT_CODE') {
+    return details?.note ? `Discount: ${details.note}` : 'Discount code';
+  }
+  if (type === 'HYBRID') {
+    const cash = details?.minCents ? `${formatCents(details.minCents)}+` : 'Cash +';
+    const note = details?.note ? details.note : 'product/benefit';
+    return `${cash} ${note}`;
+  }
+  if (details?.minCents && details?.maxCents) {
+    return `${formatCents(details.minCents)} - ${formatCents(details.maxCents)}`;
+  }
+  if (fallbackPrice != null) return formatCents(fallbackPrice);
+  return 'Flat fee';
+}
+
 export function formatDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
