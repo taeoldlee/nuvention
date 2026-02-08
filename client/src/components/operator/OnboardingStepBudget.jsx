@@ -1,6 +1,7 @@
 import Btn from '../common/Btn';
 
-export default function OnboardingStepBudget({ form, updateForm, canProceed, onBack, onNext }) {
+export default function OnboardingStepBudget({ formActions, onBack, onNext }) {
+  const { form, updateForm, canProceedFromStep2: canProceed } = formActions;
   return (
     <div className="card space-y-6">
       <h2 className="font-display text-xl font-semibold text-dark">

@@ -1,11 +1,5 @@
+import { VIBE_SCALES } from '../../utils/constants';
 import Btn from '../common/Btn';
-
-const VIBE_SCALES = [
-  { key: 'cozyEnergetic', left: 'Cozy', right: 'Energetic' },
-  { key: 'quietBuzzy', left: 'Quiet', right: 'Buzzy' },
-  { key: 'classicModern', left: 'Classic', right: 'Modern' },
-  { key: 'casualElevated', left: 'Casual', right: 'Elevated' },
-];
 
 export default function OnboardingStepConfirm({ form, saving, saveError, onBack, onSubmit }) {
   return (

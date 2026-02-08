@@ -3,34 +3,27 @@ import {
   VIBE_OPTIONS,
   VALUE_OPTIONS,
   CONTENT_COMFORT_ZONES,
+  VIBE_SCALES,
 } from '../../utils/constants';
 import Btn from '../common/Btn';
 import Chip from '../common/Chip';
 
-const VIBE_SCALES = [
-  { key: 'cozyEnergetic', left: 'Cozy', right: 'Energetic' },
-  { key: 'quietBuzzy', left: 'Quiet', right: 'Buzzy' },
-  { key: 'classicModern', left: 'Classic', right: 'Modern' },
-  { key: 'casualElevated', left: 'Casual', right: 'Elevated' },
-];
-
-export default function OnboardingStepBrand({
-  form,
-  updateForm,
-  toggleArrayItem,
-  setSingleSelect,
-  updateVibeScale,
-  keywordInput,
-  setKeywordInput,
-  addKeyword,
-  removeKeyword,
-  visualRefUploading,
-  visualRefError,
-  onVisualRefsSelected,
-  canProceed,
-  onBack,
-  onNext,
-}) {
+export default function OnboardingStepBrand({ formActions, onBack, onNext }) {
+  const {
+    form,
+    updateForm,
+    toggleArrayItem,
+    setSingleSelect,
+    updateVibeScale,
+    keywordInput,
+    setKeywordInput,
+    addKeyword,
+    removeKeyword,
+    visualRefUploading,
+    visualRefError,
+    handleVisualRefsSelected: onVisualRefsSelected,
+    canProceedFromStep1: canProceed,
+  } = formActions;
   return (
     <div className="card space-y-6">
       <h2 className="font-display text-xl font-semibold text-dark">

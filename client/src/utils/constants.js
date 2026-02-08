@@ -50,6 +50,13 @@ export const NEIGHBORHOODS = [
   'Uptown',
 ];
 
+export const VIBE_SCALES = [
+  { key: 'cozyEnergetic', left: 'Cozy', right: 'Energetic' },
+  { key: 'quietBuzzy', left: 'Quiet', right: 'Buzzy' },
+  { key: 'classicModern', left: 'Classic', right: 'Modern' },
+  { key: 'casualElevated', left: 'Casual', right: 'Elevated' },
+];
+
 export const CONTENT_TYPES = [
   'Ambiance / Interior',
   'Food & Drink',
