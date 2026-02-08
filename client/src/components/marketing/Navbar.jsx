@@ -11,6 +11,9 @@ const links = [
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0B0D12]/70 backdrop-blur-xl">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-dark">
+        Skip to content
+      </a>
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#7D8BFF] to-[#4DD4A6]" />

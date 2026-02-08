@@ -154,12 +154,8 @@ export default function NewRequest() {
     return (
       <MatchResults
         matches={matches}
-        contentType={contentType}
         requestId={requestId}
-        compensationType={compensationType}
-        budgetMin={budgetMin}
-        budgetMax={budgetMax}
-        compNotes={compNotes}
+        requestContext={{ contentType, compensationType, budgetMin, budgetMax, compNotes }}
         onReset={() => { setMatches(null); setRequestId(null); }}
       />
     );

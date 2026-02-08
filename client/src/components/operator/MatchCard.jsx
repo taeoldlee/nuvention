@@ -3,8 +3,9 @@ import { formatCompensation } from '../../utils/constants';
 import Btn from '../common/Btn';
 import MatchSignals from '../common/MatchSignals';
 
-export default function MatchCard({ match, idx, contentType, requestId, compensationType, budgetMin, budgetMax, compNotes }) {
+export default function MatchCard({ match, idx, requestId, requestContext }) {
   const navigate = useNavigate();
+  const { contentType, compensationType, budgetMin, budgetMax, compNotes } = requestContext;
   const hero = match.portfolioSamples?.[0]?.imageUrl || null;
   const thumbs = (match.portfolioSamples || []).slice(1, 3);
 

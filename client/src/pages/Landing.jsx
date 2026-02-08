@@ -160,7 +160,7 @@ export default function Landing() {
     <div className="min-h-screen bg-[#0B0D12] text-white">
       <Navbar />
 
-      <main className="relative">
+      <main id="main-content" className="relative">
         <section className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pb-20 pt-20 text-center sm:px-10 sm:pt-28 lg:px-16">
           <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(93,115,255,0.25),transparent_60%)]" />
           <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(77,212,166,0.18),transparent_45%)]" />

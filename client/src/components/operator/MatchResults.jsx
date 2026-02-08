@@ -1,7 +1,7 @@
 import Btn from '../common/Btn';
 import MatchCard from './MatchCard';
 
-export default function MatchResults({ matches, contentType, requestId, compensationType, budgetMin, budgetMax, compNotes, onReset }) {
+export default function MatchResults({ matches, requestId, requestContext, onReset }) {
   return (
     <div className="min-h-screen bg-bgWarm">
       <div className="max-w-3xl mx-auto px-4 py-8">
@@ -41,12 +41,8 @@ export default function MatchResults({ matches, contentType, requestId, compensa
               key={match.id || idx}
               match={match}
               idx={idx}
-              contentType={contentType}
               requestId={requestId}
-              compensationType={compensationType}
-              budgetMin={budgetMin}
-              budgetMax={budgetMax}
-              compNotes={compNotes}
+              requestContext={requestContext}
             />
           ))}
         </div>

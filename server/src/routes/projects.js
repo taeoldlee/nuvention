@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
-const { requireAuth } = require("../middleware/auth");
+const { requireAuth, requireOperatorWithBrand, requireCreatorWithProfile } = require("../middleware/auth");
 const { createPayout } = require("../services/payments");
 
 // All routes require authentication
@@ -141,11 +141,9 @@ router.get("/:id", async (req, res, next) => {
  * Creator submits a draft.
  * Body: { fileUrls: [...], notes?: "string" }
  */
-router.post("/:id/drafts", async (req, res, next) => {
+router.post("/:id/drafts", requireCreatorWithProfile, async (req, res, next) => {
   try {
-    if (req.user.role !== "CREATOR") {
-      return res.status(403).json({ error: "Only creators can submit drafts" });
-    }
+    const { creatorProfile } = req;
 
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
@@ -156,12 +154,7 @@ router.post("/:id/drafts", async (req, res, next) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Verify the creator owns this project
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!creatorProfile || project.creatorProfileId !== creatorProfile.id) {
+    if (project.creatorProfileId !== creatorProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
@@ -207,11 +200,9 @@ router.post("/:id/drafts", async (req, res, next) => {
  * POST /api/projects/:id/drafts/:draftId/approve
  * Operator approves a draft.
  */
-router.post("/:id/drafts/:draftId/approve", async (req, res, next) => {
+router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "OPERATOR") {
-      return res.status(403).json({ error: "Only operators can approve drafts" });
-    }
+    const { brandProfile } = req;
 
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
@@ -221,12 +212,7 @@ router.post("/:id/drafts/:draftId/approve", async (req, res, next) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Verify ownership
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile || project.brandProfileId !== brandProfile.id) {
+    if (project.brandProfileId !== brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
@@ -268,11 +254,9 @@ router.post("/:id/drafts/:draftId/approve", async (req, res, next) => {
  * Operator requests a revision on a draft.
  * Body: { feedback: "string" }
  */
-router.post("/:id/drafts/:draftId/revision", async (req, res, next) => {
+router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "OPERATOR") {
-      return res.status(403).json({ error: "Only operators can request revisions" });
-    }
+    const { brandProfile } = req;
 
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
@@ -282,12 +266,7 @@ router.post("/:id/drafts/:draftId/revision", async (req, res, next) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Verify ownership
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile || project.brandProfileId !== brandProfile.id) {
+    if (project.brandProfileId !== brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
@@ -346,11 +325,9 @@ router.post("/:id/drafts/:draftId/revision", async (req, res, next) => {
  * POST /api/projects/:id/deliver
  * Mark project as delivered. Triggers creator payout.
  */
-router.post("/:id/deliver", async (req, res, next) => {
+router.post("/:id/deliver", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "OPERATOR") {
-      return res.status(403).json({ error: "Only operators can mark projects as delivered" });
-    }
+    const { brandProfile } = req;
 
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
@@ -361,12 +338,7 @@ router.post("/:id/deliver", async (req, res, next) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Verify ownership
-    const brandProfile = await prisma.brandProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!brandProfile || project.brandProfileId !== brandProfile.id) {
+    if (project.brandProfileId !== brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
