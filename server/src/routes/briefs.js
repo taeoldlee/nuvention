@@ -49,8 +49,11 @@ router.get("/", async (req, res, next) => {
       orderBy: { createdAt: "desc" },
     });
 
+    // Only show briefs that don't have a project yet (not yet accepted)
+    const pendingMatches = matches.filter((match) => !match.project);
+
     // Transform into brief-friendly format
-    const briefs = matches.map((match) => ({
+    const briefs = pendingMatches.map((match) => ({
       matchId: match.id,
       status: match.status,
       matchRationale: match.matchRationale,
@@ -108,7 +111,11 @@ router.post("/:matchId/accept", async (req, res, next) => {
     const match = await prisma.match.findUnique({
       where: { id: req.params.matchId },
       include: {
-        contentRequest: true,
+        contentRequest: {
+          include: {
+            brandProfile: true,
+          },
+        },
         project: true,
       },
     });
@@ -121,15 +128,23 @@ router.post("/:matchId/accept", async (req, res, next) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    if (match.status !== "SELECTED") {
+    if (!["PRESENTED", "SELECTED"].includes(match.status)) {
       return res.status(400).json({
-        error: "Can only accept briefs that have been selected by the operator",
+        error: "This brief has already been processed",
       });
     }
 
     // If a project already exists, just return it
     if (match.project) {
       return res.json({ message: "Brief already accepted", project: match.project });
+    }
+
+    // Update match status to SELECTED if it was PRESENTED
+    if (match.status === "PRESENTED") {
+      await prisma.match.update({
+        where: { id: match.id },
+        data: { status: "SELECTED" },
+      });
     }
 
     // Update content request status

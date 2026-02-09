@@ -15,8 +15,11 @@ export default function DemoSwitcher() {
     }
   }, [location.hash]);
 
-  const operators = demoUsers.filter((u) => u.role === 'OPERATOR');
-  const creators = demoUsers.filter((u) => u.role === 'CREATOR');
+  const allOperators = demoUsers.filter((u) => u.role === 'OPERATOR');
+  const allCreators = demoUsers.filter((u) => u.role === 'CREATOR');
+  // Show new accounts first so they're easy to find
+  const operators = [...allOperators.filter((u) => !u.brandProfile), ...allOperators.filter((u) => u.brandProfile)];
+  const creators = [...allCreators.filter((u) => !u.creatorProfile), ...allCreators.filter((u) => u.creatorProfile)];
 
   const handleSelect = async (demoUser) => {
     try {
@@ -100,6 +103,7 @@ export default function DemoSwitcher() {
                           src={op.avatarUrl}
                           alt={op.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
                         <div className="w-full h-full bg-accentLight flex items-center justify-center text-accent font-bold">
@@ -141,6 +145,7 @@ export default function DemoSwitcher() {
                           src={cr.avatarUrl}
                           alt={cr.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
                         <div className="w-full h-full bg-creatorLight flex items-center justify-center text-creator font-bold">

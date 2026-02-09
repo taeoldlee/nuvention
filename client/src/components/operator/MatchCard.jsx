@@ -15,7 +15,7 @@ export default function MatchCard({ match, idx, requestId, requestContext }) {
         <div className="w-full sm:w-24">
           <div className="w-full h-40 sm:w-24 sm:h-24 rounded-xl bg-bgTan border border-border overflow-hidden">
             {hero ? (
-              <img src={hero} alt="UGC sample" className="w-full h-full object-cover" />
+              <img src={hero} alt="UGC sample" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted text-xs">UGC sample</div>
             )}
@@ -24,7 +24,7 @@ export default function MatchCard({ match, idx, requestId, requestContext }) {
             <div className="flex gap-1 mt-2">
               {thumbs.map((t, i) => (
                 <div key={t.id || i} className="w-7 h-7 rounded-md overflow-hidden border border-border bg-bgTan">
-                  <img src={t.imageUrl} alt="sample" className="w-full h-full object-cover" />
+                  <img src={t.imageUrl} alt="sample" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 </div>
               ))}
             </div>

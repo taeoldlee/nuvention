@@ -174,6 +174,7 @@ export default function Library() {
                         src={thumbnail}
                         alt={getContentType(project)}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted">

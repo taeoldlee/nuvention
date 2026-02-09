@@ -105,6 +105,33 @@ export default function ProjectView() {
       {status === 'DRAFT_SUBMITTED' && latestDraft && <DraftSubmittedView latestDraft={latestDraft} />}
 
       {(status === 'APPROVED' || status === 'DELIVERED') && <ApprovedView isDelivered={status === 'DELIVERED'} latestDraft={latestDraft} navigate={navigate} />}
+
+      {/* Payment Section */}
+      {project.transaction && (
+        <div className="card mt-6 space-y-3">
+          <h2 className="font-display text-lg font-semibold text-dark">Payment</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted font-body uppercase tracking-wide">Status</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                project.transaction.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
+                project.transaction.status === 'HELD' ? 'bg-yellow-50 text-yellow-700' :
+                'bg-bgWarm text-muted'
+              }`}>
+                {project.transaction.status === 'HELD' ? 'Pending (Escrow)' :
+                 project.transaction.status === 'COMPLETED' ? 'Paid' :
+                 project.transaction.status}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs text-muted font-body uppercase tracking-wide">Your Payout</span>
+              <span className="text-lg font-bold text-dark font-body">
+                ${((project.transaction.creatorPayout || 0) / 100).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
       </FadeIn>
     </div>
   );

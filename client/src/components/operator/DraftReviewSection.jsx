@@ -31,6 +31,7 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
                 src={typeof img === 'string' ? img : img.url}
                 alt={`Draft ${i + 1}`}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                onError={(e) => { e.target.style.display = 'none'; }}
               />
             </div>
           ))}

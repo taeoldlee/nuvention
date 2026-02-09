@@ -152,6 +152,7 @@ export default function MatchDetail() {
                     src={creatorInfo.photoUrl}
                     alt={creatorInfo.displayName}
                     className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm mb-3"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-accentLight flex items-center justify-center mb-3">
@@ -228,6 +229,7 @@ export default function MatchDetail() {
                     src={item.imageUrl}
                     alt={`Sample ${i + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 </div>
               ))}

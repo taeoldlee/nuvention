@@ -49,11 +49,11 @@ export default function NewRequest() {
   const [suggestions, setSuggestions] = useState(null);
   const [suggestLoading, setSuggestLoading] = useState(false);
 
-  const [contentType, setContentType] = useState('');
-  const [contentGoal, setContentGoal] = useState('');
+  const [contentTypes, setContentTypes] = useState([]);
+  const [contentGoals, setContentGoals] = useState([]);
   const [subject, setSubject] = useState('');
   const [creativeDirection, setCreativeDirection] = useState('');
-  const [deliverables, setDeliverables] = useState('');
+  const [deliverables, setDeliverables] = useState([]);
   const [timeline, setTimeline] = useState(TIMELINE_OPTIONS[0].value);
   const [usageRights, setUsageRights] = useState(buildUsageRights(TIMELINE_OPTIONS[0].value));
   const [compensationType, setCompensationType] = useState('FLAT_FEE');
@@ -81,41 +81,42 @@ export default function NewRequest() {
 
   const generatedBriefText = useMemo(() => {
     const lines = [
-      `Goal: ${contentGoal || 'Describe the specific goal'}`,
+      `Goal: ${contentGoals.length > 0 ? contentGoals.join(', ') : 'Describe the specific goal'}`,
       `Subject: ${subject || 'What should be highlighted?'}`,
       `Creative direction: ${creativeDirection || 'Add any creative notes (lighting, mood, angles)'}`,
-      `Deliverables: ${deliverables || 'Select deliverables'}`,
+      `Deliverables: ${deliverables.length > 0 ? deliverables.join(', ') : 'Select deliverables'}`,
       `Timeline: ${timeline || 'Select timeline'}`,
       `Usage rights: ${usageRights || 'Usage rights will be generated'}`,
       `Compensation: ${formatCompensation(compensationType, compensationDetails)}`,
-      `Content type: ${contentType || 'Select content type'}`,
+      `Content type: ${contentTypes.length > 0 ? contentTypes.join(', ') : 'Select content type'}`,
     ];
     return lines.join('\n');
-  }, [contentType, contentGoal, subject, creativeDirection, deliverables, timeline, usageRights, compensationType, compensationDetails]);
+  }, [contentTypes, contentGoals, subject, creativeDirection, deliverables, timeline, usageRights, compensationType, compensationDetails]);
 
   const briefText = briefTouched ? briefTextOverride : generatedBriefText;
 
   const handleFindMatches = async () => {
-    if (!contentType || !contentGoal || !deliverables || !timeline) return;
+    if (contentTypes.length === 0 || contentGoals.length === 0 || deliverables.length === 0 || !timeline) return;
     setLoading(true);
     setError('');
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
+      const contentType = contentTypes.join(', ');
       const res = await createContentRequest({
         contentType,
         description: briefText,
         briefText,
-        contentGoal,
+        contentGoal: contentGoals.join(', '),
         subject,
         creativeDirection,
-        deliverables,
+        deliverables: deliverables.join(', '),
         timeline,
         usageRights,
         briefTemplate: {
-          contentGoal,
+          contentGoal: contentGoals.join(', '),
           subject,
           creativeDirection,
-          deliverables,
+          deliverables: deliverables.join(', '),
           timeline,
           usageRights,
         },
@@ -136,9 +137,9 @@ export default function NewRequest() {
   };
 
   const canSubmit =
-    contentType &&
-    contentGoal &&
-    deliverables &&
+    contentTypes.length > 0 &&
+    contentGoals.length > 0 &&
+    deliverables.length > 0 &&
     timeline &&
     (compensationType !== 'FLAT_FEE' || (budgetMin > 0 && budgetMax >= budgetMin));
 
@@ -162,7 +163,7 @@ export default function NewRequest() {
       <MatchResults
         matches={matches}
         requestId={requestId}
-        requestContext={{ contentType, compensationType, budgetMin, budgetMax, compNotes }}
+        requestContext={{ contentType: contentTypes.join(', '), compensationType, budgetMin, budgetMax, compNotes }}
         onReset={() => { setMatches(null); setRequestId(null); }}
       />
     );
@@ -231,11 +232,11 @@ export default function NewRequest() {
                   <button
                     key={i}
                     onClick={() => {
-                      setContentType(s.contentType || '');
-                      setContentGoal(s.contentGoal || '');
+                      setContentTypes(s.contentType ? [s.contentType] : []);
+                      setContentGoals(s.contentGoal ? [s.contentGoal] : []);
                       setSubject(s.subject || '');
                       setCreativeDirection(s.creativeDirection || '');
-                      setDeliverables(s.deliverables || '');
+                      setDeliverables(s.deliverables ? [s.deliverables] : []);
                       addToast(`Applied: ${s.title}`, 'info');
                     }}
                     className="card text-left hover:border-accent/30 hover:shadow-md transition-all p-4"
@@ -264,8 +265,8 @@ export default function NewRequest() {
                 <Chip
                   key={type}
                   label={type}
-                  selected={contentType === type}
-                  onClick={() => setContentType((prev) => (prev === type ? '' : type))}
+                  selected={contentTypes.includes(type)}
+                  onClick={() => setContentTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type])}
                 />
               ))}
             </div>
@@ -278,8 +279,8 @@ export default function NewRequest() {
                 <Chip
                   key={goal}
                   label={goal}
-                  selected={contentGoal === goal}
-                  onClick={() => setContentGoal((prev) => (prev === goal ? '' : goal))}
+                  selected={contentGoals.includes(goal)}
+                  onClick={() => setContentGoals((prev) => prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal])}
                 />
               ))}
             </div>
@@ -315,8 +316,8 @@ export default function NewRequest() {
                 <Chip
                   key={d}
                   label={d}
-                  selected={deliverables === d}
-                  onClick={() => setDeliverables((prev) => (prev === d ? '' : d))}
+                  selected={deliverables.includes(d)}
+                  onClick={() => setDeliverables((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d])}
                 />
               ))}
             </div>
