@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mise — Prototype</title>
+<title>Locale — Prototype</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
@@ -778,7 +778,7 @@ function App() {
       {/* Top nav */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 24px", borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: C.dark }}>Mise</span>
+          <span style={{ fontFamily: FONTS.display, fontSize: 18, fontWeight: 700, color: C.dark }}>Locale</span>
           <span style={{ fontSize: 9, color: C.accent, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, marginLeft: 2 }}>prototype</span>
         </div>
         <button onClick={() => setShowAnnotations(!showAnnotations)} style={{ padding: "5px 12px", borderRadius: 6, border: showAnnotations ? `1.5px solid ${C.accent}` : `1.5px solid #D5CBC4`, background: showAnnotations ? C.accentLight : "transparent", color: showAnnotations ? C.accent : C.muted, fontFamily: FONTS.body, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>

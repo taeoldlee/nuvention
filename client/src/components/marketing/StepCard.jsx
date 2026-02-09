@@ -1,6 +1,6 @@
 export default function StepCard({ step, title, description }) {
   return (
-    <div className="glass-panel gradient-border card-hover flex flex-col gap-4 rounded-2xl p-6">
+    <div className="glass-panel gradient-border card-hover flex flex-col gap-4 rounded-2xl p-6 h-full">
       <span className="text-xs uppercase tracking-[0.2em] text-slate-400/70">
         Step {step}
       </span>

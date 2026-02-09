@@ -1,4 +1,4 @@
-// ─── Payment Service for Mise ───
+// ─── Payment Service for Locale ───
 // Demo mode: all transactions are recorded in the database only.
 // Production mode would integrate with Stripe.
 

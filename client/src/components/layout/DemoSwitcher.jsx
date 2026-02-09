@@ -1,11 +1,19 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function DemoSwitcher() {
   const [open, setOpen] = useState(false);
-  const { demoUsers, user, login } = useAuth();
+  const { demoUsers, user, login, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-open when #demo hash is present
+  useEffect(() => {
+    if (location.hash === '#demo') {
+      setOpen(true);
+    }
+  }, [location.hash]);
 
   const operators = demoUsers.filter((u) => u.role === 'OPERATOR');
   const creators = demoUsers.filter((u) => u.role === 'CREATOR');
@@ -153,6 +161,22 @@ export default function DemoSwitcher() {
                 ))}
               </div>
             </div>
+
+            {/* Reset Demo */}
+            {user && (
+              <div className="p-3 border-t border-border">
+                <button
+                  onClick={() => {
+                    logout();
+                    setOpen(false);
+                    navigate('/');
+                  }}
+                  className="w-full text-center py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+                >
+                  Reset Demo
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}

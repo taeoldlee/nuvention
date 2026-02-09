@@ -20,7 +20,7 @@ export default function CreatorStepDone() {
       </div>
 
       <h2 className="font-display text-3xl font-bold text-dark mb-3">You're In</h2>
-      <p className="font-body text-muted max-w-md mx-auto mb-10">Welcome to Mise. Here's how it works from here.</p>
+      <p className="font-body text-muted max-w-md mx-auto mb-10">Welcome to Locale. Here's how it works from here.</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-6 max-w-2xl mx-auto mb-10">
         {HOW_IT_WORKS.map((item) => (

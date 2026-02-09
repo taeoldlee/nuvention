@@ -98,7 +98,7 @@ app.use((err, req, res, next) => {
 const PORT = parseInt(process.env.PORT, 10) || 3001;
 
 app.listen(PORT, () => {
-  console.log(`\n  Mise API running on http://localhost:${PORT}`);
+  console.log(`\n  Locale API running on http://localhost:${PORT}`);
   console.log(`  Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`  CORS origin: ${corsOrigin}`);
   console.log(`  OpenAI: ${process.env.OPENAI_API_KEY ? "configured" : "not configured (using fallbacks)"}`);

@@ -1,4 +1,4 @@
-// ─── Shared Constants for Mise ───
+// ─── Shared Constants for Locale ───
 
 const VIBE_OPTIONS = [
   "Cozy & Warm",

@@ -67,7 +67,7 @@ export default function Onboarding() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
               </svg>
             </div>
-            <span className="font-display text-lg font-bold text-dark">Mise</span>
+            <span className="font-display text-lg font-bold text-dark">Locale</span>
           </div>
           <h1 className="font-display text-xl font-semibold text-dark">Creator Setup</h1>
         </div>

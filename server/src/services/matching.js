@@ -1,4 +1,4 @@
-// ─── Matching Algorithm for Mise ───
+// ─── Matching Algorithm for Locale ───
 // Connects operators with the best-fit creators based on
 // vibe alignment, content style, neighborhood, dream brands, and portfolio quality.
 

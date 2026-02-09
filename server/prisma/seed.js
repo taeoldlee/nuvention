@@ -2,7 +2,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Mise seed script starting ---\n');
+  console.log('--- Locale seed script starting ---\n');
 
   // ─── CLEAN SLATE ───
   console.log('Clearing existing data...');
