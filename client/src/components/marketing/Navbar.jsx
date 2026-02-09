@@ -20,7 +20,7 @@ export default function Navbar() {
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#7D8BFF] to-[#4DD4A6]" />
-          <span className="font-display text-lg font-semibold text-white">Locale</span>
+          <span className="font-display text-lg font-semibold text-white">Mise</span>
         </div>
         <div className="hidden items-center gap-6 text-sm text-slate-300/80 md:flex">
           {links.map((link) => (

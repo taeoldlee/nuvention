@@ -45,7 +45,7 @@ export default function OnboardingStepBudget({ formActions, onBack, onNext }) {
           </div>
         </div>
         <p className="text-xs text-muted mt-2 font-body">
-          Most content on Locale is priced between $150 and $400 per piece.
+          Most content on Mise is priced between $150 and $400 per piece.
         </p>
       </div>
 

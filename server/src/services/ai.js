@@ -1,4 +1,4 @@
-// ─── AI Service for Locale ───
+// ─── AI Service for Mise ───
 // Handles OpenAI integration with graceful fallbacks.
 
 const openai = require("../config/openai");

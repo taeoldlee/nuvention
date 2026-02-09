@@ -1,4 +1,4 @@
-// ─── Matching Algorithm for Locale ───
+// ─── Matching Algorithm for Mise ───
 // Connects operators with the best-fit creators based on
 // vibe alignment, content style, neighborhood, dream brands, and portfolio quality.
 
@@ -61,11 +61,12 @@ const DEFAULT_PRICE_RANGE = [18000, 22000, 25000];
 
 // ─── Scoring Weights ───
 const WEIGHTS = {
-  vibeAlignment: 30,
-  contentStyleMatch: 25,
-  neighborhoodProximity: 20,
-  dreamBrandMatch: 15,
-  portfolioQuality: 10,
+  vibeAlignment: 25,
+  contentStyleMatch: 22,
+  neighborhoodProximity: 18,
+  cuisineMatch: 15,
+  dreamBrandMatch: 12,
+  portfolioQuality: 8,
 };
 
 function titleCase(value) {
@@ -183,6 +184,26 @@ function dreamBrandMatchScore(brand, creator) {
 }
 
 /**
+ * Calculate cuisine match score (0-1).
+ * Compares brand cuisine types with creator cuisine specialties.
+ */
+function cuisineMatchScore(brand, creator) {
+  const brandCuisine = Array.isArray(brand.cuisineTypes) ? brand.cuisineTypes : [];
+  const creatorCuisine = Array.isArray(creator.cuisineSpecialties) ? creator.cuisineSpecialties : [];
+
+  if (brandCuisine.length === 0 || creatorCuisine.length === 0) return 0.4;
+
+  const brandSet = new Set(brandCuisine.map((c) => c.toLowerCase()));
+  let matches = 0;
+  for (const c of creatorCuisine) {
+    if (brandSet.has(c.toLowerCase())) matches++;
+  }
+
+  if (matches === 0) return 0.15;
+  return Math.min(matches / brandCuisine.length, 1);
+}
+
+/**
  * Calculate portfolio quality score (0-1).
  * Based on number of portfolio items.
  */
@@ -203,6 +224,7 @@ function scoreCreator(brand, request, creator) {
   const vibe = vibeAlignmentScore(brand, creator);
   const style = contentStyleMatchScore(request.contentType, creator);
   const neighborhood = neighborhoodProximityScore(brand, creator);
+  const cuisine = cuisineMatchScore(brand, creator);
   const dream = dreamBrandMatchScore(brand, creator);
   const portfolio = portfolioQualityScore(creator);
 
@@ -210,6 +232,7 @@ function scoreCreator(brand, request, creator) {
     vibe * WEIGHTS.vibeAlignment +
     style * WEIGHTS.contentStyleMatch +
     neighborhood * WEIGHTS.neighborhoodProximity +
+    cuisine * WEIGHTS.cuisineMatch +
     dream * WEIGHTS.dreamBrandMatch +
     portfolio * WEIGHTS.portfolioQuality
   );
@@ -256,6 +279,9 @@ function buildMatchPackage(brand, request, creator, optionIndex) {
     rationale += `Aesthetic markers: ${matchSignals.aestheticMarkers.join(", ")}.`;
   }
 
+  // Generate match insight badges
+  const matchInsights = buildMatchInsights(brand, request, creator);
+
   return {
     contentPreview,
     deliverables: Array.isArray(deliverables) ? deliverables.join(" · ") : deliverables,
@@ -265,7 +291,51 @@ function buildMatchPackage(brand, request, creator, optionIndex) {
     style,
     matchRationale: rationale,
     matchSignals,
+    matchInsights,
   };
+}
+
+/**
+ * Build AI match insight badges.
+ */
+function buildMatchInsights(brand, request, creator) {
+  const insights = [];
+
+  // Style fit percentage
+  const styleFit = Math.round(contentStyleMatchScore(request.contentType, creator) * 100);
+  if (styleFit >= 70) insights.push(`Style Fit: ${styleFit}%`);
+
+  // Local expert
+  const brandNeighborhood = (brand.neighborhood || "").toLowerCase();
+  const creatorNeighborhoods = Array.isArray(creator.neighborhoods)
+    ? creator.neighborhoods.map((n) => n.toLowerCase())
+    : [];
+  if (brandNeighborhood && creatorNeighborhoods.includes(brandNeighborhood)) {
+    insights.push("Local Expert");
+  }
+
+  // Cuisine match
+  const brandCuisine = Array.isArray(brand.cuisineTypes) ? brand.cuisineTypes : [];
+  const creatorCuisine = Array.isArray(creator.cuisineSpecialties) ? creator.cuisineSpecialties : [];
+  if (brandCuisine.length > 0 && creatorCuisine.length > 0) {
+    const overlap = brandCuisine.filter((c) =>
+      creatorCuisine.some((cc) => cc.toLowerCase() === c.toLowerCase())
+    );
+    if (overlap.length > 0) insights.push("Cuisine Match");
+  }
+
+  // Rising star
+  const projects = Array.isArray(creator.projects) ? creator.projects : [];
+  const portfolioItems = Array.isArray(creator.portfolioItems) ? creator.portfolioItems : [];
+  if (projects.length <= 2 && portfolioItems.length >= 3) {
+    insights.push("Rising Star");
+  }
+
+  // Vibe alignment
+  const vibeScore = vibeAlignmentScore(brand, creator);
+  if (vibeScore >= 0.8) insights.push("Vibe Aligned");
+
+  return insights.slice(0, 4);
 }
 
 function buildVenueAlignment(brand, creator) {

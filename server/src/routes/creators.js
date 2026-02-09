@@ -68,6 +68,7 @@ router.post("/profile", async (req, res, next) => {
       dreamBrands,
       vibeTags,
       profilePhotoUrl,
+      cuisineSpecialties,
     } = req.body;
 
     if (!displayName) {
@@ -87,6 +88,7 @@ router.post("/profile", async (req, res, next) => {
         dreamBrands: dreamBrands || null,
         vibeTags: vibeTags || null,
         profilePhotoUrl: profilePhotoUrl || null,
+        cuisineSpecialties: cuisineSpecialties || null,
       },
       include: {
         portfolioItems: true,
@@ -128,6 +130,7 @@ router.put("/profile", async (req, res, next) => {
       dreamBrands,
       vibeTags,
       profilePhotoUrl,
+      cuisineSpecialties,
     } = req.body;
 
     const profile = await prisma.creatorProfile.update({
@@ -143,6 +146,7 @@ router.put("/profile", async (req, res, next) => {
         ...(dreamBrands !== undefined && { dreamBrands }),
         ...(vibeTags !== undefined && { vibeTags }),
         ...(profilePhotoUrl !== undefined && { profilePhotoUrl }),
+        ...(cuisineSpecialties !== undefined && { cuisineSpecialties }),
       },
       include: {
         portfolioItems: {

@@ -64,6 +64,25 @@ export default function OnboardingStepConfirm({ form, saving, saveError, onBack,
           </div>
         </div>
 
+        {/* Cuisine */}
+        {form.cuisineTypes?.length > 0 && (
+          <div>
+            <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">
+              Cuisine
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {form.cuisineTypes.map((c) => (
+                <span
+                  key={c}
+                  className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-accentLight text-accent border border-accent/20"
+                >
+                  {c}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Content Comfort Zones */}
         <div>
           <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">

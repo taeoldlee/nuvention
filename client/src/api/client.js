@@ -11,7 +11,7 @@ const client = axios.create({
 
 // Attach demo user ID to every request
 client.interceptors.request.use((config) => {
-  const userId = localStorage.getItem('locale_user_id');
+  const userId = localStorage.getItem('mise_user_id');
   if (userId) {
     config.headers['x-user-id'] = userId;
   }

@@ -151,7 +151,7 @@ const faqs = [
   {
     question: 'Is this a marketplace or agency?',
     answer:
-      'Neither. Locale is an opinionated commissioning product focused on brand safety, not bidding or creator discovery.',
+      'Neither. Mise is an opinionated commissioning product focused on brand safety, not bidding or creator discovery.',
   },
 ];
 
@@ -173,7 +173,7 @@ export default function Landing() {
               Commission local UGC with confidence.
             </h1>
             <p className="max-w-2xl text-base text-slate-300/80 sm:text-lg">
-              Locale is an opinionated, hyperlocal UGC commissioning platform for restaurants and cafés. It helps you approve content fast because the match is brand‑safe and explainable.
+              Mise is an opinionated, hyperlocal UGC commissioning platform for restaurants and cafés. It helps you approve content fast because the match is brand‑safe and explainable.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button href="#cta">Create a brief</Button>
@@ -208,7 +208,7 @@ export default function Landing() {
                 Built for operators who need confidence, not just speed.
               </p>
               <p className="mt-2 text-sm text-slate-300/70">
-                Locale prioritizes brand safety with evidence‑based matching and controlled identity disclosure.
+                Mise prioritizes brand safety with evidence‑based matching and controlled identity disclosure.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -367,7 +367,7 @@ export default function Landing() {
         <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-slate-300/60 sm:flex-row">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#7D8BFF] to-[#4DD4A6]" />
-            <span className="font-display text-white">Locale</span>
+            <span className="font-display text-white">Mise</span>
           </div>
           <div className="flex flex-wrap items-center gap-5">
             <a className="hover:text-white transition-colors" href="#how-it-works">How it works</a>
@@ -375,7 +375,7 @@ export default function Landing() {
             <a className="hover:text-white transition-colors" href="#trust">Trust</a>
             <a className="hover:text-white transition-colors" href="#pricing">Pricing</a>
           </div>
-          <p>© 2026 Locale</p>
+          <p>© 2026 Mise</p>
         </div>
       </footer>
     </div>

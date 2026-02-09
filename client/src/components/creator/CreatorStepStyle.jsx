@@ -1,10 +1,18 @@
 import { CONTENT_STYLES, CREATOR_STRENGTHS, NEIGHBORHOODS } from '../../utils/constants';
 import Chip from '../common/Chip';
 
+const CUISINE_OPTIONS = [
+  'Italian', 'Mexican', 'Japanese', 'Thai', 'French', 'American',
+  'Mediterranean', 'Indian', 'Korean', 'Chinese', 'Vietnamese',
+  'Ethiopian', 'Middle Eastern', 'Bakery & Pastry', 'Coffee & Beverage',
+  'Farm-to-Table', 'Fusion',
+];
+
 export default function CreatorStepStyle({ formActions }) {
   const {
     contentStyles, setContentStyles,
     strengths, setStrengths,
+    cuisineSpecialties, setCuisineSpecialties,
     neighborhoods, setNeighborhoods,
     dreamBrands, brandInput, setBrandInput,
     toggleItem, addDreamBrand, removeDreamBrand,
@@ -43,6 +51,16 @@ export default function CreatorStepStyle({ formActions }) {
         <div className="flex flex-wrap gap-2">
           {NEIGHBORHOODS.map((n) => (
             <Chip key={n} label={n} selected={neighborhoods.includes(n)} creator onClick={() => toggleItem(neighborhoods, setNeighborhoods, n)} />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="label">Cuisine Specialties (optional)</label>
+        <p className="text-xs text-muted mb-3">What types of food do you love to shoot?</p>
+        <div className="flex flex-wrap gap-2">
+          {CUISINE_OPTIONS.map((c) => (
+            <Chip key={c} label={c} selected={cuisineSpecialties.includes(c)} creator onClick={() => toggleItem(cuisineSpecialties, setCuisineSpecialties, c)} />
           ))}
         </div>
       </div>

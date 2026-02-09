@@ -13,6 +13,7 @@ export default function useCreatorOnboardingForm() {
   // Step 1 — Style & Neighborhoods
   const [contentStyles, setContentStyles] = useState([]);
   const [strengths, setStrengths] = useState([]);
+  const [cuisineSpecialties, setCuisineSpecialties] = useState([]);
   const [neighborhoods, setNeighborhoods] = useState([]);
   const [dreamBrands, setDreamBrands] = useState([]);
   const [brandInput, setBrandInput] = useState('');
@@ -80,6 +81,7 @@ export default function useCreatorOnboardingForm() {
     strengths,
     neighborhoods,
     dreamBrands: dreamBrands.length > 0 ? dreamBrands : undefined,
+    cuisineSpecialties: cuisineSpecialties.length > 0 ? cuisineSpecialties : undefined,
   });
 
   return {
@@ -90,6 +92,7 @@ export default function useCreatorOnboardingForm() {
     tiktok, setTiktok,
     contentStyles, setContentStyles,
     strengths, setStrengths,
+    cuisineSpecialties, setCuisineSpecialties,
     neighborhoods, setNeighborhoods,
     dreamBrands, brandInput, setBrandInput,
     portfolioFiles, previews,

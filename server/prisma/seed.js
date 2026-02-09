@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Locale seed script starting ---\n');
+  console.log('--- Mise seed script starting ---\n');
 
   // ─── CLEAN SLATE ───────────────────────────────────────────────
   // Delete in reverse-dependency order to respect foreign keys.

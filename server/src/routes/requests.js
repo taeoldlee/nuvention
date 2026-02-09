@@ -216,8 +216,9 @@ module.exports = router;
 function anonymizeRequest(request) {
   if (!request) return request;
   const matches = Array.isArray(request.matches) ? request.matches : [];
-  const anonymizedMatches = matches.map((match, idx) => {
-    const alias = `Creator ${String.fromCharCode(65 + idx)}`;
+  const anonymizedMatches = matches.map((match) => {
+    const suffix = (match.creatorProfileId || "").slice(0, 4).toUpperCase() || "XXXX";
+    const alias = `Creator_${suffix}`;
     const portfolioSamples = (match.creatorProfile?.portfolioItems || []).map((p) => ({
       id: p.id,
       imageUrl: p.imageUrl,
@@ -236,6 +237,7 @@ function anonymizeRequest(request) {
       style: match.style,
       matchRationale: match.matchRationale,
       matchSignals: match.matchSignals,
+      matchInsights: match.matchInsights,
       portfolioSamples,
       compensationType: request.compensationType,
       compensationDetails: request.compensationDetails,
