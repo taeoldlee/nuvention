@@ -132,16 +132,10 @@ router.post("/:matchId/accept", async (req, res, next) => {
       return res.json({ message: "Brief already accepted", project: match.project });
     }
 
-    // Update match status to ACCEPTED
-    await prisma.match.update({
-      where: { id: match.id },
-      data: { status: "ACCEPTED" },
-    });
-
     // Update content request status
     await prisma.contentRequest.update({
       where: { id: match.contentRequestId },
-      data: { status: "IN_PROGRESS" },
+      data: { status: "SELECTED" },
     });
 
     // Create the project

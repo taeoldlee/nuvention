@@ -59,7 +59,8 @@ export default function ProjectView() {
   const briefText = project.briefText || project.match?.contentRequest?.description || project.request?.description || project.request?.briefText || '';
   const drafts = project.drafts || [];
   const latestDraft = drafts.length > 0 ? drafts[0] : null;
-  const revisionNotes = project.revisionNotes || project.revisionFeedback || latestDraft?.revisionFeedback || latestDraft?.feedback || '';
+  const revisionDraft = drafts.find((d) => d.status === 'REVISION_REQUESTED') || drafts.find((d) => d.feedback);
+  const revisionNotes = revisionDraft?.feedback || latestDraft?.feedback || '';
   const canSubmitDraft = status === 'BRIEF_SENT' || status === 'REVISION_REQUESTED';
   const isRevisionRequested = status === 'REVISION_REQUESTED';
 
@@ -79,7 +80,7 @@ export default function ProjectView() {
       </FadeIn>
 
       <FadeIn delay={0.15}>
-      {isRevisionRequested && revisionNotes && (
+      {isRevisionRequested && (
         <div className="card mb-6 border-orange-200 bg-orange-50/50">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
@@ -89,7 +90,9 @@ export default function ProjectView() {
             </div>
             <div>
               <h3 className="font-body font-semibold text-orange-800 mb-1">Revision Requested</h3>
-              <p className="font-body text-sm text-orange-700 leading-relaxed">{revisionNotes}</p>
+              <p className="font-body text-sm text-orange-700 leading-relaxed">
+                {revisionNotes || 'The brand has requested changes to your draft. Please review and resubmit.'}
+              </p>
             </div>
           </div>
         </div>
