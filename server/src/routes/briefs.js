@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
+const { generateUsageRightsDoc } = require("../services/documents");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -119,9 +120,9 @@ router.post("/:matchId/accept", async (req, res, next) => {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    if (match.status !== "SELECTED") {
+    if (!["PRESENTED", "SELECTED"].includes(match.status)) {
       return res.status(400).json({
-        error: "Can only accept briefs that have been selected by the operator",
+        error: "This brief can no longer be accepted",
       });
     }
 
@@ -130,7 +131,52 @@ router.post("/:matchId/accept", async (req, res, next) => {
       return res.json({ message: "Brief already accepted", project: match.project });
     }
 
-    res.json({ message: "Brief accepted", match });
+    // Mark this match as SELECTED and decline the others
+    await prisma.match.update({
+      where: { id: match.id },
+      data: { status: "SELECTED" },
+    });
+
+    await prisma.match.updateMany({
+      where: {
+        contentRequestId: match.contentRequestId,
+        id: { not: match.id },
+        status: "PRESENTED",
+      },
+      data: { status: "DECLINED" },
+    });
+
+    await prisma.contentRequest.update({
+      where: { id: match.contentRequestId },
+      data: { status: "SELECTED" },
+    });
+
+    // Create the project
+    const usageRightsDoc = generateUsageRightsDoc({
+      businessName: match.contentRequest?.businessName,
+      contentType: match.contentRequest?.contentType,
+      usageRights: match.usageRights,
+      timeline: match.timeline,
+    });
+
+    const project = await prisma.project.create({
+      data: {
+        matchId: match.id,
+        brandProfileId: match.contentRequest.brandProfileId,
+        creatorProfileId: creatorProfile.id,
+        status: "BRIEF_SENT",
+        deliverables: match.deliverables,
+        price: match.price,
+        timeline: match.timeline,
+        usageRights: match.usageRights,
+        briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview || ""}`,
+        usageRightsDoc,
+        compensationType: match.contentRequest.compensationType || "FLAT_FEE",
+        compensationDetails: match.contentRequest.compensationDetails || null,
+      },
+    });
+
+    res.json({ message: "Brief accepted", project });
   } catch (err) {
     next(err);
   }

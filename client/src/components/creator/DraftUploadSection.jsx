@@ -4,7 +4,7 @@ import Btn from '../common/Btn';
 export default function DraftUploadSection({ draftActions, isRevisionRequested }) {
   const {
     draftFiles, draftPreviews, draftNotes, setDraftNotes,
-    submitting, submitSuccess, error,
+    submitting, uploadProgress, submitSuccess, error,
     handleFilesSelected, removeFile, handleSubmit,
   } = draftActions;
 
@@ -20,6 +20,13 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
     e.preventDefault();
     e.stopPropagation();
   };
+
+  const imageCount = draftPreviews.filter((p) => p.type?.startsWith('image/')).length;
+  const videoCount = draftPreviews.filter((p) => p.type?.startsWith('video/')).length;
+  const fileSummary = [
+    imageCount > 0 && `${imageCount} image${imageCount !== 1 ? 's' : ''}`,
+    videoCount > 0 && `${videoCount} video${videoCount !== 1 ? 's' : ''}`,
+  ].filter(Boolean).join(', ');
 
   return (
     <div className="card mb-6">
@@ -38,25 +45,34 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
         onDragOver={handleDragOver}
         className="border-2 border-dashed border-creator/30 rounded-2xl p-8 text-center cursor-pointer hover:border-creator/60 hover:bg-creatorLight/30 transition-all duration-200 mb-5"
       >
-        <input ref={fileInputRef} type="file" accept="image/*" multiple onChange={(e) => handleFilesSelected(e.target.files)} className="hidden" />
+        <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={(e) => handleFilesSelected(e.target.files)} className="hidden" />
         <div className="w-12 h-12 rounded-xl bg-creatorLight mx-auto mb-3 flex items-center justify-center">
           <svg className="w-6 h-6 text-creator" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
           </svg>
         </div>
-        <p className="font-body font-semibold text-dark mb-1">Drag images here or click to browse</p>
-        <p className="font-body text-sm text-muted">JPG, PNG, or WebP</p>
+        <p className="font-body font-semibold text-dark mb-1">Drag files here or click to browse</p>
+        <p className="font-body text-sm text-muted">JPG, PNG, WebP, MP4, MOV (videos up to 100MB)</p>
       </div>
 
       {draftPreviews.length > 0 && (
         <div className="mb-5">
           <p className="text-sm font-semibold text-mid mb-3">
-            {draftPreviews.length} image{draftPreviews.length !== 1 ? 's' : ''} selected
+            {fileSummary} selected
           </p>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-            {draftPreviews.map((src, i) => (
-              <div key={`preview-${i}`} className="relative aspect-square rounded-xl overflow-hidden group">
-                <img src={src} alt={`Draft ${i + 1}`} className="w-full h-full object-cover" />
+            {draftPreviews.map((preview, i) => (
+              <div key={`preview-${i}`} className="relative aspect-square rounded-xl overflow-hidden group bg-gray-100">
+                {preview.type?.startsWith('video/') ? (
+                  <video src={preview.url} className="w-full h-full object-cover" muted />
+                ) : (
+                  <img src={preview.url} alt={`Draft ${i + 1}`} className="w-full h-full object-cover" />
+                )}
+                {preview.type?.startsWith('video/') && (
+                  <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                    VIDEO
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); removeFile(i); }}
@@ -68,6 +84,15 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {submitting && uploadProgress < 100 && (
+        <div className="mb-5 bg-creatorLight/50 rounded-xl p-4">
+          <p className="text-sm font-medium text-creator mb-2">Uploading... {uploadProgress}%</p>
+          <div className="w-full bg-gray-200 rounded-full h-1.5">
+            <div className="bg-creator h-1.5 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
           </div>
         </div>
       )}

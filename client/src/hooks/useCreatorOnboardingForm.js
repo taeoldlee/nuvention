@@ -39,16 +39,16 @@ export default function useCreatorOnboardingForm() {
   };
 
   const handleFilesSelected = (files) => {
-    const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/'));
+    const newFiles = Array.from(files).filter((f) => f.type.startsWith('image/') || f.type.startsWith('video/'));
     const combined = [...portfolioFiles, ...newFiles].slice(0, 6);
     setPortfolioFiles(combined);
-    const newPreviews = combined.map((file) => URL.createObjectURL(file));
-    previews.forEach((url) => URL.revokeObjectURL(url));
+    const newPreviews = combined.map((file) => ({ url: URL.createObjectURL(file), type: file.type }));
+    previews.forEach((p) => URL.revokeObjectURL(p.url || p));
     setPreviews(newPreviews);
   };
 
   const removeFile = (index) => {
-    URL.revokeObjectURL(previews[index]);
+    URL.revokeObjectURL(previews[index]?.url || previews[index]);
     setPortfolioFiles((prev) => prev.filter((_, i) => i !== index));
     setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
@@ -56,15 +56,15 @@ export default function useCreatorOnboardingForm() {
   const canProceedFromStep = (step) => {
     if (step === 0) return displayName.trim().length > 0 && bio.trim().length > 0;
     if (step === 1) return contentStyles.length > 0 && strengths.length > 0 && neighborhoods.length > 0;
-    if (step === 2) return portfolioFiles.length >= 3;
+    if (step === 2) return portfolioFiles.length >= 2;
     return true;
   };
 
   const buildProfileData = () => ({
     displayName: displayName.trim(),
     bio: bio.trim(),
-    instagram: instagram.trim() || undefined,
-    tiktok: tiktok.trim() || undefined,
+    instagramHandle: instagram.trim() || undefined,
+    tiktokHandle: tiktok.trim() || undefined,
     contentStyles,
     strengths,
     neighborhoods,

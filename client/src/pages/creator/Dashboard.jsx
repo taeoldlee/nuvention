@@ -11,7 +11,7 @@ import CreatorProjectCard from '../../components/creator/CreatorProjectCard';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
 
   const [stats, setStats] = useState(null);
   const [briefs, setBriefs] = useState([]);
@@ -40,7 +40,7 @@ export default function Dashboard() {
       }
     }
     fetchData();
-  }, []);
+  }, [user?.id]);
 
   if (loading) {
     return <LoadingSpinner message="Loading your dashboard..." creator />;

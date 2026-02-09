@@ -227,9 +227,20 @@ Describe the specific photos and Reel they would create. Be vivid and specific t
 }
 
 function fallbackContentPreview(brand, contentType) {
-  const { CONTENT_TEMPLATES } = require("./matching");
-  const templates = CONTENT_TEMPLATES[contentType] || CONTENT_TEMPLATES["Food & Drink"];
-  return templates[0];
+  // Inline content templates to avoid circular dependency with matching.js
+  const FALLBACK_TEMPLATES = {
+    "Ambiance / Interior":
+      "Golden-hour interior shots capturing the warm atmosphere and signature details of your space. Includes a 15-second walkthrough Reel showing the full ambiance experience.",
+    "Food & Drink":
+      "Close-up, beautifully styled shots of your signature dishes and drinks in natural light. Includes a 15-second Reel of a signature drink being crafted.",
+    "Community / Culture":
+      "Candid community moments — regulars chatting, baristas laughing, the energy of a busy morning. Includes a day-in-the-life Reel.",
+    "Behind the Scenes":
+      "Authentic behind-the-scenes of your craft — prep work, techniques, and the people behind the product. Includes a process Reel.",
+    "Seasonal Special":
+      "Seasonal menu or decoration showcase with lifestyle context. Includes a Reel announcing the seasonal feature.",
+  };
+  return FALLBACK_TEMPLATES[contentType] || FALLBACK_TEMPLATES["Food & Drink"];
 }
 
 module.exports = {

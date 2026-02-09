@@ -2,6 +2,8 @@
 // Connects operators with the best-fit creators based on
 // vibe alignment, content style, neighborhood, dream brands, and portfolio quality.
 
+const { generateMatchRationale, generateContentPreview } = require("./ai");
+
 const CONTENT_TEMPLATES = {
   "Ambiance / Interior": [
     "Golden-hour interior shots capturing the warm atmosphere and signature details of your space. Includes a 15-second walkthrough Reel showing the full ambiance experience.",
@@ -218,16 +220,32 @@ function scoreCreator(brand, request, creator) {
 }
 
 /**
- * Build a match package for a creator.
+ * Build the template-based rationale (used as fallback when AI is unavailable).
  */
-function buildMatchPackage(brand, request, creator, optionIndex) {
+function buildFallbackRationale(brand, request, creator, matchSignals) {
+  const contentType = request.contentType;
+  const vibeLabel = Array.isArray(brand.vibe) && brand.vibe.length > 0 ? brand.vibe[0] : "local";
+  let rationale = `Strong fit for your ${vibeLabel.toLowerCase()} aesthetic and ${contentType.toLowerCase()} needs. `;
+  if (matchSignals.communitySignals?.[0]) {
+    rationale += `${matchSignals.communitySignals[0]}. `;
+  }
+  if (matchSignals.aestheticMarkers?.length) {
+    rationale += `Aesthetic markers: ${matchSignals.aestheticMarkers.join(", ")}.`;
+  }
+  return rationale;
+}
+
+/**
+ * Build a match package for a creator.
+ * Uses AI for rationale and content preview when available, falls back to templates.
+ */
+async function buildMatchPackage(brand, request, creator, optionIndex, matchScore) {
   const contentType = request.contentType;
   const templates = CONTENT_TEMPLATES[contentType] || CONTENT_TEMPLATES["Food & Drink"];
   const prices = PRICE_RANGES[contentType] || DEFAULT_PRICE_RANGE;
 
   const idx = optionIndex % templates.length;
 
-  const contentPreview = templates[idx];
   const deliverables = request.deliverables || DELIVERABLE_OPTIONS[idx];
   const timeline = request.timeline || TIMELINE_OPTIONS[idx];
   const usageRights = request.usageRights || USAGE_OPTIONS[idx];
@@ -245,16 +263,17 @@ function buildMatchPackage(brand, request, creator, optionIndex) {
   const creatorStyles = Array.isArray(creator.contentStyles) ? creator.contentStyles : [];
   const style = creatorStyles[0] || "Warm & Editorial";
 
-  // Generate rationale
+  // Build match signals (needed for fallback rationale and response)
   const matchSignals = buildMatchSignals(brand, request, creator);
-  const vibeLabel = Array.isArray(brand.vibe) && brand.vibe.length > 0 ? brand.vibe[0] : "local";
-  let rationale = `Strong fit for your ${vibeLabel.toLowerCase()} aesthetic and ${contentType.toLowerCase()} needs. `;
-  if (matchSignals.communitySignals?.[0]) {
-    rationale += `${matchSignals.communitySignals[0]}. `;
-  }
-  if (matchSignals.aestheticMarkers?.length) {
-    rationale += `Aesthetic markers: ${matchSignals.aestheticMarkers.join(", ")}.`;
-  }
+
+  // Attempt AI-generated content preview and rationale in parallel,
+  // falling back to templates if AI is unavailable or fails.
+  const [contentPreview, rationale] = await Promise.all([
+    generateContentPreview(brand, creator, contentType).catch(() => templates[idx]),
+    generateMatchRationale(brand, creator, contentType, matchScore).catch(
+      () => buildFallbackRationale(brand, request, creator, matchSignals)
+    ),
+  ]);
 
   return {
     contentPreview,
@@ -360,9 +379,9 @@ function buildMatchSignals(brand, request, creator) {
  * @param {Object} brand - BrandProfile
  * @param {Object} request - ContentRequest
  * @param {Array} allCreators - Array of CreatorProfile with portfolioItems included
- * @returns {Array} Top 3 match objects
+ * @returns {Promise<Array>} Top 3 match objects
  */
-function generateMatches(brand, request, allCreators) {
+async function generateMatches(brand, request, allCreators) {
   if (!allCreators || allCreators.length === 0) {
     return [];
   }
@@ -379,15 +398,19 @@ function generateMatches(brand, request, allCreators) {
   // Take top 3
   const top3 = scored.slice(0, 3);
 
-  // Build match packages
-  return top3.map((entry, idx) => {
-    const pkg = buildMatchPackage(brand, request, entry.creator, idx);
-    return {
-      creatorProfileId: entry.creator.id,
-      matchScore: entry.score,
-      ...pkg,
-    };
-  });
+  // Build match packages (AI calls run in parallel across all 3 matches)
+  const matches = await Promise.all(
+    top3.map(async (entry, idx) => {
+      const pkg = await buildMatchPackage(brand, request, entry.creator, idx, entry.score);
+      return {
+        creatorProfileId: entry.creator.id,
+        matchScore: entry.score,
+        ...pkg,
+      };
+    })
+  );
+
+  return matches;
 }
 
 module.exports = {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { createCreatorProfile, uploadPortfolio } from '../../api';
 import useCreatorOnboardingForm from '../../hooks/useCreatorOnboardingForm';
@@ -12,36 +12,72 @@ import CreatorStepDone from '../../components/creator/CreatorStepDone';
 
 const STEPS = ['Profile', 'Style', 'Portfolio', 'Done'];
 
+// 100MB per-file limit for videos, matching the server
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const formActions = useCreatorOnboardingForm();
+
+  // Redirect to landing if not logged in
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false);
 
   const handleSubmit = async () => {
     setSaving(true);
     setError(null);
+    setUploadProgress(0);
     try {
-      await createCreatorProfile(formActions.buildProfileData());
-
-      if (formActions.portfolioFiles.length > 0) {
-        try {
-          const formData = new FormData();
-          formActions.portfolioFiles.forEach((file) => formData.append('images', file));
-          await uploadPortfolio(formData);
-        } catch {
-          console.warn('Portfolio upload skipped (demo mode)');
+      // Validate file sizes before uploading
+      for (const file of formActions.portfolioFiles) {
+        const limit = file.type.startsWith('video/') ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+        const limitLabel = file.type.startsWith('video/') ? '100MB' : '10MB';
+        if (file.size > limit) {
+          throw new Error(`"${file.name}" is too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum ${limitLabel} for ${file.type.startsWith('video/') ? 'videos' : 'images'}.`);
         }
       }
 
+      await createCreatorProfile(formActions.buildProfileData());
       await refreshProfile();
+
+      // Show "Done" step immediately -- uploads continue in background
+      setSaving(false);
       setStep(3);
+
+      if (formActions.portfolioFiles.length > 0) {
+        setUploading(true);
+        const formData = new FormData();
+        formActions.portfolioFiles.forEach((file) => formData.append('images', file));
+        uploadPortfolio(formData, {
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.total) {
+              const pct = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(pct);
+            }
+          },
+        }).then(() => {
+          setUploading(false);
+          setUploadProgress(100);
+        }).catch((err) => {
+          console.warn('Portfolio upload failed:', err.message);
+          setUploading(false);
+        });
+      }
     } catch (err) {
-      setError(err.response?.data?.error || 'Something went wrong. Please try again.');
-    } finally {
+      if (err.code === 'ECONNABORTED') {
+        setError('Upload timed out. Try smaller files or check your connection.');
+      } else {
+        setError(err.response?.data?.error || err.message || 'Something went wrong. Please try again.');
+      }
       setSaving(false);
     }
   };
@@ -82,7 +118,7 @@ export default function Onboarding() {
           {step === 0 && <CreatorStepProfile formActions={formActions} />}
           {step === 1 && <CreatorStepStyle formActions={formActions} />}
           {step === 2 && <CreatorStepPortfolio formActions={formActions} />}
-          {step === 3 && <CreatorStepDone />}
+          {step === 3 && <CreatorStepDone uploading={uploading} uploadProgress={uploadProgress} />}
         </div>
 
         {error && (

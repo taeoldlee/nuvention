@@ -15,12 +15,7 @@ const CONTENT_GOALS = [
   'Community moment',
 ];
 
-const DELIVERABLE_OPTIONS = [
-  '3 photos + 1 Reel (15s)',
-  '4 photos + 1 Story set',
-  '3 photos + 1 Reel (20s)',
-  '2 Reels + 3 Stories',
-];
+const REEL_LENGTHS = [15, 30, 60];
 
 const TIMELINE_OPTIONS = [
   { value: 'Standard (5-7 days)', label: 'Standard' },
@@ -48,7 +43,22 @@ export default function NewRequest() {
   const [contentGoal, setContentGoal] = useState('');
   const [subject, setSubject] = useState('');
   const [creativeDirection, setCreativeDirection] = useState('');
-  const [deliverables, setDeliverables] = useState('');
+  const [photoCount, setPhotoCount] = useState(0);
+  const [reelCount, setReelCount] = useState(0);
+  const [reelLength, setReelLength] = useState(15);
+  const [customReelLength, setCustomReelLength] = useState('');
+  const [storyCount, setStoryCount] = useState(0);
+  const [customDeliverables, setCustomDeliverables] = useState('');
+
+  const effectiveReelLength = customReelLength ? Number(customReelLength) : reelLength;
+
+  const builtDeliverables = [
+    photoCount > 0 && `${photoCount} photo${photoCount !== 1 ? 's' : ''}`,
+    reelCount > 0 && `${reelCount} Reel${reelCount !== 1 ? 's' : ''} (${effectiveReelLength}s)`,
+    storyCount > 0 && `${storyCount} Stor${storyCount !== 1 ? 'ies' : 'y'}`,
+  ].filter(Boolean).join(' + ');
+
+  const deliverables = customDeliverables || builtDeliverables;
   const [timeline, setTimeline] = useState(TIMELINE_OPTIONS[0].value);
   const [usageRights, setUsageRights] = useState(buildUsageRights(TIMELINE_OPTIONS[0].value));
   const [compensationType, setCompensationType] = useState('FLAT_FEE');
@@ -235,16 +245,93 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark mb-2 font-body">Deliverables</label>
-            <div className="flex flex-wrap gap-2">
-              {DELIVERABLE_OPTIONS.map((d) => (
-                <Chip
-                  key={d}
-                  label={d}
-                  selected={deliverables === d}
-                  onClick={() => setDeliverables((prev) => (prev === d ? '' : d))}
-                />
-              ))}
+            <label className="block text-sm font-medium text-dark mb-3 font-body">Deliverables</label>
+
+            <div className="space-y-3 mb-3">
+              {/* Photos */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-bgWarm rounded-xl px-3 py-2">
+                  <button type="button" onClick={() => setPhotoCount((c) => Math.max(0, c - 1))} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">−</button>
+                  <span className="w-8 text-center font-display text-lg font-bold text-dark">{photoCount}</span>
+                  <button type="button" onClick={() => setPhotoCount((c) => c + 1)} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">+</button>
+                </div>
+                <span className="text-sm font-medium text-dark font-body">Photos</span>
+              </div>
+
+              {/* Reels */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2 bg-bgWarm rounded-xl px-3 py-2">
+                  <button type="button" onClick={() => setReelCount((c) => Math.max(0, c - 1))} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">−</button>
+                  <span className="w-8 text-center font-display text-lg font-bold text-dark">{reelCount}</span>
+                  <button type="button" onClick={() => setReelCount((c) => c + 1)} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">+</button>
+                </div>
+                <span className="text-sm font-medium text-dark font-body">Reels</span>
+                {reelCount > 0 && (
+                  <div className="flex items-center gap-1.5">
+                    {REEL_LENGTHS.map((len) => (
+                      <button
+                        key={len}
+                        type="button"
+                        onClick={() => { setReelLength(len); setCustomReelLength(''); }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                          !customReelLength && reelLength === len
+                            ? 'border-accent bg-accentLight text-accent'
+                            : 'border-border bg-white text-muted hover:border-accent/50'
+                        }`}
+                      >
+                        {len}s
+                      </button>
+                    ))}
+                    <input
+                      type="number"
+                      min={1}
+                      value={customReelLength}
+                      onChange={(e) => setCustomReelLength(e.target.value)}
+                      placeholder="Custom"
+                      className={`w-20 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors text-center ${
+                        customReelLength
+                          ? 'border-accent bg-accentLight text-accent'
+                          : 'border-border bg-white text-muted placeholder:text-muted/60'
+                      }`}
+                    />
+                    <span className="text-xs text-muted font-body">sec</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Stories */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-bgWarm rounded-xl px-3 py-2">
+                  <button type="button" onClick={() => setStoryCount((c) => Math.max(0, c - 1))} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">−</button>
+                  <span className="w-8 text-center font-display text-lg font-bold text-dark">{storyCount}</span>
+                  <button type="button" onClick={() => setStoryCount((c) => c + 1)} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">+</button>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-dark font-body">Stories</span>
+                  <p className="text-xs text-muted font-body">A set of 3-5 vertical slides (photo or short clip) posted as an Instagram/TikTok Story sequence</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview */}
+            {builtDeliverables && !customDeliverables && (
+              <div className="bg-accentLight/50 rounded-xl px-4 py-2.5 mb-3">
+                <p className="text-sm font-medium text-accent font-body">{builtDeliverables}</p>
+              </div>
+            )}
+
+            {/* Custom override — always visible */}
+            <div className="border-t border-border pt-3 mt-3">
+              <label className="block text-xs text-muted font-medium font-body mb-1.5">Or type your own</label>
+              <input
+                value={customDeliverables}
+                onChange={(e) => setCustomDeliverables(e.target.value)}
+                placeholder="e.g. 2 Reels + 5 photos + 1 carousel"
+                className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+              />
+              {customDeliverables && (
+                <p className="text-xs text-muted font-body mt-1.5">Custom input will be used instead of the builder above.</p>
+              )}
             </div>
           </div>
 

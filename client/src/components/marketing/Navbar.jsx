@@ -8,6 +8,11 @@ const links = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+function openDemoSwitcher() {
+  const demoBtn = document.querySelector('[data-demo-trigger]');
+  if (demoBtn) demoBtn.click();
+}
+
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0B0D12]/70 backdrop-blur-xl">
@@ -27,10 +32,10 @@ export default function Navbar() {
           ))}
         </div>
         <div className="flex items-center gap-3">
-          <Button href="#cta" variant="secondary" className="hidden sm:inline-flex">
+          <Button onClick={openDemoSwitcher} variant="secondary" className="hidden sm:inline-flex">
             Request demo
           </Button>
-          <Button href="#cta">Create a brief</Button>
+          <Button onClick={openDemoSwitcher}>Create a brief</Button>
         </div>
       </nav>
     </header>

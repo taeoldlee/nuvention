@@ -156,6 +156,12 @@ const faqs = [
 ];
 
 export default function Landing() {
+  const handleCreateBrief = () => {
+    // Open the demo switcher so user picks an operator account
+    const demoBtn = document.querySelector('[data-demo-trigger]');
+    if (demoBtn) demoBtn.click();
+  };
+
   return (
     <div className="min-h-screen bg-[#0B0D12] text-white">
       <Navbar />
@@ -176,8 +182,8 @@ export default function Landing() {
               Locale is an opinionated, hyperlocal UGC commissioning platform for restaurants and cafés. It helps you approve content fast because the match is brand‑safe and explainable.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Button href="#cta">Create a brief</Button>
-              <Button href="#cta" variant="secondary">
+              <Button onClick={handleCreateBrief}>Create a brief</Button>
+              <Button onClick={handleCreateBrief} variant="secondary">
                 Request demo
               </Button>
             </div>
@@ -356,8 +362,8 @@ export default function Landing() {
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button href="#">Create a brief</Button>
-              <Button href="#" variant="secondary">Request demo</Button>
+              <Button onClick={handleCreateBrief}>Create a brief</Button>
+              <Button onClick={handleCreateBrief} variant="secondary">Request demo</Button>
             </div>
           </FadeIn>
         </section>

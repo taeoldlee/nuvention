@@ -39,7 +39,7 @@ export default function Dashboard() {
       }
     }
     load();
-  }, []);
+  }, [user?.id]);
 
   if (loading) {
     return (

@@ -20,10 +20,12 @@ async function main() {
   console.log('  All tables cleared.\n');
 
   // ─── USERS ─────────────────────────────────────────────────────
+  // Use stable IDs so sessions survive reseeds / redeploys
   console.log('Creating users...');
 
   const josh = await prisma.user.create({
     data: {
+      id: 'demo-operator-josh',
       email: 'josh@colectivo.com',
       name: 'Josh Rivera',
       role: 'OPERATOR',
@@ -35,6 +37,7 @@ async function main() {
 
   const marie = await prisma.user.create({
     data: {
+      id: 'demo-operator-marie',
       email: 'marie@coralie.com',
       name: 'Marie Laurent',
       role: 'OPERATOR',
@@ -46,6 +49,7 @@ async function main() {
 
   const ellen = await prisma.user.create({
     data: {
+      id: 'demo-operator-ellen',
       email: 'ellen@hewn.com',
       name: 'Ellen King',
       role: 'OPERATOR',
@@ -57,6 +61,7 @@ async function main() {
 
   const josie = await prisma.user.create({
     data: {
+      id: 'demo-operator-josie',
       email: 'josie@coffeelab.com',
       name: 'Josie Chen',
       role: 'OPERATOR',
@@ -68,6 +73,7 @@ async function main() {
 
   const shaurya = await prisma.user.create({
     data: {
+      id: 'demo-creator-shaurya',
       email: 'shaurya@locale.app',
       name: 'Shaurya Garg',
       role: 'CREATOR',
@@ -79,6 +85,7 @@ async function main() {
 
   const katelyn = await prisma.user.create({
     data: {
+      id: 'demo-creator-katelyn',
       email: 'katelyn@locale.app',
       name: 'Katelyn Liu',
       role: 'CREATOR',
@@ -90,6 +97,7 @@ async function main() {
 
   const alex = await prisma.user.create({
     data: {
+      id: 'demo-creator-alex',
       email: 'newcreator@locale.app',
       name: 'Alex Torres',
       role: 'CREATOR',
@@ -193,7 +201,7 @@ async function main() {
       userId: shaurya.id,
       displayName: 'Shaurya G.',
       bio: 'Warm editorial content for neighborhood cafes and restaurants',
-      instagramHandle: '@vibrant_lifestyle',
+      instagramHandle: 'vibrant_lifestyle',
       contentStyles: ['Warm & Editorial', 'Clean & Minimal'],
       strengths: ['Food Photography', 'Ambiance Shots', 'Reels/Short Video'],
       neighborhoods: ['Evanston', 'Rogers Park'],
@@ -209,7 +217,7 @@ async function main() {
       userId: katelyn.id,
       displayName: 'Katelyn L.',
       bio: 'Beauty and lifestyle content with authentic neighborhood energy',
-      tiktokHandle: '@kk.ameliu',
+      tiktokHandle: 'kk.ameliu',
       contentStyles: ['Bold & Energetic', 'Documentary & Candid'],
       strengths: ['Reels/Short Video', 'Lifestyle', 'Behind the Scenes'],
       neighborhoods: ['Evanston', 'Lincoln Park'],
@@ -359,7 +367,29 @@ async function main() {
       status: 'COMPLETED',
     },
   });
-  console.log('  Request 4: Patisserie Coralie - Food & Drink (COMPLETED)\n');
+  console.log('  Request 4: Patisserie Coralie - Food & Drink (COMPLETED)');
+
+  const request5 = await prisma.contentRequest.create({
+    data: {
+      brandProfileId: coralieBrand.id,
+      contentType: 'Reels & Short Video',
+      description: 'Short-form video content showcasing pastry-making process and finished pieces. Think satisfying croissant pulls, glaze pours, and morning prep montages.',
+      budgetRange: '$250-400',
+      status: 'SELECTED',
+    },
+  });
+  console.log('  Request 5: Patisserie Coralie - Reels & Short Video (SELECTED)');
+
+  const request6 = await prisma.contentRequest.create({
+    data: {
+      brandProfileId: hewnBrand.id,
+      contentType: 'Community / Events',
+      description: 'Saturday morning farmers market pop-up and in-store bread tasting events. Capture the community energy and customer interactions.',
+      budgetRange: '$150-250',
+      status: 'MATCHING',
+    },
+  });
+  console.log('  Request 6: Hewn - Community / Events (MATCHING)\n');
 
   // ─── MATCHES ───────────────────────────────────────────────────
   console.log('Creating matches...');
@@ -582,7 +612,81 @@ async function main() {
       status: 'DECLINED',
     },
   });
-  console.log('  Match 4c: Shaurya (alt) x Coralie Food (score 68, DECLINED)\n');
+  console.log('  Match 4c: Shaurya (alt) x Coralie Food (score 68, DECLINED)');
+
+  // --- Request 5 matches (Coralie Reels) ---
+  const match5a = await prisma.match.create({
+    data: {
+      contentRequestId: request5.id,
+      creatorProfileId: katelynProfile.id,
+      matchScore: 89,
+      matchRationale:
+        'Bold energetic style is ideal for short-form pastry content. Strong Reels expertise and lifestyle approach will make Coralie\'s artisan process feel accessible and shareable.',
+      contentPreview: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
+      deliverables: '3 Reels (15-30s each)',
+      price: 28000,
+      timeline: '10 business days',
+      usageRights: 'Organic social + paid ads, 12 months',
+      style: 'Bold & Energetic',
+      status: 'SELECTED',
+    },
+  });
+  console.log('  Match 5a: Katelyn x Coralie Reels (score 89, SELECTED)');
+
+  const match5b = await prisma.match.create({
+    data: {
+      contentRequestId: request5.id,
+      creatorProfileId: shauryaProfile.id,
+      matchScore: 72,
+      matchRationale:
+        'Warm editorial style could bring a cinematic feel to the pastry process, though less native to short-form format.',
+      contentPreview: 'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=800',
+      deliverables: '2 Reels (15s each)',
+      price: 22000,
+      timeline: '7 business days',
+      usageRights: 'Organic social, 6 months',
+      style: 'Warm & Editorial',
+      status: 'DECLINED',
+    },
+  });
+  console.log('  Match 5b: Shaurya x Coralie Reels (score 72, DECLINED)');
+
+  // --- Request 6 matches (Hewn Community) ---
+  const match6a = await prisma.match.create({
+    data: {
+      contentRequestId: request6.id,
+      creatorProfileId: katelynProfile.id,
+      matchScore: 85,
+      matchRationale:
+        'Documentary candid style is perfect for capturing farmers market energy and authentic customer interactions. Strong community content in portfolio.',
+      contentPreview: 'https://images.unsplash.com/photo-1445116572660-236099ec97a0?w=800',
+      deliverables: '4 photos + 1 Reel (30s)',
+      price: 20000,
+      timeline: '7 business days',
+      usageRights: 'Organic social + in-store, 12 months',
+      style: 'Documentary & Candid',
+      status: 'PRESENTED',
+    },
+  });
+  console.log('  Match 6a: Katelyn x Hewn Community (score 85, PRESENTED)');
+
+  const match6b = await prisma.match.create({
+    data: {
+      contentRequestId: request6.id,
+      creatorProfileId: shauryaProfile.id,
+      matchScore: 80,
+      matchRationale:
+        'Warm community-feel portfolio aligns well with farmers market atmosphere. Morning light expertise is a bonus for outdoor events.',
+      contentPreview: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=800',
+      deliverables: '3 photos + 1 Reel (15s)',
+      price: 18000,
+      timeline: '5 business days',
+      usageRights: 'Organic social, 12 months',
+      style: 'Warm & Editorial',
+      status: 'PRESENTED',
+    },
+  });
+  console.log('  Match 6b: Shaurya x Hewn Community (score 80, PRESENTED)\n');
 
   // ─── PROJECTS ──────────────────────────────────────────────────
   console.log('Creating projects...');
@@ -653,7 +757,24 @@ async function main() {
         'Photograph our signature pastries with a clean, editorial eye. Focus on the croissant layers, seasonal tart details, and the morning display case. Include a cafe-au-lait pour for the Story set. Natural light is essential.',
     },
   });
-  console.log('  Project 4: Patisserie Coralie x Shaurya - Food (APPROVED)\n');
+  console.log('  Project 4: Patisserie Coralie x Shaurya - Food (APPROVED)');
+
+  // Project 5: Patisserie Coralie x Katelyn - Reels (BRIEF_SENT)
+  const project5 = await prisma.project.create({
+    data: {
+      matchId: match5a.id,
+      brandProfileId: coralieBrand.id,
+      creatorProfileId: katelynProfile.id,
+      status: 'BRIEF_SENT',
+      deliverables: '3 Reels (15-30s each)',
+      price: 28000,
+      timeline: '10 business days',
+      usageRights: 'Organic social + paid ads, 12 months',
+      briefText:
+        'Create 3 short-form Reels showcasing our pastry craft. Reel 1: Croissant lamination and baking process (satisfying dough folds). Reel 2: Morning display case reveal with natural light. Reel 3: A signature pastry + coffee pairing moment. Keep it energetic and shareable — think trending audio with clean cuts.',
+    },
+  });
+  console.log('  Project 5: Patisserie Coralie x Katelyn - Reels (BRIEF_SENT)\n');
 
   // ─── PROJECT DRAFTS ────────────────────────────────────────────
   console.log('Creating project drafts...');
@@ -769,7 +890,21 @@ async function main() {
       demoMode: true,
     },
   });
-  console.log('  Transaction for Project 4: $220.00 (COMPLETED)\n');
+  console.log('  Transaction for Project 4: $220.00 (COMPLETED)');
+
+  // Transaction for Project 5
+  await prisma.transaction.create({
+    data: {
+      projectId: project5.id,
+      amount: 28000,
+      platformFee: 4200, // 15%
+      creatorPayout: 23800, // 85%
+      type: 'COMMISSION',
+      status: 'PENDING',
+      demoMode: true,
+    },
+  });
+  console.log('  Transaction for Project 5: $280.00 (PENDING)\n');
 
   // ─── SUMMARY ───────────────────────────────────────────────────
   console.log('=== Seed complete ===');
@@ -777,22 +912,28 @@ async function main() {
   console.log('  3 brand profiles');
   console.log('  2 creator profiles');
   console.log('  9 portfolio items');
-  console.log('  4 content requests');
-  console.log('  12 matches');
-  console.log('  4 projects');
+  console.log('  6 content requests');
+  console.log('  16 matches');
+  console.log('  5 projects');
   console.log('  3 project drafts');
-  console.log('  4 transactions');
+  console.log('  5 transactions');
   console.log('\nDemo accounts:');
   console.log('  Operators: josh@colectivo.com, marie@coralie.com, ellen@hewn.com, josie@coffeelab.com');
   console.log('  Creators:  shaurya@locale.app, katelyn@locale.app, newcreator@locale.app');
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error('\nSeed failed:', e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+// Export main for use by the admin reseed API route
+module.exports = { main };
+
+// Run directly when called as a script (npx prisma db seed)
+if (require.main === module) {
+  main()
+    .then(async () => {
+      await prisma.$disconnect();
+    })
+    .catch(async (e) => {
+      console.error('\nSeed failed:', e);
+      await prisma.$disconnect();
+      process.exit(1);
+    });
+}

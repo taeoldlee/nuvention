@@ -14,9 +14,10 @@ export const autoImportBrand = (url) => client.post('/brands/auto-import', { url
 export const getCreatorProfile = () => client.get('/creators/profile');
 export const createCreatorProfile = (data) => client.post('/creators/profile', data);
 export const updateCreatorProfile = (data) => client.put('/creators/profile', data);
-export const uploadPortfolio = (formData) =>
+export const uploadPortfolio = (formData, { onUploadProgress } = {}) =>
   client.post('/creators/portfolio', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress,
   });
 export const getPortfolio = () => client.get('/creators/portfolio');
 
@@ -54,11 +55,15 @@ export const uploadImage = (formData) =>
   client.post('/uploads/image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-export const uploadImages = (formData) =>
+export const uploadImages = (formData, { onUploadProgress } = {}) =>
   client.post('/uploads/images', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress,
   });
 
 // ─── Stats ───
 export const getOperatorStats = () => client.get('/stats/operator');
 export const getCreatorStats = () => client.get('/stats/creator');
+
+// ─── Admin ───
+export const reseedDatabase = () => client.post('/admin/reseed');
