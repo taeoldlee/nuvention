@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { autoImportBrand, createBrandProfile } from '../../api';
 import useOnboardingForm from '../../hooks/useOnboardingForm';
@@ -17,7 +17,11 @@ export default function Onboarding() {
   const { user, refreshProfile } = useAuth();
   const formActions = useOnboardingForm();
 
-  if (!user) return <Navigate to="/" replace />;
+  // Redirect to landing if not logged in
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
   const { form } = formActions;
 
   const [step, setStep] = useState(0);

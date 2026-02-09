@@ -156,6 +156,12 @@ const faqs = [
 ];
 
 export default function Landing() {
+  const handleCreateBrief = () => {
+    // Open the demo switcher so user picks an operator account
+    const demoBtn = document.querySelector('[data-demo-trigger]');
+    if (demoBtn) demoBtn.click();
+  };
+
   return (
     <div className="min-h-screen bg-[#0B0D12] text-white">
       <Navbar />
@@ -176,9 +182,9 @@ export default function Landing() {
               Locale is an opinionated, hyperlocal UGC commissioning platform for restaurants and cafés. It helps you approve content fast because the match is brand‑safe and explainable.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Button href="#cta">Create a brief</Button>
-              <Button href="#demo" variant="secondary">
-                Try the demo
+              <Button onClick={handleCreateBrief}>Create a brief</Button>
+              <Button onClick={handleCreateBrief} variant="secondary">
+                Request demo
               </Button>
             </div>
           </FadeIn>
@@ -285,7 +291,7 @@ export default function Landing() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Match evidence</p>
-                  <p className="text-base text-white">What you’ll see on every shortlist card</p>
+                  <p className="text-base text-white">What you'll see on every shortlist card</p>
                 </div>
               </div>
               <ul className="mt-6 space-y-4 text-sm text-slate-300/80">
@@ -333,7 +339,7 @@ export default function Landing() {
             <SectionHeader
               eyebrow="FAQ"
               title="Short answers for busy operators."
-              description="If you need more detail, we’ll walk you through a live flow in minutes."
+              description="If you need more detail, we'll walk you through a live flow in minutes."
               align="center"
             />
           </FadeIn>
@@ -352,12 +358,12 @@ export default function Landing() {
                 Commission your next UGC project with confidence.
               </h2>
               <p className="mt-3 text-sm text-slate-300/80">
-                We’ll guide your team through brand alignment, evidence‑based matching, and an in‑platform review flow.
+                We'll guide your team through brand alignment, evidence‑based matching, and an in‑platform review flow.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button href="#">Create a brief</Button>
-              <Button href="#demo" variant="secondary">Try the demo</Button>
+              <Button onClick={handleCreateBrief}>Create a brief</Button>
+              <Button onClick={handleCreateBrief} variant="secondary">Request demo</Button>
             </div>
           </FadeIn>
         </section>

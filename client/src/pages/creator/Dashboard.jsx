@@ -12,7 +12,7 @@ import FadeIn from '../../components/marketing/FadeIn';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
 
   const [stats, setStats] = useState(null);
   const [briefs, setBriefs] = useState([]);
@@ -54,7 +54,7 @@ export default function Dashboard() {
   const displayName = profile?.displayName || 'Creator';
   const neighborhood = profile?.neighborhoods?.[0] || '';
   const style = profile?.contentStyles?.[0] || '';
-  const subtitle = [neighborhood, style].filter(Boolean).join(' \u00B7 ');
+  const subtitle = [neighborhood, style].filter(Boolean).join(' · ');
 
   const monthlyEarnings = stats?.monthlyEarnings ?? 0;
   const activeCount = stats?.activeProjects ?? projects.filter((p) => !['DELIVERED', 'APPROVED'].includes(p.status)).length;

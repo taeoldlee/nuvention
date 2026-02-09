@@ -59,7 +59,7 @@ async function createRequestWithMatches(brandProfile, body) {
   });
 
   // Generate top 3 matches
-  const matchResults = generateMatches(brandProfile, contentRequest, allCreators);
+  const matchResults = await generateMatches(brandProfile, contentRequest, allCreators);
 
   // Save matches to DB
   for (const match of matchResults) {

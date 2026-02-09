@@ -1,5 +1,6 @@
 export default function Button({
   href,
+  onClick,
   children,
   variant = 'primary',
   className = '',
@@ -12,7 +13,7 @@ export default function Button({
       ? 'bg-gradient-to-r from-[#5B6CFF] via-[#7D8BFF] to-[#4DD4A6] text-white shadow-[0_18px_50px_-25px_rgba(0,0,0,0.9)] hover:shadow-[0_22px_60px_-25px_rgba(0,0,0,0.95)] hover:-translate-y-0.5'
       : 'border border-white/20 text-slate-100/90 hover:text-white hover:border-white/40 hover:-translate-y-0.5';
 
-  if (href) {
+  if (href && !href.startsWith('#')) {
     return (
       <a href={href} className={`${base} ${styles} ${className}`}>
         {children}
@@ -21,7 +22,7 @@ export default function Button({
   }
 
   return (
-    <button className={`${base} ${styles} ${className}`}>
+    <button onClick={onClick || (href ? () => { document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' }); } : undefined)} className={`${base} ${styles} ${className}`}>
       {children}
     </button>
   );

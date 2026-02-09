@@ -9,6 +9,11 @@ const links = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+function openDemoSwitcher() {
+  const demoBtn = document.querySelector('[data-demo-trigger]');
+  if (demoBtn) demoBtn.click();
+}
+
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -50,10 +55,10 @@ export default function Navbar() {
           </button>
 
           <div className="hidden md:flex items-center gap-3">
-            <Button href="#demo" variant="secondary">
-              Try the demo
+            <Button onClick={openDemoSwitcher} variant="secondary">
+              Request demo
             </Button>
-            <Button href="#cta">Create a brief</Button>
+            <Button onClick={openDemoSwitcher}>Create a brief</Button>
           </div>
         </div>
       </nav>
@@ -73,8 +78,8 @@ export default function Navbar() {
               </a>
             ))}
             <div className="pt-4 flex flex-col gap-3">
-              <Button href="#demo" variant="secondary">Try the demo</Button>
-              <Button href="#cta">Create a brief</Button>
+              <Button onClick={openDemoSwitcher} variant="secondary">Request demo</Button>
+              <Button onClick={openDemoSwitcher}>Create a brief</Button>
             </div>
           </div>
         </div>

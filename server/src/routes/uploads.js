@@ -1,6 +1,12 @@
 const express = require("express");
+const path = require("path");
+const os = require("os");
 const router = express.Router();
 const { upload, uploadMultiple, getFileUrl, placeholderUrl, s3Configured } = require("../config/s3");
+
+// Serve disk-stored uploads when S3 is not configured
+const uploadDir = path.join(os.tmpdir(), "locale-uploads");
+router.use("/files", express.static(uploadDir));
 
 /**
  * POST /api/uploads/image

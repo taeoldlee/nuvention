@@ -2,6 +2,47 @@
 
 Hyperlocal UGC sourcing platform for F&B businesses. Connects operators (restaurants, coffee shops, cafes) with pre-vetted local creators based on vibe, values, and neighborhood alignment.
 
+## TL;DR -- Running the Demo
+
+```bash
+npm run install:all          # install dependencies
+createdb locale              # create PostgreSQL database
+npm run migrate              # run database migrations
+npm run seed                 # seed demo data (7 users, 5 projects)
+npm run dev                  # start client + server
+```
+
+Open **http://localhost:5173**. Click the **Demo** button (bottom-right) to switch users.
+
+### Demo accounts at a glance
+
+- **Josie Chen** (operator) / **Alex Torres** (creator) -- new users, trigger onboarding
+- **Josh, Marie, Ellen** (operators) / **Shaurya, Katelyn** (creators) -- returning users with active projects
+
+### Operator and creator projects are connected
+
+Switch between roles to see the same project from both sides:
+
+| Project | Operator | Creator | Status | Try this |
+|---|---|---|---|---|
+| Ambiance photos | Josh (Colectivo) | Shaurya | DRAFT_SUBMITTED | Josh approves draft, switch to Shaurya to see APPROVED |
+| Community photos | Josh (Colectivo) | Katelyn | REVISION_REQUESTED | Katelyn submits revision, switch to Josh to review |
+| Behind the Scenes | Ellen (Hewn) | Shaurya | BRIEF_SENT | Shaurya submits first draft, switch to Ellen to review |
+| Food & Drink | Marie (Coralie) | Shaurya | APPROVED | Already complete, shows in Marie's content library |
+| Reels video | Marie (Coralie) | Katelyn | BRIEF_SENT | Katelyn submits first draft, switch to Marie to review |
+
+### Reset to starting state
+
+```bash
+npm run seed
+```
+
+### OpenAI (optional)
+
+Set `OPENAI_API_KEY` in `.env` to enable AI-powered brand analysis (operator onboarding URL import), creator portfolio analysis, and match rationale generation. Without it, all AI features fall back to mock data -- the app works fine either way.
+
+---
+
 ## Quick Start (Local Development)
 
 ### Prerequisites
@@ -77,7 +118,7 @@ This starts both:
 | `AWS_REGION` | No | AWS region for S3 (default: us-east-1) |
 | `AWS_ACCESS_KEY_ID` | No | AWS access key for S3 uploads. Uses placeholder URLs without it. |
 | `AWS_SECRET_ACCESS_KEY` | No | AWS secret key for S3 uploads. Uses placeholder URLs without it. |
-| `S3_BUCKET_NAME` | No | S3 bucket name for file uploads (default: locale-uploads) |
+| `AWS_S3_BUCKET` | No | S3 bucket name for file uploads (default: locale-uploads) |
 | `STRIPE_SECRET_KEY` | No | Stripe secret key (future - not used in demo) |
 | `STRIPE_WEBHOOK_SECRET` | No | Stripe webhook secret (future - not used in demo) |
 
@@ -135,7 +176,7 @@ Enables real file uploads for creator portfolios and project drafts.
    AWS_REGION=us-east-1
    AWS_ACCESS_KEY_ID=AKIA...
    AWS_SECRET_ACCESS_KEY=...
-   S3_BUCKET_NAME=locale-uploads
+   AWS_S3_BUCKET=locale-uploads
    ```
 
 Without S3: File uploads return placeholder URLs. The app still works - images use Unsplash URLs from seed data.

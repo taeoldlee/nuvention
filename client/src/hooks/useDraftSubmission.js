@@ -28,6 +28,7 @@ export default function useDraftSubmission(projectId, onSuccess) {
     );
     const combined = [...draftFiles, ...allowed].slice(0, 10);
     setDraftFiles(combined);
+
     const newPreviews = combined.map((file) => ({
       url: URL.createObjectURL(file),
       type: file.type,

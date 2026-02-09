@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const path = require("path");
 const cors = require("cors");
 
 // Route imports
@@ -13,6 +14,7 @@ const briefRoutes = require("./routes/briefs");
 const aiRoutes = require("./routes/ai");
 const uploadRoutes = require("./routes/uploads");
 const statsRoutes = require("./routes/stats");
+const adminRoutes = require("./routes/admin");
 
 const app = express();
 
@@ -39,20 +41,32 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// ─── Upload timeout middleware ───
+// Extend timeout to 5 minutes for upload routes (videos can be large)
+const uploadTimeout = (req, res, next) => {
+  req.setTimeout(5 * 60 * 1000); // 5 minutes
+  res.setTimeout(5 * 60 * 1000);
+  next();
+};
+
 // ─── Mount Routes ───
 app.use("/api/auth", authRoutes);
 app.use("/api/brands", brandRoutes);
-app.use("/api/creators", creatorRoutes);
+app.use("/api/creators", uploadTimeout, creatorRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/briefs", briefRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("/api/uploads", uploadRoutes);
+app.use("/api/uploads", uploadTimeout, uploadRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/admin", adminRoutes);
 
-// ─── 404 Handler ───
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
+// ─── Serve Frontend (production) ───
+const clientDist = path.join(__dirname, "../../client/dist");
+app.use(express.static(clientDist));
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) return next();
+  res.sendFile(path.join(clientDist, "index.html"));
 });
 
 // ─── Global Error Handler ───
@@ -76,7 +90,7 @@ app.use((err, req, res, next) => {
   // Multer file size error
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
-      error: "File too large. Maximum size is 10MB.",
+      error: "File too large. Maximum size is 100MB for videos, 10MB for images.",
     });
   }
 

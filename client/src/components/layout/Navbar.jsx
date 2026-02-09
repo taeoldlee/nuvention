@@ -11,20 +11,23 @@ export default function Navbar() {
     { to: '/operator/dashboard', label: 'Dashboard' },
     { to: '/operator/request/new', label: 'New Request' },
     { to: '/operator/library', label: 'Library' },
+    { to: '/operator/settings', label: 'Settings' },
   ];
 
   const creatorLinks = [
     { to: '/creator/dashboard', label: 'Dashboard' },
+    { to: '/creator/settings', label: 'Settings' },
   ];
 
   const links = isOperator ? operatorLinks : creatorLinks;
+  const homePath = isOperator ? '/operator/dashboard' : '/creator/dashboard';
   const accentBorder = isOperator ? 'border-accent' : 'border-creatorAccent';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-b border-border">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to={homePath} className="flex items-center gap-2">
             <span className="font-display text-xl font-bold text-dark">Locale</span>
           </Link>
           <div className="hidden sm:flex items-center gap-1">
