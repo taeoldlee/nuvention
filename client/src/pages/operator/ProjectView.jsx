@@ -15,6 +15,7 @@ import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
 import StatusBadge from '../../components/common/StatusBadge';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useToast } from '../../contexts/ToastContext';
 import DraftReviewSection from '../../components/operator/DraftReviewSection';
 import {
   BriefSentSection,
@@ -28,6 +29,7 @@ import FadeIn from '../../components/marketing/FadeIn';
 export default function ProjectView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -54,8 +56,9 @@ export default function ProjectView() {
     try {
       await approveDraft(id, draftId);
       await loadProject();
+      addToast('Draft approved!', 'success');
     } catch {
-      setError('Could not approve draft.');
+      addToast('Could not approve draft.', 'error');
     } finally {
       setActionLoading('');
     }
@@ -66,8 +69,9 @@ export default function ProjectView() {
     try {
       await requestRevision(id, draftId, notes);
       await loadProject();
+      addToast('Revision requested.', 'info');
     } catch {
-      setError('Could not request revision.');
+      addToast('Could not request revision.', 'error');
     } finally {
       setActionLoading('');
     }
@@ -78,8 +82,9 @@ export default function ProjectView() {
     try {
       const res = await deliverProject(id);
       setProject(res.data.project);
+      addToast('Project marked as delivered!', 'success');
     } catch {
-      setError('Could not mark project as delivered.');
+      addToast('Could not mark project as delivered.', 'error');
     } finally {
       setActionLoading('');
     }

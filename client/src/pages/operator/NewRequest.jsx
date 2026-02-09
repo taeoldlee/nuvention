@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createContentRequest } from '../../api';
+import { createContentRequest, getRequestSuggestions } from '../../api';
 import { CONTENT_TYPES, formatCents, formatCompensation } from '../../utils/constants';
+import { useToast } from '../../contexts/ToastContext';
 import Btn from '../../components/common/Btn';
 import Chip from '../../components/common/Chip';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -44,6 +45,9 @@ function buildUsageRights(timeline) {
 
 export default function NewRequest() {
   const navigate = useNavigate();
+  const { addToast } = useToast();
+  const [suggestions, setSuggestions] = useState(null);
+  const [suggestLoading, setSuggestLoading] = useState(false);
 
   const [contentType, setContentType] = useState('');
   const [contentGoal, setContentGoal] = useState('');
@@ -122,8 +126,10 @@ export default function NewRequest() {
       const request = res.data.request;
       setRequestId(request.id);
       setMatches(request.matches || []);
+      addToast('Matches found!', 'success');
     } catch (err) {
       setError(err.response?.data?.error || 'Could not find matches. Please try again.');
+      addToast('Could not find matches.', 'error');
     } finally {
       setLoading(false);
     }
@@ -181,6 +187,69 @@ export default function NewRequest() {
           <p className="font-body text-muted">
             Build a brief in minutes. We'll match on evidence and neighborhood fit.
           </p>
+        </div>
+        </FadeIn>
+
+        {/* AI Suggestions */}
+        <FadeIn delay={0.05}>
+        <div className="mb-6">
+          {!suggestions && (
+            <button
+              onClick={async () => {
+                setSuggestLoading(true);
+                try {
+                  const res = await getRequestSuggestions();
+                  setSuggestions(res.data.suggestions || []);
+                } catch {
+                  addToast('Could not load AI suggestions.', 'error');
+                } finally {
+                  setSuggestLoading(false);
+                }
+              }}
+              disabled={suggestLoading}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-accent/30 bg-accentLight text-accent text-sm font-semibold font-body hover:bg-accent/15 transition-all disabled:opacity-50"
+            >
+              {suggestLoading ? (
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                </svg>
+              )}
+              {suggestLoading ? 'Generating ideas...' : 'AI Suggest'}
+            </button>
+          )}
+
+          {suggestions && suggestions.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs text-muted font-body uppercase tracking-wide mb-2">AI-suggested ideas</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {suggestions.map((s, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setContentType(s.contentType || '');
+                      setContentGoal(s.contentGoal || '');
+                      setSubject(s.subject || '');
+                      setCreativeDirection(s.creativeDirection || '');
+                      setDeliverables(s.deliverables || '');
+                      addToast(`Applied: ${s.title}`, 'info');
+                    }}
+                    className="card text-left hover:border-accent/30 hover:shadow-md transition-all p-4"
+                  >
+                    <p className="text-sm font-semibold text-dark font-body mb-1">{s.title}</p>
+                    <p className="text-xs text-muted font-body line-clamp-2">{s.subject}</p>
+                    <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-xs bg-accentLight text-accent font-medium">
+                      {s.contentType}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         </FadeIn>
 

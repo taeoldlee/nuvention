@@ -5,7 +5,7 @@ import { getCreatorStats, getProjects, getBriefs } from '../../api';
 import { formatCents } from '../../utils/constants';
 import StatCard from '../../components/common/StatCard';
 import EmptyState from '../../components/common/EmptyState';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 import CreatorBriefCard from '../../components/creator/CreatorBriefCard';
 import CreatorProjectCard from '../../components/creator/CreatorProjectCard';
 import FadeIn from '../../components/marketing/FadeIn';
@@ -44,7 +44,11 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <LoadingSpinner message="Loading your dashboard..." creator />;
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <DashboardSkeleton />
+      </div>
+    );
   }
 
   const displayName = profile?.displayName || 'Creator';

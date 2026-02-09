@@ -4,6 +4,7 @@ import { getProject } from '../../api';
 import { brandDisplayName, brandPhotoUrl } from '../../utils/extractors';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useToast } from '../../contexts/ToastContext';
 import ProjectHeader from '../../components/creator/ProjectHeader';
 import ProjectDetailsCard from '../../components/creator/ProjectDetailsCard';
 import DraftUploadSection from '../../components/creator/DraftUploadSection';
@@ -14,6 +15,7 @@ import FadeIn from '../../components/marketing/FadeIn';
 export default function ProjectView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);

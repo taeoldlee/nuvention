@@ -6,10 +6,11 @@ import {
   PROJECT_STATUS_LABELS,
   formatRelativeDate,
 } from '../../utils/constants';
+import { creatorDisplayName } from '../../utils/extractors';
 import StatCard from '../../components/common/StatCard';
 import StatusBadge from '../../components/common/StatusBadge';
 import Btn from '../../components/common/Btn';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
 import FadeIn from '../../components/marketing/FadeIn';
 
@@ -45,7 +46,9 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-bgWarm">
-        <LoadingSpinner message="Loading your dashboard..." />
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <DashboardSkeleton />
+        </div>
       </div>
     );
   }
@@ -173,14 +176,12 @@ export default function Dashboard() {
                         <StatusBadge status={project.status} />
                       </div>
                       <div className="flex items-center gap-3 text-sm text-muted font-body">
-                        {(project.creatorProfile?.user?.name || project.creatorName) && (
-                          <span className="flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                            </svg>
-                            {project.creatorProfile?.user?.name || project.creatorName}
-                          </span>
-                        )}
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                          </svg>
+                          {creatorDisplayName(project)}
+                        </span>
                         {project.updatedAt && (
                           <span>Updated {formatRelativeDate(project.updatedAt)}</span>
                         )}
@@ -253,7 +254,7 @@ export default function Dashboard() {
                     {project.match?.contentRequest?.contentType || project.contentType}
                   </p>
                   <p className="text-xs text-muted font-body">
-                    {project.creatorProfile?.user?.name || project.creatorName || 'Creator'}
+                    {creatorDisplayName(project)}
                   </p>
                 </button>
                 );

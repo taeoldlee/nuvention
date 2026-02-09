@@ -48,6 +48,7 @@ export const declineBrief = (matchId) => client.post(`/briefs/${matchId}/decline
 export const analyzeBrand = (data) => client.post('/ai/analyze-brand', data);
 export const analyzePortfolio = (imageUrls) =>
   client.post('/ai/analyze-portfolio', { imageUrls });
+export const getRequestSuggestions = () => client.post('/ai/suggest-request');
 
 // ─── Uploads ───
 export const uploadImage = (formData) =>
