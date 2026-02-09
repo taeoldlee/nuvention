@@ -19,7 +19,7 @@ export function AuthProvider({ children }) {
 
   // Restore session from localStorage
   useEffect(() => {
-    const savedUserId = localStorage.getItem('mise_user_id');
+    const savedUserId = localStorage.getItem('locale_user_id');
     if (savedUserId) {
       demoLogin(savedUserId)
         .then((res) => {
@@ -27,21 +27,21 @@ export function AuthProvider({ children }) {
           setProfile(res.data.profile);
         })
         .catch(() => {
-          localStorage.removeItem('mise_user_id');
+          localStorage.removeItem('locale_user_id');
         });
     }
   }, []);
 
   const login = useCallback(async (userId) => {
     const res = await demoLogin(userId);
-    localStorage.setItem('mise_user_id', userId);
+    localStorage.setItem('locale_user_id', userId);
     setUser(res.data.user);
     setProfile(res.data.profile);
     return res.data;
   }, []);
 
   const logout = useCallback(() => {
-    localStorage.removeItem('mise_user_id');
+    localStorage.removeItem('locale_user_id');
     setUser(null);
     setProfile(null);
   }, []);

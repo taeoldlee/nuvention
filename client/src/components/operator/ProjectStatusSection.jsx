@@ -107,7 +107,7 @@ function ImageGrid({ images, label }) {
               src={typeof img === 'string' ? img : img.url}
               alt={`${label} ${i + 1}`}
               className="w-full h-full object-cover"
-              onError={(e) => { e.target.style.display = 'none'; }}
+              onError={(e) => { e.target.src = ''; }}
             />
           </div>
         ))}

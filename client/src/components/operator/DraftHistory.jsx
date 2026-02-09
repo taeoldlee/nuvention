@@ -29,7 +29,7 @@ export default function DraftHistory({ drafts }) {
                     src={typeof img === 'string' ? img : img.url}
                     alt={`Draft ${drafts.length - 1 - i} - ${j + 1}`}
                     className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-border"
-                    onError={(e) => { e.target.style.display = 'none'; }}
+                    onError={(e) => { e.target.src = ''; }}
                   />
                 ))}
               </div>

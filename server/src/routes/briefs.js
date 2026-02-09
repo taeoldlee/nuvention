@@ -139,21 +139,7 @@ router.post("/:matchId/accept", async (req, res, next) => {
       return res.json({ message: "Brief already accepted", project: match.project });
     }
 
-    // Update match status to SELECTED if it was PRESENTED
-    if (match.status === "PRESENTED") {
-      await prisma.match.update({
-        where: { id: match.id },
-        data: { status: "SELECTED" },
-      });
-    }
-
-    // Update content request status
-    await prisma.contentRequest.update({
-      where: { id: match.contentRequestId },
-      data: { status: "SELECTED" },
-    });
-
-    // Create the project
+    // Create the project and update all statuses atomically
     const usageRightsDoc = generateUsageRightsDoc({
       businessName: match.contentRequest?.brandProfile?.businessName,
       contentType: match.contentRequest?.contentType,
@@ -161,34 +147,62 @@ router.post("/:matchId/accept", async (req, res, next) => {
       timeline: match.timeline,
     });
 
-    const project = await prisma.project.create({
-      data: {
-        matchId: match.id,
-        brandProfileId: match.contentRequest.brandProfileId,
-        creatorProfileId: creatorProfile.id,
-        status: "BRIEF_SENT",
-        deliverables: match.deliverables,
-        price: match.price,
-        timeline: match.timeline,
-        usageRights: match.usageRights,
-        briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview || ""}`.trim(),
-        usageRightsDoc,
-        compensationType: match.contentRequest.compensationType || "FLAT_FEE",
-        compensationDetails: match.contentRequest.compensationDetails || null,
-      },
-      include: {
-        brandProfile: {
-          include: {
-            user: { select: { id: true, name: true, avatarUrl: true } },
+    const project = await prisma.$transaction(async (tx) => {
+      // Update match status to SELECTED if it was PRESENTED
+      if (match.status === "PRESENTED") {
+        await tx.match.update({
+          where: { id: match.id },
+          data: { status: "SELECTED" },
+        });
+      }
+
+      // Update content request status
+      await tx.contentRequest.update({
+        where: { id: match.contentRequestId },
+        data: { status: "SELECTED" },
+      });
+
+      // Decline competing matches for this content request
+      await tx.match.updateMany({
+        where: {
+          contentRequestId: match.contentRequestId,
+          id: { not: match.id },
+          status: "PRESENTED",
+        },
+        data: { status: "DECLINED" },
+      });
+
+      const proj = await tx.project.create({
+        data: {
+          matchId: match.id,
+          brandProfileId: match.contentRequest.brandProfileId,
+          creatorProfileId: creatorProfile.id,
+          status: "BRIEF_SENT",
+          deliverables: match.deliverables,
+          price: match.price,
+          timeline: match.timeline,
+          usageRights: match.usageRights,
+          briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview || ""}`.trim(),
+          usageRightsDoc,
+          compensationType: match.contentRequest.compensationType || "FLAT_FEE",
+          compensationDetails: match.contentRequest.compensationDetails || null,
+        },
+        include: {
+          brandProfile: {
+            include: {
+              user: { select: { id: true, name: true, avatarUrl: true } },
+            },
           },
         },
-      },
-    });
+      });
 
-    // Create transaction if there's a price
-    if (match.price > 0) {
-      await createCharge(project.id, match.price);
-    }
+      // Create transaction if there's a price
+      if (match.price > 0) {
+        await createCharge(proj.id, match.price);
+      }
+
+      return proj;
+    });
 
     res.json({
       message: "Brief accepted",

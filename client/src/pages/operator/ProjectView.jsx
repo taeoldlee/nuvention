@@ -139,7 +139,7 @@ export default function ProjectView() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
               {creatorPhoto ? (
-                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" onError={(e) => { e.target.style.display = 'none'; }} />
+                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" onError={(e) => { e.target.src = ''; }} />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-accentLight flex items-center justify-center">
                   <span className="text-lg font-bold text-accent">{creatorName?.charAt(0) || '?'}</span>

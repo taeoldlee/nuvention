@@ -75,8 +75,8 @@ export default function useCreatorOnboardingForm() {
   const buildProfileData = () => ({
     displayName: displayName.trim(),
     bio: bio.trim(),
-    instagram: instagram.trim() || undefined,
-    tiktok: tiktok.trim() || undefined,
+    instagramHandle: instagram.trim() || undefined,
+    tiktokHandle: tiktok.trim() || undefined,
     contentStyles,
     strengths,
     neighborhoods,

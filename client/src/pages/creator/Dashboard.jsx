@@ -41,7 +41,7 @@ export default function Dashboard() {
       }
     }
     fetchData();
-  }, []);
+  }, [profile?.id]);
 
   if (loading) {
     return (

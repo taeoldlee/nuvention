@@ -32,13 +32,18 @@ function ToastItem({ toast, onDismiss }) {
 
   return (
     <div
+      role="alert"
       className={`flex items-center gap-3 px-4 py-3 bg-white rounded-xl shadow-lg border border-border transition-all duration-300 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
       }`}
     >
       {ICONS[toast.type] || ICONS.info}
       <p className="text-sm text-dark font-body flex-1">{toast.message}</p>
-      <button onClick={() => { setVisible(false); setTimeout(() => onDismiss(toast.id), 300); }} className="text-muted hover:text-dark transition-colors">
+      <button
+        aria-label="Dismiss notification"
+        onClick={() => { setVisible(false); setTimeout(() => onDismiss(toast.id), 300); }}
+        className="text-muted hover:text-dark transition-colors p-2 -m-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
+      >
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>

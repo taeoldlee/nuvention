@@ -57,6 +57,13 @@ export const VIBE_SCALES = [
   { key: 'casualElevated', left: 'Casual', right: 'Elevated' },
 ];
 
+export const CUISINE_OPTIONS = [
+  'Italian', 'Mexican', 'Japanese', 'Thai', 'French', 'American',
+  'Mediterranean', 'Indian', 'Korean', 'Chinese', 'Vietnamese',
+  'Ethiopian', 'Middle Eastern', 'Bakery & Pastry', 'Coffee & Beverage',
+  'Farm-to-Table', 'Fusion',
+];
+
 export const CONTENT_TYPES = [
   'Ambiance / Interior',
   'Food & Drink',

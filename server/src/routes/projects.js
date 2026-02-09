@@ -170,24 +170,34 @@ router.post("/:id/drafts", requireCreatorWithProfile, async (req, res, next) => 
       return res.status(400).json({ error: "fileUrls array is required" });
     }
 
-    // Determine version number
-    const latestDraft = project.drafts[0];
-    const version = latestDraft ? latestDraft.version + 1 : 1;
+    if (!fileUrls.every((url) => typeof url === "string" && url.length > 0)) {
+      return res.status(400).json({ error: "All fileUrls must be non-empty strings" });
+    }
 
-    const draft = await prisma.projectDraft.create({
-      data: {
-        projectId: project.id,
-        version,
-        fileUrls,
-        notes: notes || null,
-        status: "SUBMITTED",
-      },
-    });
+    // Create draft and update project atomically
+    const draft = await prisma.$transaction(async (tx) => {
+      const latestDraft = await tx.projectDraft.findFirst({
+        where: { projectId: project.id },
+        orderBy: { version: "desc" },
+      });
+      const version = latestDraft ? latestDraft.version + 1 : 1;
 
-    // Update project status
-    await prisma.project.update({
-      where: { id: project.id },
-      data: { status: "DRAFT_SUBMITTED" },
+      const newDraft = await tx.projectDraft.create({
+        data: {
+          projectId: project.id,
+          version,
+          fileUrls,
+          notes: notes || null,
+          status: "SUBMITTED",
+        },
+      });
+
+      await tx.project.update({
+        where: { id: project.id },
+        data: { status: "DRAFT_SUBMITTED" },
+      });
+
+      return newDraft;
     });
 
     res.status(201).json({ draft });
@@ -243,17 +253,21 @@ router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req
     if (!result) return;
     const { project, draft } = result;
 
-    const updatedDraft = await prisma.projectDraft.update({
-      where: { id: draft.id },
-      data: {
-        status: "APPROVED",
-        feedback: req.body.feedback || null,
-      },
-    });
+    const updatedDraft = await prisma.$transaction(async (tx) => {
+      const d = await tx.projectDraft.update({
+        where: { id: draft.id },
+        data: {
+          status: "APPROVED",
+          feedback: req.body.feedback || null,
+        },
+      });
 
-    await prisma.project.update({
-      where: { id: project.id },
-      data: { status: "APPROVED" },
+      await tx.project.update({
+        where: { id: project.id },
+        data: { status: "APPROVED" },
+      });
+
+      return d;
     });
 
     res.json({ draft: updatedDraft });
@@ -291,17 +305,21 @@ router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (re
       return res.status(400).json({ error: "feedback is required for revision requests" });
     }
 
-    const updatedDraft = await prisma.projectDraft.update({
-      where: { id: draft.id },
-      data: {
-        status: "REVISION_REQUESTED",
-        feedback,
-      },
-    });
+    const updatedDraft = await prisma.$transaction(async (tx) => {
+      const d = await tx.projectDraft.update({
+        where: { id: draft.id },
+        data: {
+          status: "REVISION_REQUESTED",
+          feedback,
+        },
+      });
 
-    await prisma.project.update({
-      where: { id: project.id },
-      data: { status: "REVISION_REQUESTED" },
+      await tx.project.update({
+        where: { id: project.id },
+        data: { status: "REVISION_REQUESTED" },
+      });
+
+      return d;
     });
 
     res.json({ draft: updatedDraft });

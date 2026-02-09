@@ -59,6 +59,7 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
                 <img src={src} alt={`Draft ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
+                  aria-label={`Remove image ${i + 1}`}
                   onClick={(e) => { e.stopPropagation(); removeFile(i); }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
                 >

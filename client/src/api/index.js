@@ -55,9 +55,10 @@ export const uploadImage = (formData) =>
   client.post('/uploads/image', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
-export const uploadImages = (formData) =>
+export const uploadImages = (formData, extraConfig = {}) =>
   client.post('/uploads/images', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    ...extraConfig,
   });
 
 // ─── Stats ───

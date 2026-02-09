@@ -11,12 +11,12 @@ export default function ProjectHeader({ brandName, brandPhoto, contentType, stat
             src={brandPhoto}
             alt={brandName}
             className="w-14 h-14 rounded-xl object-cover shrink-0"
-            onError={(e) => { e.target.style.display = 'none'; }}
+            onError={(e) => { e.target.src = ''; }}
           />
         ) : (
           <div className="w-14 h-14 rounded-xl bg-creatorLight flex items-center justify-center shrink-0">
             <span className="font-display text-xl font-bold text-creator">
-              {brandName.charAt(0)}
+              {(brandName || 'B').charAt(0)}
             </span>
           </div>
         )}

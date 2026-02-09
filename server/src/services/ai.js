@@ -227,7 +227,7 @@ Describe the specific photos and Reel they would create. Be vivid and specific t
 }
 
 function fallbackContentPreview(brand, contentType) {
-  const { CONTENT_TEMPLATES } = require("./matching");
+  const { CONTENT_TEMPLATES } = require("../utils/contentTemplates");
   const templates = CONTENT_TEMPLATES[contentType] || CONTENT_TEMPLATES["Food & Drink"];
   return templates[0];
 }

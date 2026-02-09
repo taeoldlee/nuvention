@@ -1,12 +1,6 @@
+import { CUISINE_OPTIONS } from '../../utils/constants';
 import Chip from '../common/Chip';
 import Btn from '../common/Btn';
-
-const CUISINE_OPTIONS = [
-  'Italian', 'Mexican', 'Japanese', 'Thai', 'French', 'American',
-  'Mediterranean', 'Indian', 'Korean', 'Chinese', 'Vietnamese',
-  'Ethiopian', 'Middle Eastern', 'Bakery & Pastry', 'Coffee & Beverage',
-  'Farm-to-Table', 'Fusion',
-];
 
 export default function OnboardingStepCuisine({ formActions, onBack, onNext }) {
   const { form, toggleArrayItem } = formActions;

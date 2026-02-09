@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { createCreatorProfile, uploadPortfolio } from '../../api';
 import useCreatorOnboardingForm from '../../hooks/useCreatorOnboardingForm';
@@ -14,7 +14,9 @@ const STEPS = ['Profile', 'Style', 'Portfolio', 'Done'];
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
+
+  if (!user) return <Navigate to="/" replace />;
   const formActions = useCreatorOnboardingForm();
 
   const [step, setStep] = useState(0);
