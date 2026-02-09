@@ -1,7 +1,7 @@
 export default function PricingCard({ title, price, description, items, highlight = false }) {
   return (
     <div
-      className={`rounded-2xl p-6 ${
+      className={`rounded-2xl p-6 h-full ${
         highlight
           ? 'gradient-border glass-panel shadow-[0_20px_50px_-30px_rgba(0,0,0,0.9)]'
           : 'glass-panel border border-white/10'

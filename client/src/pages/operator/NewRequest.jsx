@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createContentRequest } from '../../api';
-import { CONTENT_TYPES, formatCents, formatCompensation } from '../../utils/constants';
+import { CONTENT_TYPES, formatCents } from '../../utils/constants';
+import useNewRequestForm from '../../hooks/useNewRequestForm';
 import Btn from '../../components/common/Btn';
 import Chip from '../../components/common/Chip';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MatchResults from '../../components/operator/MatchResults';
+import SuggestionPanel from '../../components/operator/SuggestionPanel';
+import FadeIn from '../../components/marketing/FadeIn';
 
 const CONTENT_GOALS = [
   'Menu item spotlight',
@@ -17,11 +18,6 @@ const CONTENT_GOALS = [
 
 const REEL_LENGTHS = [15, 30, 60];
 
-const TIMELINE_OPTIONS = [
-  { value: 'Standard (5-7 days)', label: 'Standard' },
-  { value: 'Rush (2-3 days)', label: 'Rush' },
-];
-
 const COMP_TYPES = [
   { value: 'FLAT_FEE', label: 'Flat fee' },
   { value: 'FREE_PRODUCT', label: 'Free product/meal' },
@@ -29,123 +25,11 @@ const COMP_TYPES = [
   { value: 'HYBRID', label: 'Hybrid' },
 ];
 
-function buildUsageRights(timeline) {
-  if (timeline?.toLowerCase().includes('rush')) {
-    return 'Organic social + in-store, 6 months';
-  }
-  return 'Organic social + in-store, 12 months';
-}
-
 export default function NewRequest() {
   const navigate = useNavigate();
+  const form = useNewRequestForm();
 
-  const [contentType, setContentType] = useState('');
-  const [contentGoal, setContentGoal] = useState('');
-  const [subject, setSubject] = useState('');
-  const [creativeDirection, setCreativeDirection] = useState('');
-  const [photoCount, setPhotoCount] = useState(0);
-  const [reelCount, setReelCount] = useState(0);
-  const [reelLength, setReelLength] = useState(15);
-  const [customReelLength, setCustomReelLength] = useState('');
-  const [storyCount, setStoryCount] = useState(0);
-  const [customDeliverables, setCustomDeliverables] = useState('');
-
-  const effectiveReelLength = customReelLength ? Number(customReelLength) : reelLength;
-
-  const builtDeliverables = [
-    photoCount > 0 && `${photoCount} photo${photoCount !== 1 ? 's' : ''}`,
-    reelCount > 0 && `${reelCount} Reel${reelCount !== 1 ? 's' : ''} (${effectiveReelLength}s)`,
-    storyCount > 0 && `${storyCount} Stor${storyCount !== 1 ? 'ies' : 'y'}`,
-  ].filter(Boolean).join(' + ');
-
-  const deliverables = customDeliverables || builtDeliverables;
-  const [timeline, setTimeline] = useState(TIMELINE_OPTIONS[0].value);
-  const [usageRights, setUsageRights] = useState(buildUsageRights(TIMELINE_OPTIONS[0].value));
-  const [compensationType, setCompensationType] = useState('FLAT_FEE');
-  const [budgetMin, setBudgetMin] = useState(150);
-  const [budgetMax, setBudgetMax] = useState(300);
-  const [compNotes, setCompNotes] = useState('');
-
-  const [briefTouched, setBriefTouched] = useState(false);
-  const [briefTextOverride, setBriefTextOverride] = useState('');
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [matches, setMatches] = useState(null);
-  const [requestId, setRequestId] = useState(null);
-
-  useEffect(() => {
-    setUsageRights(buildUsageRights(timeline));
-  }, [timeline]);
-
-  const compensationDetails = useMemo(() => ({
-    minCents: budgetMin * 100,
-    maxCents: budgetMax * 100,
-    note: compNotes.trim() || undefined,
-  }), [budgetMin, budgetMax, compNotes]);
-
-  const generatedBriefText = useMemo(() => {
-    const lines = [
-      `Goal: ${contentGoal || 'Describe the specific goal'}`,
-      `Subject: ${subject || 'What should be highlighted?'}`,
-      `Creative direction: ${creativeDirection || 'Add any creative notes (lighting, mood, angles)'}`,
-      `Deliverables: ${deliverables || 'Select deliverables'}`,
-      `Timeline: ${timeline || 'Select timeline'}`,
-      `Usage rights: ${usageRights || 'Usage rights will be generated'}`,
-      `Compensation: ${formatCompensation(compensationType, compensationDetails)}`,
-      `Content type: ${contentType || 'Select content type'}`,
-    ];
-    return lines.join('\n');
-  }, [contentType, contentGoal, subject, creativeDirection, deliverables, timeline, usageRights, compensationType, compensationDetails]);
-
-  const briefText = briefTouched ? briefTextOverride : generatedBriefText;
-
-  const handleFindMatches = async () => {
-    if (!contentType || !contentGoal || !deliverables || !timeline) return;
-    setLoading(true);
-    setError('');
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      const res = await createContentRequest({
-        contentType,
-        description: briefText,
-        briefText,
-        contentGoal,
-        subject,
-        creativeDirection,
-        deliverables,
-        timeline,
-        usageRights,
-        briefTemplate: {
-          contentGoal,
-          subject,
-          creativeDirection,
-          deliverables,
-          timeline,
-          usageRights,
-        },
-        compensationType,
-        compensationDetails,
-        budgetRange: `${formatCents(budgetMin * 100)} - ${formatCents(budgetMax * 100)}`,
-      });
-      const request = res.data.request;
-      setRequestId(request.id);
-      setMatches(request.matches || []);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Could not find matches. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const canSubmit =
-    contentType &&
-    contentGoal &&
-    deliverables &&
-    timeline &&
-    (compensationType !== 'FLAT_FEE' || (budgetMin > 0 && budgetMax >= budgetMin));
-
-  if (loading) {
+  if (form.loading) {
     return (
       <div className="min-h-screen bg-bgWarm">
         <div className="max-w-3xl mx-auto px-4 py-8">
@@ -160,13 +44,13 @@ export default function NewRequest() {
     );
   }
 
-  if (matches) {
+  if (form.matches) {
     return (
       <MatchResults
-        matches={matches}
-        requestId={requestId}
-        requestContext={{ contentType, compensationType, budgetMin, budgetMax, compNotes }}
-        onReset={() => { setMatches(null); setRequestId(null); }}
+        matches={form.matches}
+        requestId={form.requestId}
+        requestContext={{ contentType: form.contentTypes.join(', '), compensationType: form.compensationType, budgetMin: form.budgetMin, budgetMax: form.budgetMax, compNotes: form.compNotes }}
+        onReset={form.resetMatches}
       />
     );
   }
@@ -174,6 +58,7 @@ export default function NewRequest() {
   return (
     <div className="min-h-screen bg-bgWarm">
       <div className="max-w-3xl mx-auto px-4 py-8">
+        <FadeIn>
         <div className="mb-8">
           <button
             onClick={() => navigate('/operator/dashboard')}
@@ -184,12 +69,22 @@ export default function NewRequest() {
             </svg>
             Dashboard
           </button>
-          <h1 className="font-display text-3xl font-bold text-dark mb-2">New content request</h1>
+          <p className="section-label mb-2">New request</p>
+          <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-2">New content request</h1>
           <p className="font-body text-muted">
             Build a brief in minutes. We'll match on evidence and neighborhood fit.
           </p>
         </div>
+        </FadeIn>
 
+        {/* AI Suggestions */}
+        <FadeIn delay={0.05}>
+        <div className="mb-6">
+          <SuggestionPanel onApply={form.applySuggestion} />
+        </div>
+        </FadeIn>
+
+        <FadeIn delay={0.1}>
         <div className="card space-y-6">
           <div>
             <label className="block text-sm font-medium text-dark mb-2 font-body">
@@ -200,8 +95,8 @@ export default function NewRequest() {
                 <Chip
                   key={type}
                   label={type}
-                  selected={contentType === type}
-                  onClick={() => setContentType((prev) => (prev === type ? '' : type))}
+                  selected={form.contentTypes.includes(type)}
+                  onClick={() => form.setContentTypes((prev) => prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type])}
                 />
               ))}
             </div>
@@ -214,8 +109,8 @@ export default function NewRequest() {
                 <Chip
                   key={goal}
                   label={goal}
-                  selected={contentGoal === goal}
-                  onClick={() => setContentGoal((prev) => (prev === goal ? '' : goal))}
+                  selected={form.contentGoals.includes(goal)}
+                  onClick={() => form.setContentGoals((prev) => prev.includes(goal) ? prev.filter((g) => g !== goal) : [...prev, goal])}
                 />
               ))}
             </div>
@@ -224,8 +119,8 @@ export default function NewRequest() {
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5 font-body">Subject</label>
             <input
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              value={form.subject}
+              onChange={(e) => form.setSubject(e.target.value)}
               placeholder="e.g. winter latte, morning light, pastry case"
               className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
             />
@@ -236,8 +131,8 @@ export default function NewRequest() {
               Creative direction <span className="text-muted font-normal">(optional)</span>
             </label>
             <textarea
-              value={creativeDirection}
-              onChange={(e) => setCreativeDirection(e.target.value)}
+              value={form.creativeDirection}
+              onChange={(e) => form.setCreativeDirection(e.target.value)}
               rows={3}
               placeholder="Lighting, mood, angles, or must‑include elements"
               className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all resize-none"
@@ -245,105 +140,28 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark mb-3 font-body">Deliverables</label>
-
-            <div className="space-y-3 mb-3">
-              {/* Photos */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-bgWarm rounded-xl px-3 py-2">
-                  <button type="button" onClick={() => setPhotoCount((c) => Math.max(0, c - 1))} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">−</button>
-                  <span className="w-8 text-center font-display text-lg font-bold text-dark">{photoCount}</span>
-                  <button type="button" onClick={() => setPhotoCount((c) => c + 1)} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">+</button>
-                </div>
-                <span className="text-sm font-medium text-dark font-body">Photos</span>
-              </div>
-
-              {/* Reels */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex items-center gap-2 bg-bgWarm rounded-xl px-3 py-2">
-                  <button type="button" onClick={() => setReelCount((c) => Math.max(0, c - 1))} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">−</button>
-                  <span className="w-8 text-center font-display text-lg font-bold text-dark">{reelCount}</span>
-                  <button type="button" onClick={() => setReelCount((c) => c + 1)} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">+</button>
-                </div>
-                <span className="text-sm font-medium text-dark font-body">Reels</span>
-                {reelCount > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    {REEL_LENGTHS.map((len) => (
-                      <button
-                        key={len}
-                        type="button"
-                        onClick={() => { setReelLength(len); setCustomReelLength(''); }}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
-                          !customReelLength && reelLength === len
-                            ? 'border-accent bg-accentLight text-accent'
-                            : 'border-border bg-white text-muted hover:border-accent/50'
-                        }`}
-                      >
-                        {len}s
-                      </button>
-                    ))}
-                    <input
-                      type="number"
-                      min={1}
-                      value={customReelLength}
-                      onChange={(e) => setCustomReelLength(e.target.value)}
-                      placeholder="Custom"
-                      className={`w-20 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors text-center ${
-                        customReelLength
-                          ? 'border-accent bg-accentLight text-accent'
-                          : 'border-border bg-white text-muted placeholder:text-muted/60'
-                      }`}
-                    />
-                    <span className="text-xs text-muted font-body">sec</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Stories */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 bg-bgWarm rounded-xl px-3 py-2">
-                  <button type="button" onClick={() => setStoryCount((c) => Math.max(0, c - 1))} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">−</button>
-                  <span className="w-8 text-center font-display text-lg font-bold text-dark">{storyCount}</span>
-                  <button type="button" onClick={() => setStoryCount((c) => c + 1)} className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center text-dark font-bold hover:bg-gray-50 transition-colors">+</button>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-dark font-body">Stories</span>
-                  <p className="text-xs text-muted font-body">A set of 3-5 vertical slides (photo or short clip) posted as an Instagram/TikTok Story sequence</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Preview */}
-            {builtDeliverables && !customDeliverables && (
-              <div className="bg-accentLight/50 rounded-xl px-4 py-2.5 mb-3">
-                <p className="text-sm font-medium text-accent font-body">{builtDeliverables}</p>
-              </div>
-            )}
-
-            {/* Custom override — always visible */}
-            <div className="border-t border-border pt-3 mt-3">
-              <label className="block text-xs text-muted font-medium font-body mb-1.5">Or type your own</label>
-              <input
-                value={customDeliverables}
-                onChange={(e) => setCustomDeliverables(e.target.value)}
-                placeholder="e.g. 2 Reels + 5 photos + 1 carousel"
-                className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-              />
-              {customDeliverables && (
-                <p className="text-xs text-muted font-body mt-1.5">Custom input will be used instead of the builder above.</p>
-              )}
+            <label className="block text-sm font-medium text-dark mb-2 font-body">Deliverables</label>
+            <div className="flex flex-wrap gap-2">
+              {DELIVERABLE_OPTIONS.map((d) => (
+                <Chip
+                  key={d}
+                  label={d}
+                  selected={form.deliverables.includes(d)}
+                  onClick={() => form.setDeliverables((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d])}
+                />
+              ))}
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-dark mb-2 font-body">Timeline</label>
             <div className="flex flex-wrap gap-2">
-              {TIMELINE_OPTIONS.map((t) => (
+              {form.TIMELINE_OPTIONS.map((t) => (
                 <Chip
                   key={t.value}
                   label={t.value}
-                  selected={timeline === t.value}
-                  onClick={() => setTimeline(t.value)}
+                  selected={form.timeline === t.value}
+                  onClick={() => form.setTimeline(t.value)}
                 />
               ))}
             </div>
@@ -356,20 +174,20 @@ export default function NewRequest() {
                 <Chip
                   key={t.value}
                   label={t.label}
-                  selected={compensationType === t.value}
-                  onClick={() => setCompensationType(t.value)}
+                  selected={form.compensationType === t.value}
+                  onClick={() => form.setCompensationType(t.value)}
                 />
               ))}
             </div>
-            {(compensationType === 'FLAT_FEE' || compensationType === 'HYBRID') && (
-              <div className="flex items-center gap-4">
+            {(form.compensationType === 'FLAT_FEE' || form.compensationType === 'HYBRID') && (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                 <div className="flex-1">
                   <label className="block text-xs text-muted mb-1 font-body">Min</label>
                   <input
                     type="number"
                     min={50}
-                    value={budgetMin}
-                    onChange={(e) => setBudgetMin(Number(e.target.value))}
+                    value={form.budgetMin}
+                    onChange={(e) => form.setBudgetMin(Number(e.target.value))}
                     className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm"
                   />
                 </div>
@@ -377,20 +195,20 @@ export default function NewRequest() {
                   <label className="block text-xs text-muted mb-1 font-body">Max</label>
                   <input
                     type="number"
-                    min={budgetMin}
-                    value={budgetMax}
-                    onChange={(e) => setBudgetMax(Number(e.target.value))}
+                    min={form.budgetMin}
+                    value={form.budgetMax}
+                    onChange={(e) => form.setBudgetMax(Number(e.target.value))}
                     className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm"
                   />
                 </div>
               </div>
             )}
-            {(compensationType === 'FREE_PRODUCT' || compensationType === 'DISCOUNT_CODE' || compensationType === 'HYBRID') && (
+            {(form.compensationType === 'FREE_PRODUCT' || form.compensationType === 'DISCOUNT_CODE' || form.compensationType === 'HYBRID') && (
               <div className="mt-3">
                 <label className="block text-xs text-muted mb-1 font-body">Details</label>
                 <input
-                  value={compNotes}
-                  onChange={(e) => setCompNotes(e.target.value)}
+                  value={form.compNotes}
+                  onChange={(e) => form.setCompNotes(e.target.value)}
                   placeholder="e.g. $30 meal, 20% code, or meal + $100"
                   className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm"
                 />
@@ -401,10 +219,10 @@ export default function NewRequest() {
           <div>
             <label className="block text-sm font-medium text-dark mb-1.5 font-body">Brief template</label>
             <textarea
-              value={briefText}
+              value={form.briefText}
               onChange={(e) => {
-                setBriefTouched(true);
-                setBriefTextOverride(e.target.value);
+                form.setBriefTouched(true);
+                form.setBriefTextOverride(e.target.value);
               }}
               rows={6}
               className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all resize-none"
@@ -414,12 +232,12 @@ export default function NewRequest() {
             </p>
           </div>
 
-          {error && <p className="text-sm text-red-600 font-body">{error}</p>}
+          {form.error && <p className="text-sm text-red-600 font-body">{form.error}</p>}
 
           <div className="pt-2">
             <Btn
-              onClick={handleFindMatches}
-              disabled={!canSubmit}
+              onClick={form.handleFindMatches}
+              disabled={!form.canSubmit}
               className="w-full"
               size="lg"
             >
@@ -427,6 +245,7 @@ export default function NewRequest() {
             </Btn>
           </div>
         </div>
+        </FadeIn>
       </div>
     </div>
   );

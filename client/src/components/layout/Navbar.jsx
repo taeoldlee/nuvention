@@ -61,6 +61,7 @@ export default function Navbar() {
                 src={user.avatarUrl}
                 alt={user.name}
                 className="w-full h-full object-cover"
+                onError={(e) => { e.target.src = ''; }}
               />
             ) : (
               <div className="w-full h-full bg-bgWarm flex items-center justify-center text-sm font-bold text-muted">

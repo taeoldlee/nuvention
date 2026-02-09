@@ -150,6 +150,7 @@ export default function OnboardingStepBrand({ formActions, onBack, onNext }) {
               {k}
               <button
                 type="button"
+                aria-label={`Remove ${k}`}
                 onClick={() => removeKeyword(k)}
                 className="hover:text-dark"
               >

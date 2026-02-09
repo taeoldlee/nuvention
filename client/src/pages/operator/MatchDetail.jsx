@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getContentRequests, selectMatch } from '../../api';
 import { formatCompensation } from '../../utils/constants';
@@ -22,6 +22,14 @@ export default function MatchDetail() {
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [creatorInfo, setCreatorInfo] = useState(null);
+  const redirectTimer = useRef(null);
+
+  // Clean up redirect timer on unmount
+  useEffect(() => {
+    return () => {
+      if (redirectTimer.current) clearTimeout(redirectTimer.current);
+    };
+  }, []);
 
   // Load match from requests if not in state
   useEffect(() => {
@@ -79,10 +87,11 @@ export default function MatchDetail() {
       } else {
         setCreatorInfo(null);
       }
+      setConfirming(false);
       setConfirmed(true);
 
       // Redirect to project after a short reveal
-      setTimeout(() => {
+      redirectTimer.current = setTimeout(() => {
         if (project?.id) {
           navigate(`/operator/project/${project.id}`);
         } else {
@@ -143,6 +152,7 @@ export default function MatchDetail() {
                     src={creatorInfo.photoUrl}
                     alt={creatorInfo.displayName}
                     className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-sm mb-3"
+                    onError={(e) => { e.target.src = ''; }}
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-full bg-accentLight flex items-center justify-center mb-3">
@@ -209,7 +219,7 @@ export default function MatchDetail() {
 
           {/* Content Samples */}
           {match.portfolioSamples?.length > 0 && (
-            <div className="grid grid-cols-3 gap-3 mb-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
               {match.portfolioSamples.slice(0, 3).map((item, i) => (
                 <div
                   key={item.id || i}
@@ -219,6 +229,7 @@ export default function MatchDetail() {
                     src={item.imageUrl}
                     alt={`Sample ${i + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = ''; }}
                   />
                 </div>
               ))}

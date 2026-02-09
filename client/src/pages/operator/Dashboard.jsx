@@ -6,11 +6,13 @@ import {
   PROJECT_STATUS_LABELS,
   formatRelativeDate,
 } from '../../utils/constants';
+import { creatorDisplayName } from '../../utils/extractors';
 import StatCard from '../../components/common/StatCard';
 import StatusBadge from '../../components/common/StatusBadge';
 import Btn from '../../components/common/Btn';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -44,7 +46,9 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-bgWarm">
-        <LoadingSpinner message="Loading your dashboard..." />
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <DashboardSkeleton />
+        </div>
       </div>
     );
   }
@@ -73,25 +77,29 @@ export default function Dashboard() {
     <div className="min-h-screen bg-bgWarm">
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-bold text-dark mb-1">
-              Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
-            </h1>
-            {profile?.businessName && (
-              <p className="font-body text-muted">{profile.businessName}</p>
-            )}
+        <FadeIn>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">
+            <div>
+              <p className="section-label mb-2">Dashboard</p>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-1">
+                Welcome back{user?.name ? `, ${user.name.split(' ')[0]}` : ''}
+              </h1>
+              {profile?.businessName && (
+                <p className="font-body text-muted">{profile.businessName}</p>
+              )}
+            </div>
+            <Btn onClick={() => navigate('/operator/request/new')}>
+              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              New Content Request
+            </Btn>
           </div>
-          <Btn onClick={() => navigate('/operator/request/new')}>
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-            New Content Request
-          </Btn>
-        </div>
+        </FadeIn>
 
         {/* Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+        <FadeIn delay={0.1}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           <StatCard
             label="Active Projects"
             value={stats?.activeProjects ?? activeProjects.length}
@@ -120,8 +128,10 @@ export default function Dashboard() {
             }
           />
         </div>
+        </FadeIn>
 
         {/* Active Projects */}
+        <FadeIn delay={0.2}>
         <section className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-dark">
@@ -155,7 +165,7 @@ export default function Dashboard() {
                 <button
                   key={project.id}
                   onClick={() => navigate(`/operator/project/${project.id}`)}
-                  className="card w-full text-left hover:shadow-md hover:border-accent/20 transition-all duration-200"
+                  className="card w-full text-left hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-accent/20 hover:-translate-y-0.5 transition-all duration-300"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -166,14 +176,12 @@ export default function Dashboard() {
                         <StatusBadge status={project.status} />
                       </div>
                       <div className="flex items-center gap-3 text-sm text-muted font-body">
-                        {(project.creatorProfile?.user?.name || project.creatorName) && (
-                          <span className="flex items-center gap-1">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                            </svg>
-                            {project.creatorProfile?.user?.name || project.creatorName}
-                          </span>
-                        )}
+                        <span className="flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                          </svg>
+                          {creatorDisplayName(project)}
+                        </span>
                         {project.updatedAt && (
                           <span>Updated {formatRelativeDate(project.updatedAt)}</span>
                         )}
@@ -188,8 +196,10 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+        </FadeIn>
 
         {/* Recent Content */}
+        <FadeIn delay={0.3}>
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-dark">
@@ -231,6 +241,7 @@ export default function Dashboard() {
                         src={thumbUrl}
                         alt={project.match?.contentRequest?.contentType || project.contentType}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        onError={(e) => { e.target.src = ''; e.target.alt = ''; }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted">
@@ -244,7 +255,7 @@ export default function Dashboard() {
                     {project.match?.contentRequest?.contentType || project.contentType}
                   </p>
                   <p className="text-xs text-muted font-body">
-                    {project.creatorProfile?.user?.name || project.creatorName || 'Creator'}
+                    {creatorDisplayName(project)}
                   </p>
                 </button>
                 );
@@ -252,6 +263,7 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+        </FadeIn>
       </div>
     </div>
   );

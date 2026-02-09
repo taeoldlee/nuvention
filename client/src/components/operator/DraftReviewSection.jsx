@@ -9,7 +9,7 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
   const images = draft.fileUrls || draft.images;
 
   return (
-    <div className="card">
+    <div className="card hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display text-lg font-semibold text-dark">
           Draft for Review
@@ -31,6 +31,7 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
                 src={typeof img === 'string' ? img : img.url}
                 alt={`Draft ${i + 1}`}
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                onError={(e) => { e.target.src = ''; }}
               />
             </div>
           ))}
@@ -88,7 +89,7 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
 
       {/* Action CTAs */}
       {!showRevisionInput && (
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
           <Btn
             onClick={() => onApprove(draft.id)}
             loading={actionLoading === 'approve'}

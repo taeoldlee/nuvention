@@ -15,7 +15,7 @@ export default function CreatorProjectCard({ project, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="card w-full text-left hover:shadow-md hover:border-creatorAccent/30 transition-all duration-200 group"
+      className="card w-full text-left hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-creatorAccent/30 hover:-translate-y-0.5 transition-all duration-300 group"
     >
       <div className="flex items-center gap-4">
         <div className="w-11 h-11 rounded-xl bg-creatorLight flex items-center justify-center shrink-0">

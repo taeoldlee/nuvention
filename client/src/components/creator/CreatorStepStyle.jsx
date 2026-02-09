@@ -1,10 +1,11 @@
-import { CONTENT_STYLES, CREATOR_STRENGTHS, NEIGHBORHOODS } from '../../utils/constants';
+import { CONTENT_STYLES, CREATOR_STRENGTHS, NEIGHBORHOODS, CUISINE_OPTIONS } from '../../utils/constants';
 import Chip from '../common/Chip';
 
 export default function CreatorStepStyle({ formActions }) {
   const {
     contentStyles, setContentStyles,
     strengths, setStrengths,
+    cuisineSpecialties, setCuisineSpecialties,
     neighborhoods, setNeighborhoods,
     dreamBrands, brandInput, setBrandInput,
     toggleItem, addDreamBrand, removeDreamBrand,
@@ -48,6 +49,16 @@ export default function CreatorStepStyle({ formActions }) {
       </div>
 
       <div>
+        <label className="label">Cuisine Specialties (optional)</label>
+        <p className="text-xs text-muted mb-3">What types of food do you love to shoot?</p>
+        <div className="flex flex-wrap gap-2">
+          {CUISINE_OPTIONS.map((c) => (
+            <Chip key={c} label={c} selected={cuisineSpecialties.includes(c)} creator onClick={() => toggleItem(cuisineSpecialties, setCuisineSpecialties, c)} />
+          ))}
+        </div>
+      </div>
+
+      <div>
         <label className="label">Dream Brands (optional)</label>
         <p className="text-xs text-muted mb-3">Local spots you'd love to shoot for. Press Enter to add.</p>
         <input
@@ -63,7 +74,7 @@ export default function CreatorStepStyle({ formActions }) {
             {dreamBrands.map((brand) => (
               <span key={brand} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border border-creator bg-creatorLight text-creator">
                 {brand}
-                <button type="button" onClick={() => removeDreamBrand(brand)} className="hover:text-creator/70 transition-colors">
+                <button type="button" aria-label={`Remove ${brand}`} onClick={() => removeDreamBrand(brand)} className="hover:text-creator/70 transition-colors">
                   <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                   </svg>

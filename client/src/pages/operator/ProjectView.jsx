@@ -15,6 +15,7 @@ import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
 import StatusBadge from '../../components/common/StatusBadge';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useToast } from '../../contexts/ToastContext';
 import DraftReviewSection from '../../components/operator/DraftReviewSection';
 import {
   BriefSentSection,
@@ -23,10 +24,12 @@ import {
   DeliveredSection,
 } from '../../components/operator/ProjectStatusSection';
 import DraftHistory from '../../components/operator/DraftHistory';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function ProjectView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -53,8 +56,9 @@ export default function ProjectView() {
     try {
       await approveDraft(id, draftId);
       await loadProject();
+      addToast('Draft approved!', 'success');
     } catch {
-      setError('Could not approve draft.');
+      addToast('Could not approve draft.', 'error');
     } finally {
       setActionLoading('');
     }
@@ -65,8 +69,9 @@ export default function ProjectView() {
     try {
       await requestRevision(id, draftId, notes);
       await loadProject();
+      addToast('Revision requested.', 'info');
     } catch {
-      setError('Could not request revision.');
+      addToast('Could not request revision.', 'error');
     } finally {
       setActionLoading('');
     }
@@ -77,8 +82,9 @@ export default function ProjectView() {
     try {
       const res = await deliverProject(id);
       setProject(res.data.project);
+      addToast('Project marked as delivered!', 'success');
     } catch {
-      setError('Could not mark project as delivered.');
+      addToast('Could not mark project as delivered.', 'error');
     } finally {
       setActionLoading('');
     }
@@ -128,11 +134,12 @@ export default function ProjectView() {
         </button>
 
         {/* Project Header */}
+        <FadeIn>
         <div className="card mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
               {creatorPhoto ? (
-                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" />
+                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" onError={(e) => { e.target.src = ''; }} />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-accentLight flex items-center justify-center">
                   <span className="text-lg font-bold text-accent">{creatorName?.charAt(0) || '?'}</span>
@@ -157,7 +164,9 @@ export default function ProjectView() {
         <div className="card mb-6">
           <ProjectStatusTracker status={project.status} />
         </div>
+        </FadeIn>
 
+        <FadeIn delay={0.15}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Details */}
           <div className="lg:col-span-1 space-y-6">
@@ -210,12 +219,51 @@ export default function ProjectView() {
               {project.usageRightsDoc && (
                 <div>
                   <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">Usage Rights Document</p>
-                  <pre className="text-xs text-mid font-body whitespace-pre-wrap bg-bgWarm rounded-xl p-3 border border-border">
+                  <pre className="text-xs text-mid font-body whitespace-pre-wrap break-words overflow-x-auto bg-bgWarm rounded-xl p-3 border border-border">
                     {project.usageRightsDoc}
                   </pre>
                 </div>
               )}
             </div>
+
+            {/* Payment Section */}
+            {project.transaction && (
+              <div className="card space-y-3">
+                <h2 className="font-display text-lg font-semibold text-dark">Payment</h2>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-muted font-body uppercase tracking-wide">Status</span>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                      project.transaction.status === 'COMPLETED' ? 'bg-greenBg text-green' :
+                      project.transaction.status === 'HELD' ? 'bg-yellowBg text-yellowText' :
+                      'bg-bgWarm text-muted'
+                    }`}>
+                      {project.transaction.status === 'HELD' ? 'Escrow Held' :
+                       project.transaction.status === 'COMPLETED' ? 'Paid' :
+                       project.transaction.status}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted font-body uppercase tracking-wide">Total Charged</span>
+                    <span className="text-sm font-semibold text-dark font-body">
+                      ${((project.transaction.brandCharge || 0) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted font-body uppercase tracking-wide">Creator Payout</span>
+                    <span className="text-sm font-semibold text-dark font-body">
+                      ${((project.transaction.creatorPayout || 0) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-xs text-muted font-body uppercase tracking-wide">Platform Fee</span>
+                    <span className="text-sm text-muted font-body">
+                      ${((project.transaction.platformFee || 0) / 100).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: Draft Review / Status */}
@@ -248,6 +296,7 @@ export default function ProjectView() {
             <DraftHistory drafts={project.drafts} />
           </div>
         </div>
+        </FadeIn>
       </div>
     </div>
   );

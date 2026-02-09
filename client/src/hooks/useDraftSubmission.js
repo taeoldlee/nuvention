@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { submitDraft, uploadImages } from '../api';
 
 const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
@@ -12,6 +12,15 @@ export default function useDraftSubmission(projectId, onSuccess) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [error, setError] = useState(null);
+  const previewsRef = useRef(draftPreviews);
+  previewsRef.current = draftPreviews;
+
+  // Revoke all object URLs on unmount
+  useEffect(() => {
+    return () => {
+      previewsRef.current.forEach((p) => URL.revokeObjectURL(p.url || p));
+    };
+  }, []);
 
   const handleFilesSelected = (files) => {
     const allowed = Array.from(files).filter(

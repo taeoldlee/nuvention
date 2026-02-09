@@ -291,7 +291,7 @@ export default function Landing() {
                 </div>
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Match evidence</p>
-                  <p className="text-base text-white">What you’ll see on every shortlist card</p>
+                  <p className="text-base text-white">What you'll see on every shortlist card</p>
                 </div>
               </div>
               <ul className="mt-6 space-y-4 text-sm text-slate-300/80">
@@ -339,7 +339,7 @@ export default function Landing() {
             <SectionHeader
               eyebrow="FAQ"
               title="Short answers for busy operators."
-              description="If you need more detail, we’ll walk you through a live flow in minutes."
+              description="If you need more detail, we'll walk you through a live flow in minutes."
               align="center"
             />
           </FadeIn>
@@ -358,7 +358,7 @@ export default function Landing() {
                 Commission your next UGC project with confidence.
               </h2>
               <p className="mt-3 text-sm text-slate-300/80">
-                We’ll guide your team through brand alignment, evidence‑based matching, and an in‑platform review flow.
+                We'll guide your team through brand alignment, evidence‑based matching, and an in‑platform review flow.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">

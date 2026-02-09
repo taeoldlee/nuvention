@@ -6,10 +6,11 @@ import useOnboardingForm from '../../hooks/useOnboardingForm';
 import ProgressBar from '../../components/common/ProgressBar';
 import OnboardingStepImport from '../../components/operator/OnboardingStepImport';
 import OnboardingStepBrand from '../../components/operator/OnboardingStepBrand';
+import OnboardingStepCuisine from '../../components/operator/OnboardingStepCuisine';
 import OnboardingStepBudget from '../../components/operator/OnboardingStepBudget';
 import OnboardingStepConfirm from '../../components/operator/OnboardingStepConfirm';
 
-const STEPS = ['Import', 'Brand', 'Budget', 'Confirm'];
+const STEPS = ['Import', 'Brand', 'Cuisine', 'Budget', 'Confirm'];
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function Onboarding() {
   if (!user) {
     return <Navigate to="/" replace />;
   }
+
   const { form } = formActions;
 
   const [step, setStep] = useState(0);
@@ -64,6 +66,7 @@ export default function Onboarding() {
         vibeScales: form.vibeScales,
         guestExperienceKeywords: form.guestExperienceKeywords,
         visualRefUrls: form.visualRefUrls,
+        cuisineTypes: form.cuisineTypes,
         budgetMin: form.budgetMin * 100,
         budgetMax: form.budgetMax * 100,
         contentNoGos: form.contentNoGos,
@@ -113,7 +116,7 @@ export default function Onboarding() {
         )}
 
         {step === 2 && (
-          <OnboardingStepBudget
+          <OnboardingStepCuisine
             formActions={formActions}
             onBack={back}
             onNext={next}
@@ -121,6 +124,14 @@ export default function Onboarding() {
         )}
 
         {step === 3 && (
+          <OnboardingStepBudget
+            formActions={formActions}
+            onBack={back}
+            onNext={next}
+          />
+        )}
+
+        {step === 4 && (
           <OnboardingStepConfirm
             form={form}
             saving={saving}

@@ -1,27 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getProject } from '../../api';
 import { brandDisplayName, brandPhotoUrl } from '../../utils/extractors';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import { useToast } from '../../contexts/ToastContext';
 import ProjectHeader from '../../components/creator/ProjectHeader';
 import ProjectDetailsCard from '../../components/creator/ProjectDetailsCard';
 import DraftUploadSection from '../../components/creator/DraftUploadSection';
 import { DraftSubmittedView, ApprovedView } from '../../components/creator/DraftStatusView';
 import useDraftSubmission from '../../hooks/useDraftSubmission';
+import FadeIn from '../../components/marketing/FadeIn';
 
 export default function ProjectView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const loadProject = async () => {
+  const loadProject = useCallback(async () => {
     const res = await getProject(id);
     setProject(res.data.project);
-  };
+  }, [id]);
 
   const draftActions = useDraftSubmission(id, loadProject);
 
@@ -30,7 +33,7 @@ export default function ProjectView() {
     loadProject()
       .catch(() => setError('Failed to load project.'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [loadProject]);
 
   if (loading) return <LoadingSpinner message="Loading project..." creator />;
 
@@ -58,7 +61,8 @@ export default function ProjectView() {
   const briefText = project.briefText || project.match?.contentRequest?.description || project.request?.description || project.request?.briefText || '';
   const drafts = project.drafts || [];
   const latestDraft = drafts.length > 0 ? drafts[0] : null;
-  const revisionNotes = project.revisionNotes || project.revisionFeedback || latestDraft?.revisionFeedback || latestDraft?.feedback || '';
+  const revisionDraft = drafts.find((d) => d.status === 'REVISION_REQUESTED') || drafts.find((d) => d.feedback);
+  const revisionNotes = revisionDraft?.feedback || latestDraft?.feedback || '';
   const canSubmitDraft = status === 'BRIEF_SENT' || status === 'REVISION_REQUESTED';
   const isRevisionRequested = status === 'REVISION_REQUESTED';
 
@@ -71,11 +75,14 @@ export default function ProjectView() {
         Back to Dashboard
       </button>
 
+      <FadeIn>
       <ProjectHeader brandName={brandDisplayName(project)} brandPhoto={brandPhotoUrl(project)} contentType={contentType} status={status} compensationType={compensationType} compensationDetails={compensationDetails} pay={project.price ?? project.pay ?? project.budget ?? 0} />
 
       <ProjectDetailsCard briefText={briefText} deliverables={deliverables} timeline={timeline} usageRights={usageRights} />
+      </FadeIn>
 
-      {isRevisionRequested && revisionNotes && (
+      <FadeIn delay={0.15}>
+      {isRevisionRequested && (
         <div className="card mb-6 border-orange-200 bg-orange-50/50">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0">
@@ -85,7 +92,9 @@ export default function ProjectView() {
             </div>
             <div>
               <h3 className="font-body font-semibold text-orange-800 mb-1">Revision Requested</h3>
-              <p className="font-body text-sm text-orange-700 leading-relaxed">{revisionNotes}</p>
+              <p className="font-body text-sm text-orange-700 leading-relaxed">
+                {revisionNotes || 'The brand has requested changes to your draft. Please review and resubmit.'}
+              </p>
             </div>
           </div>
         </div>
@@ -96,6 +105,34 @@ export default function ProjectView() {
       {status === 'DRAFT_SUBMITTED' && latestDraft && <DraftSubmittedView latestDraft={latestDraft} />}
 
       {(status === 'APPROVED' || status === 'DELIVERED') && <ApprovedView isDelivered={status === 'DELIVERED'} latestDraft={latestDraft} navigate={navigate} />}
+
+      {/* Payment Section */}
+      {project.transaction && (
+        <div className="card mt-6 space-y-3">
+          <h2 className="font-display text-lg font-semibold text-dark">Payment</h2>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted font-body uppercase tracking-wide">Status</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                project.transaction.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
+                project.transaction.status === 'HELD' ? 'bg-yellow-50 text-yellow-700' :
+                'bg-bgWarm text-muted'
+              }`}>
+                {project.transaction.status === 'HELD' ? 'Pending (Escrow)' :
+                 project.transaction.status === 'COMPLETED' ? 'Paid' :
+                 project.transaction.status}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-xs text-muted font-body uppercase tracking-wide">Your Payout</span>
+              <span className="text-lg font-bold text-dark font-body">
+                ${((project.transaction.creatorPayout || 0) / 100).toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+      </FadeIn>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { reseedDatabase } from '../../api';
 
@@ -8,6 +8,14 @@ export default function DemoSwitcher() {
   const [reseedLoading, setReseedLoading] = useState(false);
   const { demoUsers, user, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Auto-open when #demo hash is present
+  useEffect(() => {
+    if (location.hash === '#demo') {
+      setOpen(true);
+    }
+  }, [location.hash]);
 
   const handleReseed = async () => {
     if (!window.confirm('This will reset all demo data to its starting state. Continue?')) {
@@ -25,8 +33,11 @@ export default function DemoSwitcher() {
     }
   };
 
-  const operators = demoUsers.filter((u) => u.role === 'OPERATOR');
-  const creators = demoUsers.filter((u) => u.role === 'CREATOR');
+  const allOperators = demoUsers.filter((u) => u.role === 'OPERATOR');
+  const allCreators = demoUsers.filter((u) => u.role === 'CREATOR');
+  // Show new accounts first so they're easy to find
+  const operators = [...allOperators.filter((u) => !u.brandProfile), ...allOperators.filter((u) => u.brandProfile)];
+  const creators = [...allCreators.filter((u) => !u.creatorProfile), ...allCreators.filter((u) => u.creatorProfile)];
 
   const handleSelect = async (demoUser) => {
     try {
@@ -81,7 +92,12 @@ export default function DemoSwitcher() {
             className="fixed inset-0 bg-black/40 z-50 backdrop-blur-sm"
             onClick={() => setOpen(false)}
           />
-          <div className="fixed bottom-20 right-6 z-50 w-80 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden">
+          <div
+            role="dialog"
+            aria-label="Demo account switcher"
+            onKeyDown={(e) => { if (e.key === 'Escape') setOpen(false); }}
+            className="fixed bottom-20 left-4 right-4 sm:left-auto sm:right-6 z-50 sm:w-80 bg-white rounded-2xl shadow-2xl border border-border overflow-hidden"
+          >
             <div className="p-4 border-b border-border bg-bgWarm">
               <h3 className="font-display text-lg font-bold text-dark">Demo Accounts</h3>
               <p className="text-xs text-muted mt-0.5">
@@ -111,6 +127,7 @@ export default function DemoSwitcher() {
                           src={op.avatarUrl}
                           alt={op.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => { e.target.src = ''; }}
                         />
                       ) : (
                         <div className="w-full h-full bg-accentLight flex items-center justify-center text-accent font-bold">
@@ -152,6 +169,7 @@ export default function DemoSwitcher() {
                           src={cr.avatarUrl}
                           alt={cr.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => { e.target.src = ''; }}
                         />
                       ) : (
                         <div className="w-full h-full bg-creatorLight flex items-center justify-center text-creator font-bold">

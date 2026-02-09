@@ -12,10 +12,11 @@ export const brandPhotoUrl = (project) =>
   project.brand?.photo ||
   null;
 
-export const creatorDisplayName = (project) =>
-  project.creatorProfile?.user?.name ||
-  project.creatorName ||
-  '';
+export const creatorDisplayName = (project) => {
+  const profileId = project.creatorProfile?.id || project.creatorProfileId || '';
+  const suffix = profileId.slice(0, 4).toUpperCase() || 'XXXX';
+  return `Creator_${suffix}`;
+};
 
 export const creatorPhotoUrl = (project) =>
   project.creatorProfile?.user?.avatarUrl ||

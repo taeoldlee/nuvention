@@ -43,7 +43,7 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
         onClick={() => fileInputRef.current?.click()}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
-        className="border-2 border-dashed border-creator/30 rounded-2xl p-8 text-center cursor-pointer hover:border-creator/60 hover:bg-creatorLight/30 transition-all duration-200 mb-5"
+        className="border-2 border-dashed border-creator/30 rounded-2xl p-5 sm:p-8 text-center cursor-pointer hover:border-creator/60 hover:bg-creatorLight/30 transition-all duration-200 mb-5"
       >
         <input ref={fileInputRef} type="file" accept="image/*,video/*" multiple onChange={(e) => handleFilesSelected(e.target.files)} className="hidden" />
         <div className="w-12 h-12 rounded-xl bg-creatorLight mx-auto mb-3 flex items-center justify-center">
@@ -75,6 +75,7 @@ export default function DraftUploadSection({ draftActions, isRevisionRequested }
                 )}
                 <button
                   type="button"
+                  aria-label={`Remove file ${i + 1}`}
                   onClick={(e) => { e.stopPropagation(); removeFile(i); }}
                   className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-black/70"
                 >

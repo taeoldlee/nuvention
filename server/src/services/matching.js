@@ -2,35 +2,8 @@
 // Connects operators with the best-fit creators based on
 // vibe alignment, content style, neighborhood, dream brands, and portfolio quality.
 
+const { CONTENT_TEMPLATES } = require("../utils/contentTemplates");
 const { generateMatchRationale, generateContentPreview } = require("./ai");
-
-const CONTENT_TEMPLATES = {
-  "Ambiance / Interior": [
-    "Golden-hour interior shots capturing the warm atmosphere and signature details of your space. Includes a 15-second walkthrough Reel showing the full ambiance experience.",
-    "Natural light photography showcasing your space's unique character — from cozy corners to statement pieces. Complemented by a short-form video of the morning setup ritual.",
-    "Editorial-style interior captures focusing on textures, lighting, and the details that make your space special. Includes a cinematic pan Reel.",
-  ],
-  "Food & Drink": [
-    "Close-up, beautifully styled shots of your signature dishes and drinks in natural light. Includes a 15-second Reel of a signature drink being crafted.",
-    "Warm, editorial food photography highlighting plating details and ingredients. Complemented by a top-down prep process video.",
-    "Bold, vibrant captures of your menu highlights with lifestyle context. Includes a Reel featuring a customer's first-bite reaction moment.",
-  ],
-  "Community / Culture": [
-    "Candid community moments — regulars chatting, baristas laughing, the energy of a busy morning. Includes a day-in-the-life Reel.",
-    "Documentary-style captures of your community events and daily interactions. Complemented by a behind-the-counter perspective Reel.",
-    "Lifestyle shots weaving your space into the neighborhood story. Includes a 20-second Reel of a community event highlight.",
-  ],
-  "Behind the Scenes": [
-    "Authentic behind-the-scenes of your craft — prep work, techniques, and the people behind the product. Includes a process Reel.",
-    "Raw, intimate captures of your morning routine and preparation rituals. Complemented by a hands-at-work close-up Reel.",
-    "Documentary-style BTS showing the passion and precision behind your offerings. Includes a start-to-finish process Reel.",
-  ],
-  "Seasonal Special": [
-    "Seasonal menu or decoration showcase with lifestyle context. Includes a Reel announcing the seasonal feature.",
-    "Limited-time offering photography with emphasis on seasonal ingredients and atmosphere. Complemented by a taste-test reaction Reel.",
-    "Festive or seasonal ambiance captures showing how your space transforms. Includes a before/after seasonal transformation Reel.",
-  ],
-};
 
 const DELIVERABLE_OPTIONS = [
   "3 photos + 1 Reel (15s)",
@@ -63,11 +36,12 @@ const DEFAULT_PRICE_RANGE = [18000, 22000, 25000];
 
 // ─── Scoring Weights ───
 const WEIGHTS = {
-  vibeAlignment: 30,
-  contentStyleMatch: 25,
-  neighborhoodProximity: 20,
-  dreamBrandMatch: 15,
-  portfolioQuality: 10,
+  vibeAlignment: 25,
+  contentStyleMatch: 22,
+  neighborhoodProximity: 18,
+  cuisineMatch: 15,
+  dreamBrandMatch: 12,
+  portfolioQuality: 8,
 };
 
 function titleCase(value) {
@@ -185,6 +159,26 @@ function dreamBrandMatchScore(brand, creator) {
 }
 
 /**
+ * Calculate cuisine match score (0-1).
+ * Compares brand cuisine types with creator cuisine specialties.
+ */
+function cuisineMatchScore(brand, creator) {
+  const brandCuisine = Array.isArray(brand.cuisineTypes) ? brand.cuisineTypes : [];
+  const creatorCuisine = Array.isArray(creator.cuisineSpecialties) ? creator.cuisineSpecialties : [];
+
+  if (brandCuisine.length === 0 || creatorCuisine.length === 0) return 0.4;
+
+  const brandSet = new Set(brandCuisine.map((c) => c.toLowerCase()));
+  let matches = 0;
+  for (const c of creatorCuisine) {
+    if (brandSet.has(c.toLowerCase())) matches++;
+  }
+
+  if (matches === 0) return 0.15;
+  return Math.min(matches / brandCuisine.length, 1);
+}
+
+/**
  * Calculate portfolio quality score (0-1).
  * Based on number of portfolio items.
  */
@@ -205,6 +199,7 @@ function scoreCreator(brand, request, creator) {
   const vibe = vibeAlignmentScore(brand, creator);
   const style = contentStyleMatchScore(request.contentType, creator);
   const neighborhood = neighborhoodProximityScore(brand, creator);
+  const cuisine = cuisineMatchScore(brand, creator);
   const dream = dreamBrandMatchScore(brand, creator);
   const portfolio = portfolioQualityScore(creator);
 
@@ -212,6 +207,7 @@ function scoreCreator(brand, request, creator) {
     vibe * WEIGHTS.vibeAlignment +
     style * WEIGHTS.contentStyleMatch +
     neighborhood * WEIGHTS.neighborhoodProximity +
+    cuisine * WEIGHTS.cuisineMatch +
     dream * WEIGHTS.dreamBrandMatch +
     portfolio * WEIGHTS.portfolioQuality
   );
@@ -275,6 +271,9 @@ async function buildMatchPackage(brand, request, creator, optionIndex, matchScor
     ),
   ]);
 
+  // Generate match insight badges
+  const matchInsights = buildMatchInsights(brand, request, creator);
+
   return {
     contentPreview,
     deliverables: Array.isArray(deliverables) ? deliverables.join(" · ") : deliverables,
@@ -284,7 +283,51 @@ async function buildMatchPackage(brand, request, creator, optionIndex, matchScor
     style,
     matchRationale: rationale,
     matchSignals,
+    matchInsights,
   };
+}
+
+/**
+ * Build AI match insight badges.
+ */
+function buildMatchInsights(brand, request, creator) {
+  const insights = [];
+
+  // Style fit percentage
+  const styleFit = Math.round(contentStyleMatchScore(request.contentType, creator) * 100);
+  if (styleFit >= 70) insights.push(`Style Fit: ${styleFit}%`);
+
+  // Local expert
+  const brandNeighborhood = (brand.neighborhood || "").toLowerCase();
+  const creatorNeighborhoods = Array.isArray(creator.neighborhoods)
+    ? creator.neighborhoods.map((n) => n.toLowerCase())
+    : [];
+  if (brandNeighborhood && creatorNeighborhoods.includes(brandNeighborhood)) {
+    insights.push("Local Expert");
+  }
+
+  // Cuisine match
+  const brandCuisine = Array.isArray(brand.cuisineTypes) ? brand.cuisineTypes : [];
+  const creatorCuisine = Array.isArray(creator.cuisineSpecialties) ? creator.cuisineSpecialties : [];
+  if (brandCuisine.length > 0 && creatorCuisine.length > 0) {
+    const overlap = brandCuisine.filter((c) =>
+      creatorCuisine.some((cc) => cc.toLowerCase() === c.toLowerCase())
+    );
+    if (overlap.length > 0) insights.push("Cuisine Match");
+  }
+
+  // Rising star
+  const projects = Array.isArray(creator.projects) ? creator.projects : [];
+  const portfolioItems = Array.isArray(creator.portfolioItems) ? creator.portfolioItems : [];
+  if (projects.length <= 2 && portfolioItems.length >= 3) {
+    insights.push("Rising Star");
+  }
+
+  // Vibe alignment
+  const vibeScore = vibeAlignmentScore(brand, creator);
+  if (vibeScore >= 0.8) insights.push("Vibe Aligned");
+
+  return insights.slice(0, 4);
 }
 
 function buildVenueAlignment(brand, creator) {

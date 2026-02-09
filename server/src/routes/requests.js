@@ -139,29 +139,7 @@ router.post("/:id/select/:matchId", requireOperatorWithBrand, async (req, res, n
       return res.status(400).json({ error: "Match has already been processed" });
     }
 
-    // Mark the selected match
-    await prisma.match.update({
-      where: { id: match.id },
-      data: { status: "SELECTED" },
-    });
-
-    // Decline other matches for this request
-    await prisma.match.updateMany({
-      where: {
-        contentRequestId: match.contentRequestId,
-        id: { not: match.id },
-        status: "PRESENTED",
-      },
-      data: { status: "DECLINED" },
-    });
-
-    // Update request status
-    await prisma.contentRequest.update({
-      where: { id: match.contentRequestId },
-      data: { status: "SELECTED" },
-    });
-
-    // Create the project
+    // Select match, decline others, create project atomically
     const usageRightsDoc = generateUsageRightsDoc({
       businessName: match.contentRequest?.brandProfile?.businessName,
       contentType: match.contentRequest?.contentType,
@@ -169,41 +147,67 @@ router.post("/:id/select/:matchId", requireOperatorWithBrand, async (req, res, n
       timeline: match.timeline,
     });
 
-    const project = await prisma.project.create({
-      data: {
-        matchId: match.id,
-        brandProfileId: brandProfile.id,
-        creatorProfileId: match.creatorProfileId,
-        status: "BRIEF_SENT",
-        deliverables: match.deliverables,
-        price: match.price,
-        timeline: match.timeline,
-        usageRights: match.usageRights,
-        briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview}`,
-        usageRightsDoc,
-        compensationType: match.contentRequest.compensationType || "FLAT_FEE",
-        compensationDetails: match.contentRequest.compensationDetails || null,
-      },
-      include: {
-        match: {
-          include: {
-            creatorProfile: {
-              include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
+    const { project, transaction } = await prisma.$transaction(async (tx) => {
+      // Mark the selected match
+      await tx.match.update({
+        where: { id: match.id },
+        data: { status: "SELECTED" },
+      });
+
+      // Decline other matches for this request
+      await tx.match.updateMany({
+        where: {
+          contentRequestId: match.contentRequestId,
+          id: { not: match.id },
+          status: "PRESENTED",
+        },
+        data: { status: "DECLINED" },
+      });
+
+      // Update request status
+      await tx.contentRequest.update({
+        where: { id: match.contentRequestId },
+        data: { status: "SELECTED" },
+      });
+
+      const proj = await tx.project.create({
+        data: {
+          matchId: match.id,
+          brandProfileId: brandProfile.id,
+          creatorProfileId: match.creatorProfileId,
+          status: "BRIEF_SENT",
+          deliverables: match.deliverables,
+          price: match.price,
+          timeline: match.timeline,
+          usageRights: match.usageRights,
+          briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview}`,
+          usageRightsDoc,
+          compensationType: match.contentRequest.compensationType || "FLAT_FEE",
+          compensationDetails: match.contentRequest.compensationDetails || null,
+        },
+        include: {
+          match: {
+            include: {
+              creatorProfile: {
+                include: {
+                  user: {
+                    select: { id: true, name: true, avatarUrl: true },
+                  },
                 },
               },
             },
           },
+          brandProfile: true,
         },
-        brandProfile: true,
-      },
-    });
+      });
 
-    // Create transaction (charge)
-    const transaction = match.price > 0
-      ? await createCharge(project.id, match.price)
-      : null;
+      // Create charge if there's a price
+      const txn = proj.price > 0
+        ? await createCharge(proj.id, match.price)
+        : null;
+
+      return { project: proj, transaction: txn };
+    });
 
     res.status(201).json({ project, transaction });
   } catch (err) {
@@ -216,8 +220,9 @@ module.exports = router;
 function anonymizeRequest(request) {
   if (!request) return request;
   const matches = Array.isArray(request.matches) ? request.matches : [];
-  const anonymizedMatches = matches.map((match, idx) => {
-    const alias = `Creator ${String.fromCharCode(65 + idx)}`;
+  const anonymizedMatches = matches.map((match) => {
+    const suffix = (match.creatorProfileId || "").slice(0, 4).toUpperCase() || "XXXX";
+    const alias = `Creator_${suffix}`;
     const portfolioSamples = (match.creatorProfile?.portfolioItems || []).map((p) => ({
       id: p.id,
       imageUrl: p.imageUrl,
@@ -236,6 +241,7 @@ function anonymizeRequest(request) {
       style: match.style,
       matchRationale: match.matchRationale,
       matchSignals: match.matchSignals,
+      matchInsights: match.matchInsights,
       portfolioSamples,
       compensationType: request.compensationType,
       compensationDetails: request.compensationDetails,

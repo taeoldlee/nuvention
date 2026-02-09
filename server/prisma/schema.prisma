@@ -54,6 +54,8 @@ model BrandProfile {
   budgetMin Int? // cents
   budgetMax Int? // cents
 
+  cuisineTypes    Json? // ["Italian", "Coffee & Beverage", "Bakery & Pastry"]
+
   vibeAnalysis    Json?
   profilePhotoUrl String?
 
@@ -80,6 +82,8 @@ model CreatorProfile {
   strengths     Json // ["Food photography", "Reels", "Ambiance"]
   neighborhoods Json // ["Evanston", "Logan Square"]
   dreamBrands   Json? // ["Colectivo", "Metric Coffee"]
+
+  cuisineSpecialties Json? // ["Italian", "Bakery & Pastry", "Coffee & Beverage"]
 
   vibeTags Json? // ["warm-light", "minimalist", "community-feel"]
   tier CreatorTier? @default(NEW)
@@ -172,6 +176,7 @@ model Match {
   matchScore     Int
   matchRationale String
   matchSignals   Json?
+  matchInsights  Json? // ["Style Fit: 95%", "Local Expert", "Cuisine Match"]
 
   contentPreview String
   deliverables   String

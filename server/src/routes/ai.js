@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { analyzeBrandFromUrl, analyzeCreatorPortfolio } = require("../services/ai");
+const { analyzeBrandFromUrl, analyzeCreatorPortfolio, generateRequestSuggestions } = require("../services/ai");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 /**
  * POST /api/ai/analyze-brand
@@ -67,6 +69,32 @@ router.post("/analyze-portfolio", async (req, res, next) => {
 
     const analysis = await analyzeCreatorPortfolio(imageUrls);
     res.json({ analysis });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/ai/suggest-request
+ * Generate content request suggestions based on the user's brand profile.
+ */
+router.post("/suggest-request", async (req, res, next) => {
+  try {
+    const userId = req.headers["x-user-id"];
+    if (!userId) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+
+    const brand = await prisma.brandProfile.findFirst({
+      where: { userId },
+    });
+
+    if (!brand) {
+      return res.status(404).json({ error: "Brand profile not found. Complete onboarding first." });
+    }
+
+    const suggestions = await generateRequestSuggestions(brand);
+    res.json({ suggestions });
   } catch (err) {
     next(err);
   }

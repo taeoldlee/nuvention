@@ -11,22 +11,22 @@ export default function Btn({
   ...props
 }) {
   const base =
-    'inline-flex items-center justify-center font-body font-semibold transition-all duration-200 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed';
+    'inline-flex items-center justify-center font-body font-semibold transition-all duration-300 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 focus-visible:ring-offset-2';
 
   const sizes = {
-    sm: 'px-4 py-2 text-sm',
+    sm: 'px-4 py-2.5 text-sm min-h-[44px]',
     md: 'px-6 py-3 text-base',
     lg: 'px-8 py-4 text-lg',
   };
 
   const variants = {
     primary: creator
-      ? 'bg-creatorAccent hover:bg-creatorAccent/90 text-white shadow-sm'
-      : 'bg-accent hover:bg-accent/90 text-white shadow-sm',
+      ? 'bg-creatorAccent hover:bg-creatorAccent/90 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5'
+      : 'bg-accent hover:bg-accent/90 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5',
     secondary:
-      'border-2 border-border bg-white hover:bg-bgWarm text-mid',
+      'border-2 border-border bg-white hover:bg-bgWarm text-mid hover:shadow-sm',
     ghost: 'text-muted hover:text-dark hover:bg-bgWarm',
-    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-sm',
+    danger: 'bg-red-500 hover:bg-red-600 text-white shadow-sm hover:shadow-md hover:-translate-y-0.5',
   };
 
   return (

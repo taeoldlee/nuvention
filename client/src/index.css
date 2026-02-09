@@ -36,11 +36,19 @@
   }
 
   .card {
-    @apply bg-white rounded-2xl border border-border p-6 shadow-sm;
+    @apply bg-white rounded-2xl border border-border p-4 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] transition-shadow duration-300;
+  }
+
+  .card-interactive {
+    @apply card cursor-pointer hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300;
+  }
+
+  .section-label {
+    @apply text-xs uppercase tracking-[0.2em] text-muted font-body font-semibold;
   }
 
   .chip {
-    @apply inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-border bg-white text-mid cursor-pointer transition-all duration-200 hover:border-accent/50;
+    @apply inline-flex items-center px-4 py-2 rounded-full text-sm font-medium border border-border bg-white text-mid cursor-pointer transition-all duration-300 hover:border-accent/50 hover:shadow-sm;
   }
 
   .chip-selected {

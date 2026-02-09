@@ -7,11 +7,11 @@ export default function Chip({
   className = '',
 }) {
   const base =
-    'inline-flex items-center px-4 py-2 min-h-[44px] rounded-full text-sm font-medium border cursor-pointer transition-all duration-200 select-none focus:outline-none focus:ring-2 focus:ring-accent/30';
+    'inline-flex items-center px-4 py-2 min-h-[44px] rounded-full text-sm font-medium border cursor-pointer transition-all duration-300 select-none focus:outline-none focus:ring-2 focus:ring-accent/30';
 
   const selectedClass = creator
-    ? 'border-creator bg-creatorLight text-creator'
-    : 'border-accent bg-accentLight text-accent';
+    ? 'border-creator bg-creatorLight text-creator shadow-sm'
+    : 'border-accent bg-accentLight text-accent shadow-sm';
 
   const unselectedClass = creator
     ? 'border-border bg-white text-mid hover:border-creator/50'

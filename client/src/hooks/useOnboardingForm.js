@@ -15,6 +15,7 @@ const INITIAL_FORM = {
   },
   guestExperienceKeywords: [],
   visualRefUrls: [],
+  cuisineTypes: [],
   budgetMin: 100,
   budgetMax: 500,
   contentNoGos: '',

@@ -159,6 +159,7 @@ router.post("/profile", async (req, res, next) => {
       guestExperienceKeywords,
       visualRefUrls,
       contentNoGos,
+      cuisineTypes,
     } = req.body;
 
     if (!businessName || !neighborhood) {
@@ -185,6 +186,7 @@ router.post("/profile", async (req, res, next) => {
         guestExperienceKeywords: guestExperienceKeywords || null,
         visualRefUrls: visualRefUrls || null,
         contentNoGos: contentNoGos || null,
+        cuisineTypes: cuisineTypes || null,
       },
     });
 
@@ -231,6 +233,7 @@ router.put("/profile", async (req, res, next) => {
       guestExperienceKeywords,
       visualRefUrls,
       contentNoGos,
+      cuisineTypes,
     } = req.body;
 
     const profile = await prisma.brandProfile.update({
@@ -253,6 +256,7 @@ router.put("/profile", async (req, res, next) => {
         ...(guestExperienceKeywords !== undefined && { guestExperienceKeywords }),
         ...(visualRefUrls !== undefined && { visualRefUrls }),
         ...(contentNoGos !== undefined && { contentNoGos }),
+        ...(cuisineTypes !== undefined && { cuisineTypes }),
       },
     });
 

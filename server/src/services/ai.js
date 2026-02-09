@@ -227,20 +227,91 @@ Describe the specific photos and Reel they would create. Be vivid and specific t
 }
 
 function fallbackContentPreview(brand, contentType) {
-  // Inline content templates to avoid circular dependency with matching.js
-  const FALLBACK_TEMPLATES = {
-    "Ambiance / Interior":
-      "Golden-hour interior shots capturing the warm atmosphere and signature details of your space. Includes a 15-second walkthrough Reel showing the full ambiance experience.",
-    "Food & Drink":
-      "Close-up, beautifully styled shots of your signature dishes and drinks in natural light. Includes a 15-second Reel of a signature drink being crafted.",
-    "Community / Culture":
-      "Candid community moments — regulars chatting, baristas laughing, the energy of a busy morning. Includes a day-in-the-life Reel.",
-    "Behind the Scenes":
-      "Authentic behind-the-scenes of your craft — prep work, techniques, and the people behind the product. Includes a process Reel.",
-    "Seasonal Special":
-      "Seasonal menu or decoration showcase with lifestyle context. Includes a Reel announcing the seasonal feature.",
-  };
-  return FALLBACK_TEMPLATES[contentType] || FALLBACK_TEMPLATES["Food & Drink"];
+  const { CONTENT_TEMPLATES } = require("../utils/contentTemplates");
+  const templates = CONTENT_TEMPLATES[contentType] || CONTENT_TEMPLATES["Food & Drink"];
+  return templates[0];
+}
+
+/**
+ * Generate content request suggestions based on a brand's profile.
+ * Falls back to template-based suggestions.
+ */
+async function generateRequestSuggestions(brandProfile) {
+  if (!openai) {
+    return fallbackRequestSuggestions(brandProfile);
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: `You are a UGC content strategist for food & hospitality brands. Given this brand profile, suggest 3 content request ideas.
+
+Brand: ${brandProfile.businessName}
+Neighborhood: ${brandProfile.neighborhood || "Chicago"}
+Vibe: ${JSON.stringify(brandProfile.vibe || [])}
+Cuisine: ${JSON.stringify(brandProfile.cuisineTypes || [])}
+Values: ${JSON.stringify(brandProfile.values || [])}
+
+Return a JSON array of 3 objects, each with:
+{
+  "contentType": "one of: Food & Drink, Interior & Ambiance, Behind the Scenes, Community & Events, Staff & Culture",
+  "contentGoal": "short goal phrase",
+  "subject": "specific subject to photograph/film",
+  "creativeDirection": "1-2 sentence creative direction",
+  "deliverables": "one of: 3 photos + 1 Reel (15s), 4 photos + 1 Story set, 3 photos + 1 Reel (20s), 2 Reels + 3 Stories",
+  "title": "catchy 3-5 word title for this idea"
+}
+
+Only return the JSON array.`,
+        },
+      ],
+      temperature: 0.8,
+      max_tokens: 600,
+      response_format: { type: "json_object" },
+    });
+
+    const result = JSON.parse(completion.choices[0].message.content);
+    return result.suggestions || result;
+  } catch (err) {
+    console.warn("[AI] generateRequestSuggestions failed:", err.message);
+    return fallbackRequestSuggestions(brandProfile);
+  }
+}
+
+function fallbackRequestSuggestions(brandProfile) {
+  const name = brandProfile.businessName || "your spot";
+  const cuisine = (brandProfile.cuisineTypes || [])[0] || "signature";
+  const vibe = (brandProfile.vibe || [])[0] || "unique";
+
+  return [
+    {
+      title: "Signature Dish Spotlight",
+      contentType: "Food & Drink",
+      contentGoal: "Menu item spotlight",
+      subject: `${cuisine} signature dish at ${name}`,
+      creativeDirection: `Warm, close-up shots that highlight texture and presentation. Natural light preferred, styled with the ${vibe.toLowerCase()} atmosphere of the space.`,
+      deliverables: "3 photos + 1 Reel (15s)",
+    },
+    {
+      title: "Golden Hour Ambiance",
+      contentType: "Interior & Ambiance",
+      contentGoal: "Atmosphere / ambiance",
+      subject: `Evening atmosphere at ${name}`,
+      creativeDirection: "Capture the mood during golden hour or soft evening light. Focus on details that make the space feel inviting — lighting, textures, seating areas.",
+      deliverables: "4 photos + 1 Story set",
+    },
+    {
+      title: "Behind the Counter",
+      contentType: "Behind the Scenes",
+      contentGoal: "Community moment",
+      subject: `Kitchen prep and team energy at ${name}`,
+      creativeDirection: "Documentary-style, candid moments of the team in action. Show the craft and care that goes into each dish. Keep it real and unscripted.",
+      deliverables: "3 photos + 1 Reel (20s)",
+    },
+  ];
 }
 
 module.exports = {
@@ -248,4 +319,5 @@ module.exports = {
   analyzeCreatorPortfolio,
   generateMatchRationale,
   generateContentPreview,
+  generateRequestSuggestions,
 };

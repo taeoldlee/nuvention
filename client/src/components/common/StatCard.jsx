@@ -3,7 +3,7 @@ export default function StatCard({ label, value, icon, creator = false, classNam
   const iconColor = creator ? 'text-creator' : 'text-accent';
 
   return (
-    <div className={`card ${className}`}>
+    <div className={`card hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 ${className}`}>
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-muted mb-1">{label}</p>
