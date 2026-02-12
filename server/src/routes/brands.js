@@ -273,18 +273,29 @@ router.put("/profile", async (req, res, next) => {
  */
 router.post("/auto-import", async (req, res, next) => {
   try {
-    const { url } = req.body;
+    let { url } = req.body;
 
     if (!url) {
       return res.status(400).json({ error: "url is required" });
     }
 
-    // Detect URL type
+    // Resolve shortened URLs (maps.app.goo.gl, goo.gl/maps) to full URLs
     const urlLower = url.toLowerCase();
+    if (urlLower.includes("goo.gl/") || urlLower.includes("maps.app.goo.gl")) {
+      try {
+        const resolved = await resolveRedirect(url);
+        if (resolved) url = resolved;
+      } catch (e) {
+        console.warn("[auto-import] Could not resolve short URL:", e.message);
+      }
+    }
+
+    // Detect URL type
+    const finalLower = url.toLowerCase();
     let urlType = "unknown";
-    if (urlLower.includes("google.com/maps") || urlLower.includes("goo.gl/maps") || urlLower.includes("maps.app.goo.gl")) {
+    if (finalLower.includes("google.com/maps") || finalLower.includes("goo.gl/maps") || finalLower.includes("maps.app.goo.gl")) {
       urlType = "google_maps";
-    } else if (urlLower.includes("yelp.com")) {
+    } else if (finalLower.includes("yelp.com")) {
       urlType = "yelp";
     }
 
@@ -310,6 +321,27 @@ router.post("/auto-import", async (req, res, next) => {
     next(err);
   }
 });
+
+/**
+ * Follow redirects on a shortened URL to get the final destination.
+ */
+async function resolveRedirect(shortUrl) {
+  const https = require("https");
+  const http = require("http");
+  return new Promise((resolve, reject) => {
+    const proto = shortUrl.startsWith("https") ? https : http;
+    const req = proto.get(shortUrl, { timeout: 5000 }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        resolve(res.headers.location);
+      } else {
+        resolve(null);
+      }
+      res.resume();
+    });
+    req.on("error", reject);
+    req.on("timeout", () => { req.destroy(); reject(new Error("timeout")); });
+  });
+}
 
 function openaiAvailable() {
   return !!process.env.OPENAI_API_KEY;

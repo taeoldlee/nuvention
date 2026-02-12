@@ -54,15 +54,27 @@ function fallbackBrandAnalysis(url) {
 
   // Try to extract a business name from URL
   let businessName = "Your Business";
-  if (urlLower.includes("google.com/maps")) {
-    const placeMatch = url.match(/place\/([^/]+)/);
+  if (urlLower.includes("google.com/maps") || urlLower.includes("google.com/maps/")) {
+    // Try /place/Business+Name/ format
+    const placeMatch = url.match(/place\/([^/@]+)/);
     if (placeMatch) {
       businessName = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ");
+    } else {
+      // Try ?q=Business+Name format
+      const qMatch = url.match(/[?&]q=([^&]+)/);
+      if (qMatch) {
+        businessName = decodeURIComponent(qMatch[1]).replace(/\+/g, " ");
+      }
     }
+    // Clean up trailing coordinates or noise (e.g. "Business Name,+Chicago,+IL")
+    businessName = businessName.split(",")[0].trim();
   } else if (urlLower.includes("yelp.com")) {
     const bizMatch = url.match(/biz\/([^/?]+)/);
     if (bizMatch) {
-      businessName = bizMatch[1].replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+      // Remove city suffix (e.g. "business-name-chicago" → "Business Name")
+      let slug = bizMatch[1];
+      slug = slug.replace(/-(?:chicago|evanston|il|illinois)(?:-\d+)?$/i, "");
+      businessName = slug.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
     }
   }
 
