@@ -257,8 +257,8 @@ Values: ${JSON.stringify(brandProfile.values || [])}
 
 Return a JSON array of 3 objects, each with:
 {
-  "contentType": "one of: Food & Drink, Interior & Ambiance, Behind the Scenes, Community & Events, Staff & Culture",
-  "contentGoal": "short goal phrase",
+  "contentType": "EXACTLY one of: Ambiance / Interior, Food & Drink, Community / Culture, Behind the Scenes, Seasonal Special",
+  "contentGoal": "EXACTLY one of: Menu item spotlight, Atmosphere / ambiance, Signature dish, Neighborhood vibe, Community moment",
   "subject": "specific subject to photograph/film",
   "creativeDirection": "1-2 sentence creative direction",
   "deliverables": "one of: 3 photos + 1 Reel (15s), 4 photos + 1 Story set, 3 photos + 1 Reel (20s), 2 Reels + 3 Stories",

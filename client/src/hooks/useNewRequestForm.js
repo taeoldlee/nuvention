@@ -1,7 +1,32 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createContentRequest } from '../api';
-import { formatCents, formatCompensation } from '../utils/constants';
+import { CONTENT_TYPES, formatCents, formatCompensation } from '../utils/constants';
 import { useToast } from '../contexts/ToastContext';
+
+const CONTENT_GOALS = [
+  'Menu item spotlight',
+  'Atmosphere / ambiance',
+  'Signature dish',
+  'Neighborhood vibe',
+  'Community moment',
+];
+
+const DELIVERABLE_OPTIONS = [
+  '3 photos + 1 Reel (15s)',
+  '4 photos + 1 Story set',
+  '3 photos + 1 Reel (20s)',
+  '2 Reels + 3 Stories',
+];
+
+function bestMatch(value, options) {
+  if (!value) return null;
+  const exact = options.find((o) => o === value);
+  if (exact) return exact;
+  const lower = value.toLowerCase();
+  return options.find((o) => o.toLowerCase() === lower)
+    || options.find((o) => lower.includes(o.toLowerCase()) || o.toLowerCase().includes(lower))
+    || null;
+}
 
 const TIMELINE_OPTIONS = [
   { value: 'Standard (5-7 days)', label: 'Standard' },
@@ -113,11 +138,16 @@ export default function useNewRequestForm() {
     (compensationType !== 'FLAT_FEE' || (budgetMin > 0 && budgetMax >= budgetMin));
 
   const applySuggestion = (s) => {
-    setContentTypes(s.contentType ? [s.contentType] : []);
-    setContentGoals(s.contentGoal ? [s.contentGoal] : []);
+    const ct = bestMatch(s.contentType, CONTENT_TYPES);
+    const goal = bestMatch(s.contentGoal, CONTENT_GOALS);
+    const deliv = bestMatch(s.deliverables, DELIVERABLE_OPTIONS);
+    setContentTypes(ct ? [ct] : []);
+    setContentGoals(goal ? [goal] : []);
     setSubject(s.subject || '');
     setCreativeDirection(s.creativeDirection || '');
-    setDeliverables(s.deliverables ? [s.deliverables] : []);
+    setDeliverables(deliv ? [deliv] : []);
+    setTimeline(TIMELINE_OPTIONS[0].value);
+    setBriefTouched(false);
     addToast(`Applied: ${s.title}`, 'info');
   };
 
