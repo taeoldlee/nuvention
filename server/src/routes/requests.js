@@ -147,7 +147,7 @@ router.post("/:id/select/:matchId", requireOperatorWithBrand, async (req, res, n
       timeline: match.timeline,
     });
 
-    const { project, transaction } = await prisma.$transaction(async (tx) => {
+    const project = await prisma.$transaction(async (tx) => {
       // Mark the selected match
       await tx.match.update({
         where: { id: match.id },
