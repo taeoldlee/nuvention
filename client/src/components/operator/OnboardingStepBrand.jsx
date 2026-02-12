@@ -221,8 +221,16 @@ export default function OnboardingStepBrand({ formActions, onBack, onNext }) {
         {form.visualRefUrls.length > 0 && (
           <div className="grid grid-cols-3 gap-2 mt-3">
             {form.visualRefUrls.map((url, idx) => (
-              <div key={url + idx} className="aspect-square rounded-lg overflow-hidden border border-border bg-bgTan">
+              <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-bgTan group">
                 <img src={url} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  aria-label={`Remove reference ${idx + 1}`}
+                  onClick={() => updateForm('visualRefUrls', form.visualRefUrls.filter((_, i) => i !== idx))}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-dark/70 text-white flex items-center justify-center text-xs hover:bg-dark transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  &times;
+                </button>
               </div>
             ))}
           </div>
