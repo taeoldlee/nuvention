@@ -6,8 +6,8 @@ export const brandDisplayName = (project) =>
   'Brand';
 
 export const brandPhotoUrl = (project) =>
-  project.brandProfile?.user?.avatarUrl ||
   project.brandProfile?.profilePhotoUrl ||
+  project.brandProfile?.user?.avatarUrl ||
   project.brand?.profilePhoto ||
   project.brand?.photo ||
   null;

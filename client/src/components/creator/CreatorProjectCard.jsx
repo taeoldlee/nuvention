@@ -34,7 +34,7 @@ export default function CreatorProjectCard({ project, onClick }) {
         </div>
 
         <div className="flex items-center gap-4 shrink-0">
-          <StatusBadge status={status} />
+          <StatusBadge status={status} creator />
           <span className="font-display text-lg font-bold text-dark">
             {formatCents(pay)}
           </span>

@@ -35,9 +35,10 @@ export default function DemoSwitcher() {
 
   const allOperators = demoUsers.filter((u) => u.role === 'OPERATOR');
   const allCreators = demoUsers.filter((u) => u.role === 'CREATOR');
-  // Show new accounts first so they're easy to find
-  const operators = [...allOperators.filter((u) => !u.brandProfile), ...allOperators.filter((u) => u.brandProfile)];
-  const creators = [...allCreators.filter((u) => !u.creatorProfile), ...allCreators.filter((u) => u.creatorProfile)];
+  const newOperators = allOperators.filter((u) => !u.brandProfile);
+  const existingOperators = allOperators.filter((u) => u.brandProfile);
+  const newCreators = allCreators.filter((u) => !u.creatorProfile);
+  const existingCreators = allCreators.filter((u) => u.creatorProfile);
 
   const handleSelect = async (demoUser) => {
     try {
@@ -62,14 +63,6 @@ export default function DemoSwitcher() {
     }
   };
 
-  const getStatusText = (demoUser) => {
-    if (demoUser.role === 'OPERATOR') {
-      if (!demoUser.brandProfile) return 'New user';
-      return 'Returning';
-    }
-    if (!demoUser.creatorProfile) return 'New user';
-    return 'Returning';
-  };
 
   return (
     <>
@@ -106,12 +99,59 @@ export default function DemoSwitcher() {
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto">
+              {/* New Accounts */}
+              {(newOperators.length > 0 || newCreators.length > 0) && (
+                <div className="p-3 pb-1">
+                  <p className="text-xs font-semibold text-accent uppercase tracking-wider px-2 mb-2">
+                    + Create New Account
+                  </p>
+                  {newOperators.map((op) => (
+                    <button
+                      key={op.id}
+                      onClick={() => handleSelect(op)}
+                      className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-colors mb-1 ${
+                        user?.id === op.id
+                          ? 'bg-accentLight border border-accent/20'
+                          : 'bg-accent/5 hover:bg-accent/10 border border-accent/10'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-accentLight flex items-center justify-center text-accent font-bold flex-shrink-0 border-2 border-accent/30">
+                        +
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-dark truncate">{op.name}</p>
+                        <p className="text-xs text-accent font-medium">New Business</p>
+                      </div>
+                    </button>
+                  ))}
+                  {newCreators.map((cr) => (
+                    <button
+                      key={cr.id}
+                      onClick={() => handleSelect(cr)}
+                      className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-colors mb-1 ${
+                        user?.id === cr.id
+                          ? 'bg-creatorLight border border-creator/20'
+                          : 'bg-creator/5 hover:bg-creator/10 border border-creator/10'
+                      }`}
+                    >
+                      <div className="w-10 h-10 rounded-full bg-creatorLight flex items-center justify-center text-creator font-bold flex-shrink-0 border-2 border-creator/30">
+                        +
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-dark truncate">{cr.name}</p>
+                        <p className="text-xs text-creator font-medium">New Creator</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Operators */}
               <div className="p-3">
                 <p className="text-xs font-semibold text-muted uppercase tracking-wider px-2 mb-2">
                   Operators
                 </p>
-                {operators.map((op) => (
+                {existingOperators.map((op) => (
                   <button
                     key={op.id}
                     onClick={() => handleSelect(op)}
@@ -139,7 +179,7 @@ export default function DemoSwitcher() {
                       <p className="text-sm font-semibold text-dark truncate">
                         {op.brandProfile?.businessName || op.name}
                       </p>
-                      <p className="text-xs text-muted">{getStatusText(op)}</p>
+                      <p className="text-xs text-muted">Returning</p>
                     </div>
                     {user?.id === op.id && (
                       <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
@@ -153,7 +193,7 @@ export default function DemoSwitcher() {
                 <p className="text-xs font-semibold text-muted uppercase tracking-wider px-2 mb-2">
                   Creators
                 </p>
-                {creators.map((cr) => (
+                {existingCreators.map((cr) => (
                   <button
                     key={cr.id}
                     onClick={() => handleSelect(cr)}
@@ -181,7 +221,7 @@ export default function DemoSwitcher() {
                       <p className="text-sm font-semibold text-dark truncate">
                         {cr.creatorProfile?.displayName || cr.name}
                       </p>
-                      <p className="text-xs text-muted">{getStatusText(cr)}</p>
+                      <p className="text-xs text-muted">Returning</p>
                     </div>
                     {user?.id === cr.id && (
                       <div className="w-2 h-2 rounded-full bg-creator flex-shrink-0" />

@@ -29,7 +29,7 @@ export default function ProjectHeader({ brandName, brandPhoto, contentType, stat
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <StatusBadge status={status} />
+          <StatusBadge status={status} creator />
         </div>
       </div>
 

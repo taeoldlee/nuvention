@@ -235,10 +235,10 @@ export default function ProjectView() {
                     <span className="text-xs text-muted font-body uppercase tracking-wide">Status</span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                       project.transaction.status === 'COMPLETED' ? 'bg-greenBg text-green' :
-                      project.transaction.status === 'HELD' ? 'bg-yellowBg text-yellowText' :
+                      (project.transaction.status === 'HELD' || project.transaction.status === 'PENDING') ? 'bg-yellowBg text-yellowText' :
                       'bg-bgWarm text-muted'
                     }`}>
-                      {project.transaction.status === 'HELD' ? 'Escrow Held' :
+                      {(project.transaction.status === 'HELD' || project.transaction.status === 'PENDING') ? 'Escrow Held' :
                        project.transaction.status === 'COMPLETED' ? 'Paid' :
                        project.transaction.status}
                     </span>
@@ -246,7 +246,7 @@ export default function ProjectView() {
                   <div className="flex justify-between">
                     <span className="text-xs text-muted font-body uppercase tracking-wide">Total Charged</span>
                     <span className="text-sm font-semibold text-dark font-body">
-                      ${((project.transaction.brandCharge || 0) / 100).toFixed(2)}
+                      ${((project.transaction.amount || 0) / 100).toFixed(2)}
                     </span>
                   </div>
                   <div className="flex justify-between">

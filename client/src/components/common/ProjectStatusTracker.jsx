@@ -1,5 +1,12 @@
-const STEPS = [
+const OPERATOR_STEPS = [
   { key: 'BRIEF_SENT', label: 'Brief Sent' },
+  { key: 'DRAFT_SUBMITTED', label: 'Draft Submitted' },
+  { key: 'APPROVED', label: 'Approved' },
+  { key: 'DELIVERED', label: 'Delivered' },
+];
+
+const CREATOR_STEPS = [
+  { key: 'BRIEF_SENT', label: 'Brief Accepted' },
   { key: 'DRAFT_SUBMITTED', label: 'Draft Submitted' },
   { key: 'APPROVED', label: 'Approved' },
   { key: 'DELIVERED', label: 'Delivered' },
@@ -9,6 +16,7 @@ export default function ProjectStatusTracker({ status, creator = false, classNam
   const activeColor = creator ? 'bg-creatorAccent' : 'bg-accent';
   const activeRing = creator ? 'ring-creatorAccent/20' : 'ring-accent/20';
 
+  const STEPS = creator ? CREATOR_STEPS : OPERATOR_STEPS;
   // REVISION_REQUESTED maps to the same step as DRAFT_SUBMITTED
   const statusKey = status === 'REVISION_REQUESTED' ? 'DRAFT_SUBMITTED' : status;
   const currentIdx = STEPS.findIndex((s) => s.key === statusKey);

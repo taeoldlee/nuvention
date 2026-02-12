@@ -82,6 +82,24 @@ export default function ProjectView() {
       </FadeIn>
 
       <FadeIn delay={0.15}>
+      {status === 'BRIEF_SENT' && (
+        <div className="card mb-6 border-green-200 bg-green-50/50">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center shrink-0">
+              <svg className="w-5 h-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="font-body font-semibold text-green-800 mb-1">Brief Accepted</h3>
+              <p className="font-body text-sm text-green-700 leading-relaxed">
+                You've accepted this brief. Upload your content below when ready.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isRevisionRequested && (
         <div className="card mb-6 border-orange-200 bg-orange-50/50">
           <div className="flex items-start gap-3">
@@ -91,7 +109,7 @@ export default function ProjectView() {
               </svg>
             </div>
             <div>
-              <h3 className="font-body font-semibold text-orange-800 mb-1">Revision Requested</h3>
+              <h3 className="font-body font-semibold text-orange-800 mb-1">Revision Received</h3>
               <p className="font-body text-sm text-orange-700 leading-relaxed">
                 {revisionNotes || 'The brand has requested changes to your draft. Please review and resubmit.'}
               </p>
@@ -115,10 +133,10 @@ export default function ProjectView() {
               <span className="text-xs text-muted font-body uppercase tracking-wide">Status</span>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                 project.transaction.status === 'COMPLETED' ? 'bg-green-50 text-green-700' :
-                project.transaction.status === 'HELD' ? 'bg-yellow-50 text-yellow-700' :
+                (project.transaction.status === 'HELD' || project.transaction.status === 'PENDING') ? 'bg-yellow-50 text-yellow-700' :
                 'bg-bgWarm text-muted'
               }`}>
-                {project.transaction.status === 'HELD' ? 'Pending (Escrow)' :
+                {(project.transaction.status === 'HELD' || project.transaction.status === 'PENDING') ? 'Pending (Escrow)' :
                  project.transaction.status === 'COMPLETED' ? 'Paid' :
                  project.transaction.status}
               </span>
