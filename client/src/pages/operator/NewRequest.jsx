@@ -16,7 +16,12 @@ const CONTENT_GOALS = [
   'Community moment',
 ];
 
-const REEL_LENGTHS = [15, 30, 60];
+const DELIVERABLE_OPTIONS = [
+  '3 photos + 1 Reel (15s)',
+  '4 photos + 1 Story set',
+  '3 photos + 1 Reel (20s)',
+  '2 Reels + 3 Stories',
+];
 
 const COMP_TYPES = [
   { value: 'FLAT_FEE', label: 'Flat fee' },

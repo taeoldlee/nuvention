@@ -196,13 +196,13 @@ router.post("/:matchId/accept", async (req, res, next) => {
         },
       });
 
-      // Create transaction if there's a price
-      if (match.price > 0) {
-        await createCharge(proj.id, match.price);
-      }
-
       return proj;
     });
+
+    // Create transaction after project is committed (outside $transaction to avoid FK error)
+    if (match.price > 0) {
+      await createCharge(project.id, match.price);
+    }
 
     res.json({
       message: "Brief accepted",
