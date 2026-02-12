@@ -274,7 +274,11 @@ Only return the JSON array.`,
     });
 
     const result = JSON.parse(completion.choices[0].message.content);
-    return result.suggestions || result;
+    // AI may wrap the array in various keys — extract the array
+    const suggestions = Array.isArray(result)
+      ? result
+      : result.suggestions || result.contentRequests || Object.values(result).find(Array.isArray) || [];
+    return suggestions;
   } catch (err) {
     console.warn("[AI] generateRequestSuggestions failed:", err.message);
     return fallbackRequestSuggestions(brandProfile);

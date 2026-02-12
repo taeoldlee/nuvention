@@ -201,13 +201,13 @@ router.post("/:id/select/:matchId", requireOperatorWithBrand, async (req, res, n
         },
       });
 
-      // Create charge if there's a price
-      const txn = proj.price > 0
-        ? await createCharge(proj.id, match.price)
-        : null;
-
-      return { project: proj, transaction: txn };
+      return proj;
     });
+
+    // Create charge after project is committed (outside $transaction to avoid FK error)
+    const transaction = project.price > 0
+      ? await createCharge(project.id, match.price)
+      : null;
 
     res.status(201).json({ project, transaction });
   } catch (err) {
