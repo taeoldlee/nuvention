@@ -288,7 +288,17 @@ router.post("/auto-import", async (req, res, next) => {
       urlType = "yelp";
     }
 
-    // Step 1: Try fallback data for known businesses
+    // Step 1: Try AI-powered analysis if available
+    if (openaiAvailable()) {
+      const aiResult = await analyzeBrandFromUrl(url);
+      return res.json({
+        source: "ai",
+        urlType,
+        data: aiResult,
+      });
+    }
+
+    // Step 2: Fall back to known businesses if no AI
     const fallbackData = findFallbackMatch(url);
     if (fallbackData) {
       return res.json({
@@ -298,13 +308,12 @@ router.post("/auto-import", async (req, res, next) => {
       });
     }
 
-    // Step 2: Try AI-powered analysis
-    const aiResult = await analyzeBrandFromUrl(url);
-
+    // Step 3: Generic fallback
+    const genericResult = await analyzeBrandFromUrl(url);
     return res.json({
-      source: openaiAvailable() ? "ai" : "fallback",
+      source: "fallback",
       urlType,
-      data: aiResult,
+      data: genericResult,
     });
   } catch (err) {
     next(err);
