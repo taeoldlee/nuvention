@@ -16,12 +16,7 @@ const CONTENT_GOALS = [
   'Community moment',
 ];
 
-const DELIVERABLE_OPTIONS = [
-  '3 photos + 1 Reel (15s)',
-  '4 photos + 1 Story set',
-  '3 photos + 1 Reel (20s)',
-  '2 Reels + 3 Stories',
-];
+const REEL_LENGTHS = [15, 20, 30, 60];
 
 const COMP_TYPES = [
   { value: 'FLAT_FEE', label: 'Flat fee' },
@@ -145,17 +140,50 @@ export default function NewRequest() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-dark mb-2 font-body">Deliverables</label>
-            <div className="flex flex-wrap gap-2">
-              {DELIVERABLE_OPTIONS.map((d) => (
-                <Chip
-                  key={d}
-                  label={d}
-                  selected={form.deliverables.includes(d)}
-                  onClick={() => form.setDeliverables((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d])}
-                />
-              ))}
+            <label className="block text-sm font-medium text-dark mb-3 font-body">Deliverables</label>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <label className="w-20 text-sm text-mid font-body">Photos</label>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => form.setPhotos((p) => Math.max(0, p - 1))} className="w-8 h-8 rounded-lg border border-border bg-white text-dark flex items-center justify-center hover:bg-bgTan transition-colors font-medium">-</button>
+                  <span className="w-8 text-center text-sm font-medium text-dark font-body">{form.photos}</span>
+                  <button type="button" onClick={() => form.setPhotos((p) => Math.min(10, p + 1))} className="w-8 h-8 rounded-lg border border-border bg-white text-dark flex items-center justify-center hover:bg-bgTan transition-colors font-medium">+</button>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="w-20 text-sm text-mid font-body">Reels</label>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => form.setReels((r) => Math.max(0, r - 1))} className="w-8 h-8 rounded-lg border border-border bg-white text-dark flex items-center justify-center hover:bg-bgTan transition-colors font-medium">-</button>
+                  <span className="w-8 text-center text-sm font-medium text-dark font-body">{form.reels}</span>
+                  <button type="button" onClick={() => form.setReels((r) => Math.min(5, r + 1))} className="w-8 h-8 rounded-lg border border-border bg-white text-dark flex items-center justify-center hover:bg-bgTan transition-colors font-medium">+</button>
+                </div>
+                {form.reels > 0 && (
+                  <div className="flex items-center gap-1.5 ml-2">
+                    {REEL_LENGTHS.map((len) => (
+                      <button
+                        key={len}
+                        type="button"
+                        onClick={() => form.setReelLength(len)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${form.reelLength === len ? 'border-accent bg-accentLight text-accent' : 'border-border bg-white text-mid hover:border-accent/50'}`}
+                      >
+                        {len}s
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                <label className="w-20 text-sm text-mid font-body">Stories</label>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => form.setStories((s) => Math.max(0, s - 1))} className="w-8 h-8 rounded-lg border border-border bg-white text-dark flex items-center justify-center hover:bg-bgTan transition-colors font-medium">-</button>
+                  <span className="w-8 text-center text-sm font-medium text-dark font-body">{form.stories}</span>
+                  <button type="button" onClick={() => form.setStories((s) => Math.min(10, s + 1))} className="w-8 h-8 rounded-lg border border-border bg-white text-dark flex items-center justify-center hover:bg-bgTan transition-colors font-medium">+</button>
+                </div>
+              </div>
             </div>
+            {form.deliverableString && (
+              <p className="mt-3 text-xs text-accent font-medium font-body">{form.deliverableString}</p>
+            )}
           </div>
 
           <div>
