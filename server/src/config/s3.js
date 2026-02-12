@@ -46,6 +46,7 @@ if (
     const s3Storage = multerS3({
       s3: s3Client,
       bucket: s3BucketName,
+      acl: "public-read",
       contentType: multerS3.AUTO_CONTENT_TYPE,
       key: function (req, file, cb) {
         const folder = req.uploadFolder || "uploads";
