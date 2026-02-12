@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { uploadImages } from '../api';
+import { NEIGHBORHOODS } from '../utils/constants';
 
 const INITIAL_FORM = {
   businessName: '',
   neighborhood: '',
+  customNeighborhood: '',
   vibes: [],
   values: [],
   contentComfortZones: [],
@@ -102,10 +104,22 @@ export default function useOnboardingForm() {
   };
 
   const applyImportData = (data) => {
+    // Match neighborhood to predefined list, or use "Other" with custom value
+    let neighborhood = prev => prev.neighborhood;
+    if (data.neighborhood) {
+      const match = NEIGHBORHOODS.find((n) => n.toLowerCase() === data.neighborhood.toLowerCase());
+      if (match) {
+        neighborhood = () => match;
+      } else {
+        // Not in predefined list — set to "Other" and store custom value
+        neighborhood = () => 'Other';
+      }
+    }
     setForm((prev) => ({
       ...prev,
       businessName: data.businessName || prev.businessName,
-      neighborhood: data.neighborhood || prev.neighborhood,
+      neighborhood: neighborhood(prev),
+      customNeighborhood: (!NEIGHBORHOODS.find((n) => n.toLowerCase() === (data.neighborhood || '').toLowerCase()) && data.neighborhood) ? data.neighborhood : prev.customNeighborhood || '',
       vibes: (data.vibe?.length ? data.vibe : data.vibes) || prev.vibes,
       values: data.values?.length ? data.values : prev.values,
       contentComfortZones: data.contentComfortZones?.length
@@ -114,9 +128,11 @@ export default function useOnboardingForm() {
     }));
   };
 
+  const effectiveNeighborhood = form.neighborhood === 'Other' ? form.customNeighborhood.trim() : form.neighborhood;
+
   const canProceedFromStep1 =
     form.businessName.trim() &&
-    form.neighborhood &&
+    effectiveNeighborhood &&
     form.vibes.length > 0 &&
     form.values.length > 0 &&
     form.contentComfortZones.length > 0 &&
@@ -139,6 +155,7 @@ export default function useOnboardingForm() {
     removeKeyword,
     handleVisualRefsSelected,
     applyImportData,
+    effectiveNeighborhood,
     canProceedFromStep1,
     canProceedFromStep2,
   };

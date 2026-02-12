@@ -58,7 +58,7 @@ export default function Onboarding() {
     try {
       await createBrandProfile({
         businessName: form.businessName,
-        neighborhood: form.neighborhood,
+        neighborhood: formActions.effectiveNeighborhood,
         vibe: form.vibes,
         vibes: form.vibes,
         values: form.values,

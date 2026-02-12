@@ -58,7 +58,21 @@ export default function OnboardingStepBrand({ formActions, onBack, onNext }) {
               onClick={() => setSingleSelect('neighborhood', n)}
             />
           ))}
+          <Chip
+            label="Other"
+            selected={form.neighborhood === 'Other'}
+            onClick={() => setSingleSelect('neighborhood', 'Other')}
+          />
         </div>
+        {form.neighborhood === 'Other' && (
+          <input
+            type="text"
+            value={form.customNeighborhood}
+            onChange={(e) => updateForm('customNeighborhood', e.target.value)}
+            placeholder="Enter your neighborhood or city"
+            className="mt-2 w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+          />
+        )}
       </div>
 
       {/* Vibe */}

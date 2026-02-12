@@ -44,7 +44,7 @@ export default function OnboardingStepConfirm({ form, saving, saveError, onBack,
         </ConfirmSection>
 
         <ConfirmSection label="Neighborhood">
-          <p className="text-dark font-body">{form.neighborhood}</p>
+          <p className="text-dark font-body">{form.neighborhood === 'Other' ? form.customNeighborhood : form.neighborhood}</p>
         </ConfirmSection>
 
         <ConfirmSection label="Vibe">
