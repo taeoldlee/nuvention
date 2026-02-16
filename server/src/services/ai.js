@@ -318,9 +318,255 @@ function fallbackRequestSuggestions(brandProfile) {
   ];
 }
 
+/**
+ * Analyze a brand from Google Places structured data.
+ * Returns a complete brand profile pre-fill.
+ * Falls back to template-based analysis when API keys are missing.
+ */
+async function analyzeBrandFromPlaceData(placeData) {
+  if (!openai) {
+    return fallbackPlaceAnalysis(placeData);
+  }
+
+  try {
+    const { name, address, types, rating, reviews, photoUrls } = placeData;
+
+    const prompt = `Analyze this business from Google Places data and return a complete brand profile for a hyperlocal UGC content platform.
+
+Business: ${name}
+Address: ${address || "Unknown"}
+Google Place Types: ${JSON.stringify(types || [])}
+Rating: ${rating || "N/A"}
+Sample Reviews: ${JSON.stringify((reviews || []).slice(0, 5))}
+Number of photos available: ${(photoUrls || []).length}
+
+Return a JSON object with ALL of these fields:
+{
+  "businessName": "string",
+  "neighborhood": "string - use one of these if in Chicago area: Evanston, Rogers Park, Wicker Park, Logan Square, West Loop, Hyde Park, Lincoln Park, Uptown. Otherwise return the actual neighborhood.",
+  "vibe": ["2-3 from: Cozy & Warm, Minimalist & Clean, Energetic & Bold, Rustic & Raw, Polished & Editorial"],
+  "values": ["2-3 from: Community-first, Sustainability, Quality-obsessed, Inclusive, Design-forward"],
+  "contentComfortZones": ["2-3 from: Ambiance / Interior, Food & Drink, Staff & Culture, Community / Events, Behind the Scenes"],
+  "vibeScales": {
+    "cozyEnergetic": 0-100,
+    "quietBuzzy": 0-100,
+    "classicModern": 0-100,
+    "casualElevated": 0-100
+  },
+  "guestExperienceKeywords": ["3 lowercase keywords describing the guest experience"],
+  "cuisineTypes": ["1-3 from: Italian, Mexican, Japanese, Thai, French, American, Mediterranean, Indian, Korean, Chinese, Vietnamese, Ethiopian, Middle Eastern, Bakery & Pastry, Coffee & Beverage, Farm-to-Table, Fusion"],
+  "budgetMin": number (suggested min budget per content piece in dollars, 100-500),
+  "budgetMax": number (suggested max budget, 200-1000),
+  "contentNoGos": "string - brief list of content to avoid based on the business type",
+  "vibeAnalysis": {
+    "primaryVibe": "one-phrase summary",
+    "aestheticTags": ["5 lowercase hyphenated tags"],
+    "contentRecommendations": ["4 specific content ideas"],
+    "avoidTags": ["3 things to avoid"]
+  }
+}
+
+Only return the JSON, no other text.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 1000,
+      response_format: { type: "json_object" },
+    });
+
+    const result = JSON.parse(completion.choices[0].message.content);
+    return result;
+  } catch (err) {
+    console.warn("[AI] analyzeBrandFromPlaceData failed:", err.message);
+    return fallbackPlaceAnalysis(placeData);
+  }
+}
+
+function fallbackPlaceAnalysis(placeData) {
+  const { name, address, types } = placeData || {};
+  const typeList = types || [];
+
+  // Map Google Place types to cuisine types
+  const cuisineMap = {
+    bakery: "Bakery & Pastry",
+    cafe: "Coffee & Beverage",
+    coffee_shop: "Coffee & Beverage",
+    restaurant: "American",
+    italian_restaurant: "Italian",
+    mexican_restaurant: "Mexican",
+    japanese_restaurant: "Japanese",
+    thai_restaurant: "Thai",
+    french_restaurant: "French",
+    indian_restaurant: "Indian",
+    korean_restaurant: "Korean",
+    chinese_restaurant: "Chinese",
+    vietnamese_restaurant: "Vietnamese",
+    mediterranean_restaurant: "Mediterranean",
+    pizza_restaurant: "Italian",
+    bar: "American",
+  };
+
+  const cuisineTypes = [];
+  for (const t of typeList) {
+    if (cuisineMap[t] && !cuisineTypes.includes(cuisineMap[t])) {
+      cuisineTypes.push(cuisineMap[t]);
+    }
+  }
+  if (cuisineTypes.length === 0) cuisineTypes.push("American");
+
+  // Guess neighborhood from address
+  let neighborhood = "Evanston";
+  const addressLower = (address || "").toLowerCase();
+  const neighborhoods = ["Rogers Park", "Wicker Park", "Logan Square", "West Loop", "Hyde Park", "Lincoln Park", "Uptown", "Evanston"];
+  for (const n of neighborhoods) {
+    if (addressLower.includes(n.toLowerCase())) {
+      neighborhood = n;
+      break;
+    }
+  }
+
+  const isCafe = typeList.some((t) => ["cafe", "coffee_shop", "bakery"].includes(t));
+
+  return {
+    businessName: name || "Your Business",
+    neighborhood,
+    vibe: isCafe ? ["Cozy & Warm", "Minimalist & Clean"] : ["Cozy & Warm", "Rustic & Raw"],
+    values: ["Community-first", "Quality-obsessed"],
+    contentComfortZones: ["Food & Drink", "Ambiance / Interior"],
+    vibeScales: {
+      cozyEnergetic: isCafe ? 30 : 50,
+      quietBuzzy: isCafe ? 35 : 55,
+      classicModern: 50,
+      casualElevated: isCafe ? 40 : 50,
+    },
+    guestExperienceKeywords: isCafe
+      ? ["cozy", "welcoming", "neighborhood"]
+      : ["warm", "authentic", "local"],
+    cuisineTypes,
+    budgetMin: 150,
+    budgetMax: 400,
+    contentNoGos: "",
+    vibeAnalysis: {
+      primaryVibe: isCafe ? "Cozy Neighborhood Cafe" : "Welcoming Local Spot",
+      aestheticTags: ["warm-light", "community-focused", "local-charm", "clean-aesthetic", "inviting"],
+      contentRecommendations: [
+        "Interior ambiance shots during golden hour",
+        "Signature menu item close-ups",
+        "Community moments with regulars",
+        "Behind-the-scenes preparation",
+      ],
+      avoidTags: ["corporate", "chain-feel", "stock-photo-style"],
+    },
+  };
+}
+
+/**
+ * Analyze a creator from scraped social media posts + profile.
+ * Merges caption analysis with optional vision analysis.
+ * Falls back to template-based analysis.
+ */
+async function analyzeCreatorFromSocial(posts, profile) {
+  if (!openai) {
+    return fallbackCreatorSocialAnalysis(posts, profile);
+  }
+
+  try {
+    const captions = (posts || [])
+      .map((p) => p.caption)
+      .filter(Boolean)
+      .slice(0, 12);
+    const bio = profile?.bio || "";
+
+    const prompt = `Analyze this content creator's social media presence for a hyperlocal UGC platform focused on food & beverage businesses.
+
+Bio: "${bio}"
+Recent post captions:
+${captions.map((c, i) => `${i + 1}. "${c}"`).join("\n")}
+
+Return a JSON object:
+{
+  "bio": "string - a polished 1-2 sentence bio suggestion based on their content",
+  "contentStyles": ["2-3 from: Warm & Editorial, Documentary & Candid, Clean & Minimal, Bold & Energetic, Moody & Cinematic"],
+  "strengths": ["3-4 from: Food Photography, Reels/Short Video, Ambiance Shots, Lifestyle, Portraits, Behind the Scenes"],
+  "neighborhoods": ["1-3 from: Evanston, Rogers Park, Wicker Park, Logan Square, West Loop, Hyde Park, Lincoln Park, Uptown"],
+  "cuisineSpecialties": ["1-3 from: Italian, Mexican, Japanese, Thai, French, American, Mediterranean, Indian, Korean, Chinese, Vietnamese, Ethiopian, Middle Eastern, Bakery & Pastry, Coffee & Beverage, Farm-to-Table, Fusion"],
+  "vibeTags": ["5-6 lowercase hyphenated aesthetic tags"],
+  "qualityScore": 1-10
+}
+
+Only return the JSON.`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 600,
+      response_format: { type: "json_object" },
+    });
+
+    const textResult = JSON.parse(completion.choices[0].message.content);
+
+    // Optionally merge with vision analysis if images available
+    const imageUrls = (posts || [])
+      .map((p) => p.imageUrl)
+      .filter((url) => url && url.startsWith("http"))
+      .slice(0, 4);
+
+    if (imageUrls.length > 0) {
+      try {
+        const visionResult = await analyzeCreatorPortfolio(imageUrls);
+        // Merge: prefer vision for styles/strengths if available
+        return {
+          ...textResult,
+          contentStyles: visionResult.contentStyles || textResult.contentStyles,
+          strengths: visionResult.strengths || textResult.strengths,
+          vibeTags: visionResult.vibeTags || textResult.vibeTags,
+          qualityScore: visionResult.qualityScore || textResult.qualityScore,
+        };
+      } catch {
+        // Vision failed, use text analysis only
+      }
+    }
+
+    return textResult;
+  } catch (err) {
+    console.warn("[AI] analyzeCreatorFromSocial failed:", err.message);
+    return fallbackCreatorSocialAnalysis(posts, profile);
+  }
+}
+
+function fallbackCreatorSocialAnalysis(posts, profile) {
+  const bio = profile?.bio || "Creative content creator passionate about food and local businesses.";
+  const captions = (posts || []).map((p) => (p.caption || "").toLowerCase()).join(" ");
+
+  // Infer styles from caption keywords
+  let contentStyles = ["Warm & Editorial", "Documentary & Candid"];
+  if (captions.includes("minimal") || captions.includes("clean")) {
+    contentStyles = ["Clean & Minimal", "Warm & Editorial"];
+  } else if (captions.includes("bold") || captions.includes("energy")) {
+    contentStyles = ["Bold & Energetic", "Documentary & Candid"];
+  } else if (captions.includes("moody") || captions.includes("dark") || captions.includes("cinematic")) {
+    contentStyles = ["Moody & Cinematic", "Documentary & Candid"];
+  }
+
+  return {
+    bio,
+    contentStyles,
+    strengths: ["Food Photography", "Ambiance Shots", "Lifestyle"],
+    neighborhoods: ["Evanston", "Lincoln Park"],
+    cuisineSpecialties: ["Coffee & Beverage", "American"],
+    vibeTags: ["warm-tones", "authentic-moments", "local-vibes", "natural-light", "cozy-aesthetic"],
+    qualityScore: 7,
+  };
+}
+
 module.exports = {
   analyzeBrandFromUrl,
+  analyzeBrandFromPlaceData,
   analyzeCreatorPortfolio,
+  analyzeCreatorFromSocial,
   generateMatchRationale,
   generateContentPreview,
   generateRequestSuggestions,

@@ -3,6 +3,8 @@ const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
 const { uploadMultiple, getFileUrl, placeholderUrl } = require("../config/s3");
+const { analyzeCreatorFromSocial } = require("../services/ai");
+const { fetchInstagramPosts, fetchTiktokPosts, fallbackCreatorImport } = require("../services/socialScraper");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -249,6 +251,58 @@ router.get("/portfolio", async (req, res, next) => {
     });
 
     res.json({ portfolioItems });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/creators/import-social
+ * Body: { instagramHandle?, tiktokHandle? }
+ * Import and analyze a creator's social media presence.
+ */
+router.post("/import-social", async (req, res, next) => {
+  try {
+    if (req.user.role !== "CREATOR") {
+      return res.status(403).json({ error: "Only creators can import social profiles" });
+    }
+
+    const { instagramHandle, tiktokHandle } = req.body;
+
+    if (!instagramHandle && !tiktokHandle) {
+      return res.status(400).json({ error: "At least one social handle is required" });
+    }
+
+    let source = "manual";
+    let scraped = { posts: [], profile: { bio: "" } };
+
+    // Try Instagram first, then TikTok
+    if (instagramHandle) {
+      source = "instagram";
+      scraped = await fetchInstagramPosts(instagramHandle);
+    } else if (tiktokHandle) {
+      source = "tiktok";
+      scraped = await fetchTiktokPosts(tiktokHandle);
+    }
+
+    // Run AI analysis on the scraped data
+    const analysis = await analyzeCreatorFromSocial(scraped.posts, scraped.profile);
+
+    return res.json({
+      source,
+      profile: {
+        bio: analysis.bio || scraped.profile.bio || "",
+        contentStyles: analysis.contentStyles || [],
+        strengths: analysis.strengths || [],
+        neighborhoods: analysis.neighborhoods || [],
+        cuisineSpecialties: analysis.cuisineSpecialties || [],
+        vibeTags: analysis.vibeTags || [],
+      },
+      importedPortfolio: (scraped.posts || []).map((p) => ({
+        url: p.imageUrl,
+        caption: p.caption,
+      })),
+    });
   } catch (err) {
     next(err);
   }

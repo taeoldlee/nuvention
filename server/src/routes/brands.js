@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
-const { analyzeBrandFromUrl } = require("../services/ai");
+const { analyzeBrandFromUrl, analyzeBrandFromPlaceData } = require("../services/ai");
 
 // ─── Autofill Fallback Data ───
 
@@ -320,6 +320,64 @@ router.post("/auto-import", async (req, res, next) => {
         contentComfortZones: [],
       },
       message: "Could not auto-detect brand info. Please fill in manually.",
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/brands/analyze-place
+ * Body: { name, address, types[], rating, reviews[], photoUrls[], googleMapsUrl }
+ * Analyze a business from Google Places structured data using AI.
+ */
+router.post("/analyze-place", async (req, res, next) => {
+  try {
+    if (req.user.role !== "OPERATOR") {
+      return res.status(403).json({ error: "Only operators can analyze brands" });
+    }
+
+    const { name, address, types, rating, reviews, photoUrls, googleMapsUrl } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "name is required" });
+    }
+
+    const placeData = { name, address, types, rating, reviews, photoUrls, googleMapsUrl };
+
+    // Try AI analysis
+    if (openaiAvailable()) {
+      const aiResult = await analyzeBrandFromPlaceData(placeData);
+      return res.json({
+        source: "ai",
+        data: aiResult,
+      });
+    }
+
+    // Fallback: check known businesses by name
+    const nameLower = name.toLowerCase();
+    for (const [key, data] of Object.entries(AUTOFILL_FALLBACK)) {
+      if (nameLower.includes(key) || key.includes(nameLower)) {
+        return res.json({
+          source: "fallback",
+          data: {
+            ...data,
+            vibeScales: { cozyEnergetic: 40, quietBuzzy: 40, classicModern: 50, casualElevated: 45 },
+            guestExperienceKeywords: ["warm", "neighborhood", "welcoming"],
+            cuisineTypes: ["Coffee & Beverage"],
+            budgetMin: 150,
+            budgetMax: 400,
+            contentNoGos: "",
+          },
+        });
+      }
+    }
+
+    // No known fallback — use the AI service's built-in template fallback
+    const fallbackResult = await analyzeBrandFromPlaceData(placeData);
+    return res.json({
+      source: "fallback",
+      data: fallbackResult,
     });
   } catch (err) {
     next(err);
