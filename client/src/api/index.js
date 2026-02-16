@@ -39,9 +39,12 @@ export const requestRevision = (projectId, draftId, feedback) =>
   client.post(`/projects/${projectId}/drafts/${draftId}/revision`, { feedback });
 export const deliverProject = (projectId) =>
   client.post(`/projects/${projectId}/deliver`);
+export const downloadUsageRightsPDF = (projectId) =>
+  client.get(`/projects/${projectId}/usage-rights-pdf`, { responseType: 'blob' });
 
 // ─── Briefs (Creator) ───
 export const getBriefs = () => client.get('/briefs');
+export const markBriefViewed = (matchId) => client.post(`/briefs/${matchId}/view`);
 export const acceptBrief = (matchId) => client.post(`/briefs/${matchId}/accept`);
 export const declineBrief = (matchId) => client.post(`/briefs/${matchId}/decline`);
 

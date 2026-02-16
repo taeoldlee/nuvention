@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCreatorStats, getProjects, getBriefs } from '../../api';
 import { formatCents } from '../../utils/constants';
@@ -13,6 +13,11 @@ import FadeIn from '../../components/marketing/FadeIn';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+
+  // Redirect to onboarding if no creator profile
+  if (user && !profile) {
+    return <Navigate to="/creator/onboarding" replace />;
+  }
 
   const [stats, setStats] = useState(null);
   const [briefs, setBriefs] = useState([]);

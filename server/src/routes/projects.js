@@ -3,6 +3,7 @@ const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth, requireOperatorWithBrand, requireCreatorWithProfile } = require("../middleware/auth");
 const { createPayout } = require("../services/payments");
+const { generateUsageRightsPDF } = require("../services/documents");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -131,6 +132,61 @@ router.get("/:id", async (req, res, next) => {
     }
 
     res.json({ project });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/projects/:id/usage-rights-pdf
+ * Generate and download a PDF usage rights document for a project.
+ */
+router.get("/:id/usage-rights-pdf", async (req, res, next) => {
+  try {
+    const project = await prisma.project.findUnique({
+      where: { id: req.params.id },
+      include: {
+        brandProfile: {
+          include: { user: { select: { name: true } } },
+        },
+        creatorProfile: {
+          include: { user: { select: { name: true } } },
+        },
+        match: {
+          include: { contentRequest: true },
+        },
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    // Verify access
+    const isOperator =
+      req.user.brandProfile && project.brandProfileId === req.user.brandProfile.id;
+    const isCreator =
+      req.user.creatorProfile && project.creatorProfileId === req.user.creatorProfile.id;
+
+    if (!isOperator && !isCreator) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const pdfBuffer = await generateUsageRightsPDF({
+      businessName: project.brandProfile?.businessName,
+      contentType: project.match?.contentRequest?.contentType,
+      usageRights: project.usageRights,
+      timeline: project.timeline,
+      creatorName: project.creatorProfile?.user?.name || project.creatorProfile?.displayName,
+      deliverables: project.deliverables,
+      compensationType: project.compensationType,
+      compensationDetails: project.compensationDetails,
+    });
+
+    const filename = `usage-rights-${project.id.slice(0, 8)}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(pdfBuffer);
   } catch (err) {
     next(err);
   }

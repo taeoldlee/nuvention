@@ -127,7 +127,7 @@ export default function DemoSwitcher() {
                           src={op.avatarUrl}
                           alt={op.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => { e.target.src = ''; }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
                         <div className="w-full h-full bg-accentLight flex items-center justify-center text-accent font-bold">
@@ -169,7 +169,7 @@ export default function DemoSwitcher() {
                           src={cr.avatarUrl}
                           alt={cr.name}
                           className="w-full h-full object-cover"
-                          onError={(e) => { e.target.src = ''; }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
                         <div className="w-full h-full bg-creatorLight flex items-center justify-center text-creator font-bold">

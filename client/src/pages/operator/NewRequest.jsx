@@ -23,6 +23,9 @@ const COMP_TYPES = [
   { value: 'FREE_PRODUCT', label: 'Free product/meal' },
   { value: 'DISCOUNT_CODE', label: 'Discount code' },
   { value: 'HYBRID', label: 'Hybrid' },
+  { value: 'COMMISSION', label: 'Commission' },
+  { value: 'COUPON_CODE', label: 'Coupon code' },
+  { value: 'BONUS', label: 'Bonus' },
 ];
 
 export default function NewRequest() {

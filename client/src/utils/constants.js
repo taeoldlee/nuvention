@@ -112,6 +112,15 @@ export function formatCompensation(type, details, fallbackPrice) {
     const note = details?.note ? details.note : 'product/benefit';
     return `${cash} ${note}`;
   }
+  if (type === 'COMMISSION') {
+    return details?.note ? `Commission: ${details.note}` : 'Commission-based';
+  }
+  if (type === 'COUPON_CODE') {
+    return details?.note ? `Coupon: ${details.note}` : 'Coupon code';
+  }
+  if (type === 'BONUS') {
+    return details?.note ? `Bonus: ${details.note}` : 'Performance bonus';
+  }
   if (details?.minCents && details?.maxCents) {
     return `${formatCents(details.minCents)} - ${formatCents(details.maxCents)}`;
   }

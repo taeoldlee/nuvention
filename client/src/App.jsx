@@ -16,8 +16,11 @@ import CreatorProjectView from './pages/creator/ProjectView';
 import { useAuth } from './contexts/AuthContext';
 
 function HomeRedirect() {
-  const { user, isOperator } = useAuth();
+  const { user, isOperator, hasProfile } = useAuth();
   if (!user) return <Landing />;
+  if (!hasProfile) {
+    return <Navigate to={isOperator ? '/operator/onboarding' : '/creator/onboarding'} replace />;
+  }
   return <Navigate to={isOperator ? '/operator/dashboard' : '/creator/dashboard'} replace />;
 }
 

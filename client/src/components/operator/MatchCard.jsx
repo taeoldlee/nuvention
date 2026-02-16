@@ -15,7 +15,7 @@ export default function MatchCard({ match, idx, requestId, requestContext }) {
         <div className="w-full sm:w-24">
           <div className="w-full h-40 sm:w-24 sm:h-24 rounded-xl bg-bgTan border border-border overflow-hidden">
             {hero ? (
-              <img src={hero} alt="UGC sample" className="w-full h-full object-cover" onError={(e) => { e.target.src = ''; }} />
+              <img src={hero} alt="UGC sample" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted text-xs">UGC sample</div>
             )}
@@ -24,7 +24,7 @@ export default function MatchCard({ match, idx, requestId, requestContext }) {
             <div className="flex gap-1 mt-2">
               {thumbs.map((t, i) => (
                 <div key={t.id || i} className="w-7 h-7 rounded-md overflow-hidden border border-border bg-bgTan">
-                  <img src={t.imageUrl} alt="sample" className="w-full h-full object-cover" onError={(e) => { e.target.src = ''; }} />
+                  <img src={t.imageUrl} alt="sample" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                 </div>
               ))}
             </div>
@@ -39,6 +39,19 @@ export default function MatchCard({ match, idx, requestId, requestContext }) {
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-bgTan text-mid">
               {contentType}
             </span>
+            {match.viewedAt ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-greenBg text-green">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                </svg>
+                Viewed
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-bgWarm text-muted">
+                Not yet viewed
+              </span>
+            )}
           </div>
 
           {(match.contentPreview || match.description) && (

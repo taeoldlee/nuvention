@@ -42,6 +42,8 @@ router.get("/", requireOperatorWithBrand, async (req, res, next) => {
           include: {
             creatorProfile: {
               select: {
+                displayName: true,
+                user: { select: { name: true } },
                 portfolioItems: {
                   select: { id: true, imageUrl: true, verified: true },
                   take: 3,
@@ -78,6 +80,8 @@ router.get("/:id", requireOperatorWithBrand, async (req, res, next) => {
           include: {
             creatorProfile: {
               select: {
+                displayName: true,
+                user: { select: { name: true } },
                 portfolioItems: {
                   select: { id: true, imageUrl: true, verified: true },
                   take: 4,
@@ -217,6 +221,15 @@ router.post("/:id/select/:matchId", requireOperatorWithBrand, async (req, res, n
 
 module.exports = router;
 
+function stripCreatorName(text, names) {
+  if (!text || typeof text !== "string") return text;
+  let result = text;
+  for (const name of names) {
+    if (name) result = result.split(name).join("the creator");
+  }
+  return result;
+}
+
 function anonymizeRequest(request) {
   if (!request) return request;
   const matches = Array.isArray(request.matches) ? request.matches : [];
@@ -229,22 +242,29 @@ function anonymizeRequest(request) {
       verified: !!p.verified,
     }));
 
+    // Collect all name variants to strip from text fields
+    const displayName = match.creatorProfile?.displayName || "";
+    const fullName = match.creatorProfile?.user?.name || "";
+    const firstName = fullName.split(" ")[0] || "";
+    const namesToStrip = [fullName, displayName, firstName].filter(Boolean);
+
     return {
       id: match.id,
       creatorAlias: alias,
       contentType: request.contentType,
-      contentPreview: match.contentPreview,
+      contentPreview: stripCreatorName(match.contentPreview, namesToStrip),
       deliverables: match.deliverables,
       price: match.price,
       timeline: match.timeline,
       usageRights: match.usageRights,
       style: match.style,
-      matchRationale: match.matchRationale,
+      matchRationale: stripCreatorName(match.matchRationale, namesToStrip),
       matchSignals: match.matchSignals,
       matchInsights: match.matchInsights,
       portfolioSamples,
       compensationType: request.compensationType,
       compensationDetails: request.compensationDetails,
+      viewedAt: match.viewedAt || null,
     };
   });
 

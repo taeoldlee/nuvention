@@ -91,6 +91,50 @@ router.get("/", async (req, res, next) => {
 });
 
 /**
+ * POST /api/briefs/:matchId/view
+ * Mark a brief as viewed by the creator.
+ */
+router.post("/:matchId/view", async (req, res, next) => {
+  try {
+    if (req.user.role !== "CREATOR") {
+      return res.status(403).json({ error: "Only creators can view briefs" });
+    }
+
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!creatorProfile) {
+      return res.status(404).json({ error: "Creator profile not found" });
+    }
+
+    const match = await prisma.match.findUnique({
+      where: { id: req.params.matchId },
+    });
+
+    if (!match) {
+      return res.status(404).json({ error: "Brief not found" });
+    }
+
+    if (match.creatorProfileId !== creatorProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Only set viewedAt if not already set
+    if (!match.viewedAt) {
+      await prisma.match.update({
+        where: { id: match.id },
+        data: { viewedAt: new Date() },
+      });
+    }
+
+    res.json({ message: "Brief view recorded" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/briefs/:matchId/accept
  * Creator accepts a brief (match).
  */

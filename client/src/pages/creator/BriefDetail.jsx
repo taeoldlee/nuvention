@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBriefs, acceptBrief, declineBrief } from '../../api';
+import { getBriefs, markBriefViewed, acceptBrief, declineBrief } from '../../api';
 import { formatCompensation } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -41,6 +41,13 @@ export default function BriefDetail() {
       }
     }
     fetchBrief();
+  }, [matchId]);
+
+  // Track that the creator viewed this brief
+  useEffect(() => {
+    if (matchId) {
+      markBriefViewed(matchId).catch(() => {});
+    }
   }, [matchId]);
 
   const handleAccept = async () => {

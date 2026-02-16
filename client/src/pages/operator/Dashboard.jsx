@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOperatorStats, getProjects } from '../../api';
 import {
@@ -17,6 +17,11 @@ import FadeIn from '../../components/marketing/FadeIn';
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
+
+  // Redirect to onboarding if no brand profile
+  if (user && !profile) {
+    return <Navigate to="/operator/onboarding" replace />;
+  }
 
   const [stats, setStats] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -241,7 +246,7 @@ export default function Dashboard() {
                         src={thumbUrl}
                         alt={project.match?.contentRequest?.contentType || project.contentType}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => { e.target.src = ''; e.target.alt = ''; }}
+                        onError={(e) => { e.target.style.display = 'none'; }}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-muted">

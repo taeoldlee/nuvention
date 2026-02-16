@@ -154,6 +154,9 @@ enum CompensationType {
   FREE_PRODUCT
   DISCOUNT_CODE
   HYBRID
+  COMMISSION
+  COUPON_CODE
+  BONUS
 }
 
 enum RequestStatus {
@@ -186,6 +189,7 @@ model Match {
   style          String
 
   status MatchStatus @default(PRESENTED)
+  viewedAt DateTime?
 
   createdAt DateTime @default(now())
 

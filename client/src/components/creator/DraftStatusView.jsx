@@ -10,7 +10,7 @@ function DraftImageGrid({ images, label }) {
             src={typeof img === 'string' ? img : img.url}
             alt={`${label} ${i + 1}`}
             className="w-full h-full object-cover"
-            onError={(e) => { e.target.src = ''; }}
+            onError={(e) => { e.target.style.display = 'none'; }}
           />
         </div>
       ))}

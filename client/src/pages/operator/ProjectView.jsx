@@ -5,6 +5,7 @@ import {
   approveDraft,
   requestRevision,
   deliverProject,
+  downloadUsageRightsPDF,
 } from '../../api';
 import {
   formatCompensation,
@@ -139,7 +140,7 @@ export default function ProjectView() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex items-center gap-3 flex-1">
               {creatorPhoto ? (
-                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" onError={(e) => { e.target.src = ''; }} />
+                <img src={creatorPhoto} alt={creatorName} className="w-12 h-12 rounded-full object-cover border-2 border-border" onError={(e) => { e.target.style.display = 'none'; }} />
               ) : (
                 <div className="w-12 h-12 rounded-full bg-accentLight flex items-center justify-center">
                   <span className="text-lg font-bold text-accent">{creatorName?.charAt(0) || '?'}</span>
@@ -222,6 +223,28 @@ export default function ProjectView() {
                   <pre className="text-xs text-mid font-body whitespace-pre-wrap break-words overflow-x-auto bg-bgWarm rounded-xl p-3 border border-border">
                     {project.usageRightsDoc}
                   </pre>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await downloadUsageRightsPDF(id);
+                        const blob = new Blob([res.data], { type: 'application/pdf' });
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `usage-rights-${id.slice(0, 8)}.pdf`;
+                        a.click();
+                        window.URL.revokeObjectURL(url);
+                      } catch {
+                        addToast('Could not download PDF.', 'error');
+                      }
+                    }}
+                    className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:bg-accent/90 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                    </svg>
+                    Download PDF
+                  </button>
                 </div>
               )}
             </div>
