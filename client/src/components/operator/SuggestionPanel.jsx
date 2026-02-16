@@ -41,7 +41,13 @@ export default function SuggestionPanel({ onApply }) {
     );
   }
 
-  if (suggestions.length === 0) return null;
+  if (suggestions.length === 0) {
+    return (
+      <p className="text-xs text-muted font-body italic">
+        No suggestions available right now. Try adding more brand details to get better ideas.
+      </p>
+    );
+  }
 
   return (
     <div className="space-y-2">

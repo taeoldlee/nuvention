@@ -150,7 +150,7 @@ export default function Library() {
             {filteredProjects.map((project) => {
               const latestDraft =
                 project.drafts?.length > 0
-                  ? project.drafts[project.drafts.length - 1]
+                  ? project.drafts[0]
                   : null;
               const draftImages = latestDraft?.fileUrls || latestDraft?.images || [];
               const thumbnail =

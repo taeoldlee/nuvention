@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { analyzeBrandFromUrl, analyzeCreatorPortfolio, generateRequestSuggestions } = require("../services/ai");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../config/db");
 
 /**
  * POST /api/ai/analyze-brand

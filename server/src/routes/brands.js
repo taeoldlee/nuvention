@@ -308,12 +308,18 @@ router.post("/auto-import", async (req, res, next) => {
       });
     }
 
-    // Step 3: Generic fallback
-    const genericResult = await analyzeBrandFromUrl(url);
+    // Step 3: No AI and no known fallback — return empty shell for manual entry
     return res.json({
-      source: "fallback",
+      source: "manual",
       urlType,
-      data: genericResult,
+      data: {
+        businessName: "",
+        neighborhood: "",
+        vibe: [],
+        values: [],
+        contentComfortZones: [],
+      },
+      message: "Could not auto-detect brand info. Please fill in manually.",
     });
   } catch (err) {
     next(err);
