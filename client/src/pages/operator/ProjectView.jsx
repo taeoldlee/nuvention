@@ -25,6 +25,7 @@ import {
   DeliveredSection,
 } from '../../components/operator/ProjectStatusSection';
 import DraftHistory from '../../components/operator/DraftHistory';
+import MessageThread from '../../components/common/MessageThread';
 import FadeIn from '../../components/marketing/FadeIn';
 
 export default function ProjectView() {
@@ -317,6 +318,7 @@ export default function ProjectView() {
             )}
 
             <DraftHistory drafts={project.drafts} />
+            <MessageThread projectId={id} />
           </div>
         </div>
         </FadeIn>

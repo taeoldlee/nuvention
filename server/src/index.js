@@ -15,6 +15,8 @@ const aiRoutes = require("./routes/ai");
 const uploadRoutes = require("./routes/uploads");
 const statsRoutes = require("./routes/stats");
 const adminRoutes = require("./routes/admin");
+const notificationRoutes = require("./routes/notifications");
+const messageRoutes = require("./routes/messages");
 
 const app = express();
 
@@ -60,6 +62,8 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/uploads", uploadTimeout, uploadRoutes);
 app.use("/api/stats", statsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/projects", messageRoutes);
 
 // ─── Serve Frontend (production) ───
 const clientDist = path.join(__dirname, "../../client/dist");

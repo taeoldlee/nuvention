@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getOperatorStats, getProjects } from '../../api';
 import {
   PROJECT_STATUS_LABELS,
   formatRelativeDate,
+  parseRightsDuration,
 } from '../../utils/constants';
+import Chip from '../../components/common/Chip';
 import { creatorDisplayName } from '../../utils/extractors';
 import StatCard from '../../components/common/StatCard';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -27,6 +29,8 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -77,6 +81,36 @@ export default function Dashboard() {
   const approvedContent = projects.filter(
     (p) => p.status === 'APPROVED' || p.status === 'DELIVERED'
   );
+
+  // Find projects with expiring usage rights (within 30 days)
+  const expiringProjects = useMemo(() => {
+    return projects.filter((p) => {
+      if (p.status !== 'DELIVERED' && p.status !== 'APPROVED') return false;
+      const months = parseRightsDuration(p.usageRights);
+      const deliveredAt = new Date(p.updatedAt);
+      const expiresAt = new Date(deliveredAt);
+      expiresAt.setMonth(expiresAt.getMonth() + months);
+      const daysLeft = (expiresAt - new Date()) / (1000 * 60 * 60 * 24);
+      return daysLeft <= 30 && daysLeft > -Infinity;
+    });
+  }, [projects]);
+
+  // Filtered active projects
+  const filteredActive = useMemo(() => {
+    let result = activeProjects;
+    if (statusFilter) {
+      result = result.filter((p) => p.status === statusFilter);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((p) =>
+        (creatorDisplayName(p) || '').toLowerCase().includes(q) ||
+        (p.match?.contentRequest?.contentType || '').toLowerCase().includes(q) ||
+        (p.status || '').toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [activeProjects, search, statusFilter]);
 
   return (
     <div className="min-h-screen bg-bgWarm">
@@ -135,6 +169,26 @@ export default function Dashboard() {
         </div>
         </FadeIn>
 
+        {/* Usage Rights Alert */}
+        {expiringProjects.length > 0 && (
+          <FadeIn delay={0.15}>
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-6">
+            <div className="flex items-start gap-3">
+              <svg className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <div>
+                <p className="text-sm font-semibold text-orange-800 font-body">Usage Rights Expiring</p>
+                <p className="text-sm text-orange-700 font-body">
+                  {expiringProjects.length} project{expiringProjects.length !== 1 ? 's have' : ' has'} usage rights expiring within 30 days.{' '}
+                  <button onClick={() => navigate('/operator/library')} className="underline font-semibold">View in Library</button>
+                </p>
+              </div>
+            </div>
+          </div>
+          </FadeIn>
+        )}
+
         {/* Active Projects */}
         <FadeIn delay={0.2}>
         <section className="mb-10">
@@ -149,7 +203,37 @@ export default function Dashboard() {
             )}
           </div>
 
-          {activeProjects.length === 0 ? (
+          {/* Search + Filter */}
+          {activeProjects.length > 0 && (
+            <div className="mb-4 space-y-3">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by creator, content type..."
+                aria-label="Search active projects"
+                className="input w-full text-sm"
+              />
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { label: 'All', value: '' },
+                  { label: 'Brief Sent', value: 'BRIEF_SENT' },
+                  { label: 'Draft Submitted', value: 'DRAFT_SUBMITTED' },
+                  { label: 'Revision', value: 'REVISION_REQUESTED' },
+                  { label: 'Approved', value: 'APPROVED' },
+                ].map((f) => (
+                  <Chip
+                    key={f.value}
+                    label={f.label}
+                    selected={statusFilter === f.value}
+                    onClick={() => setStatusFilter(f.value)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {filteredActive.length === 0 ? (
             <EmptyState
               icon={
                 <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -166,7 +250,7 @@ export default function Dashboard() {
             />
           ) : (
             <div className="space-y-3">
-              {activeProjects.map((project) => (
+              {filteredActive.map((project) => (
                 <button
                   key={project.id}
                   onClick={() => navigate(`/operator/project/${project.id}`)}

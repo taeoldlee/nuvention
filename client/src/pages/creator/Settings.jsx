@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { getCreatorProfile, updateCreatorProfile } from '../../api';
+import { getCreatorProfile, updateCreatorProfile, getPortfolio, uploadPortfolio, deletePortfolioItem } from '../../api';
 import {
   CONTENT_STYLES,
   CREATOR_STRENGTHS,
@@ -29,6 +29,16 @@ export default function Settings() {
   const [neighborhoods, setNeighborhoods] = useState([]);
   const [dreamBrands, setDreamBrands] = useState([]);
   const [brandInput, setBrandInput] = useState('');
+  const [isAvailable, setIsAvailable] = useState(true);
+  const [portfolio, setPortfolio] = useState([]);
+  const [portfolioLoading, setPortfolioLoading] = useState(false);
+
+  const loadPortfolio = async () => {
+    try {
+      const res = await getPortfolio();
+      setPortfolio(res.data.portfolioItems || []);
+    } catch { /* silent */ }
+  };
 
   useEffect(() => {
     async function loadProfile() {
@@ -43,6 +53,8 @@ export default function Settings() {
         setStrengths(p.strengths || []);
         setNeighborhoods(p.neighborhoods || []);
         setDreamBrands(p.dreamBrands || []);
+        setIsAvailable(p.isAvailable !== false);
+        setPortfolio(p.portfolioItems || []);
       } catch (err) {
         setError('Could not load your profile. Please try again.');
       } finally {
@@ -89,6 +101,7 @@ export default function Settings() {
         strengths,
         neighborhoods,
         dreamBrands: dreamBrands.length > 0 ? dreamBrands : [],
+        isAvailable,
       });
       await refreshProfile();
       setSuccess('Profile updated successfully.');
@@ -134,6 +147,32 @@ export default function Settings() {
           <p className="text-sm text-green-700 font-body">{success}</p>
         </div>
       )}
+
+      {/* Availability Toggle */}
+      <div className="card mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-dark mb-1">Availability</h2>
+            <p className="text-sm text-muted font-body">
+              {isAvailable ? 'You will receive new briefs from brands.' : "You won't receive new briefs while unavailable."}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isAvailable}
+            aria-label="Available for new briefs"
+            onClick={() => { setIsAvailable(!isAvailable); clearSuccess(); }}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isAvailable ? 'bg-creatorAccent' : 'bg-gray-300'
+            }`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+              isAvailable ? 'translate-x-6' : 'translate-x-1'
+            }`} />
+          </button>
+        </div>
+      </div>
 
       <div className="card space-y-6">
         {/* Profile Section */}
@@ -306,6 +345,74 @@ export default function Settings() {
             Save Changes
           </Btn>
         </div>
+      </div>
+
+      {/* Portfolio Section */}
+      <div className="card mt-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-semibold text-dark">Portfolio</h2>
+          <label className="cursor-pointer">
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              className="hidden"
+              onChange={async (e) => {
+                const files = e.target.files;
+                if (!files?.length) return;
+                setPortfolioLoading(true);
+                try {
+                  const formData = new FormData();
+                  Array.from(files).forEach((f) => formData.append('images', f));
+                  await uploadPortfolio(formData);
+                  await loadPortfolio();
+                  setSuccess('Portfolio updated.');
+                } catch {
+                  setError('Failed to upload photos.');
+                } finally {
+                  setPortfolioLoading(false);
+                  e.target.value = '';
+                }
+              }}
+            />
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-creatorAccent text-white hover:bg-creatorAccent/90 transition-colors cursor-pointer">
+              {portfolioLoading ? 'Uploading...' : 'Add Photos'}
+            </span>
+          </label>
+        </div>
+
+        {portfolio.length === 0 ? (
+          <p className="text-sm text-muted font-body text-center py-4">No portfolio items yet. Add some photos to showcase your work.</p>
+        ) : (
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+            {portfolio.map((item) => (
+              <div key={item.id} className="relative group aspect-square rounded-xl overflow-hidden border border-border">
+                <img
+                  src={item.imageUrl}
+                  alt={item.caption || 'Portfolio'}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await deletePortfolioItem(item.id);
+                      setPortfolio((prev) => prev.filter((p) => p.id !== item.id));
+                    } catch {
+                      setError('Failed to delete portfolio item.');
+                    }
+                  }}
+                  className="absolute top-1 right-1 w-6 h-6 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

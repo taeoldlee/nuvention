@@ -5,9 +5,12 @@ const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export default function useDraftSubmission(projectId, onSuccess) {
+  const storageKey = `locale_draft_${projectId}`;
   const [draftFiles, setDraftFiles] = useState([]);
   const [draftPreviews, setDraftPreviews] = useState([]);
-  const [draftNotes, setDraftNotes] = useState('');
+  const [draftNotes, setDraftNotes] = useState(() => {
+    try { return localStorage.getItem(storageKey) || ''; } catch { return ''; }
+  });
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -21,6 +24,14 @@ export default function useDraftSubmission(projectId, onSuccess) {
       previewsRef.current.forEach((p) => URL.revokeObjectURL(p.url || p));
     };
   }, []);
+
+  // Auto-save notes to localStorage
+  useEffect(() => {
+    try {
+      if (draftNotes) localStorage.setItem(storageKey, draftNotes);
+      else localStorage.removeItem(storageKey);
+    } catch { /* quota exceeded */ }
+  }, [draftNotes, storageKey]);
 
   const handleFilesSelected = (files) => {
     const allowed = Array.from(files).filter(
@@ -76,6 +87,7 @@ export default function useDraftSubmission(projectId, onSuccess) {
       draftPreviews.forEach((p) => URL.revokeObjectURL(p.url || p));
       setDraftPreviews([]);
       setDraftNotes('');
+      try { localStorage.removeItem(storageKey); } catch {}
       setUploadProgress(100);
       if (onSuccess) await onSuccess();
     } catch (err) {

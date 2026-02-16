@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCreatorStats, getProjects, getBriefs } from '../../api';
@@ -8,6 +8,7 @@ import EmptyState from '../../components/common/EmptyState';
 import { DashboardSkeleton } from '../../components/common/Skeleton';
 import CreatorBriefCard from '../../components/creator/CreatorBriefCard';
 import CreatorProjectCard from '../../components/creator/CreatorProjectCard';
+import Chip from '../../components/common/Chip';
 import FadeIn from '../../components/marketing/FadeIn';
 
 export default function Dashboard() {
@@ -24,6 +25,8 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -65,8 +68,40 @@ export default function Dashboard() {
   const activeCount = stats?.activeProjects ?? projects.filter((p) => !['DELIVERED', 'APPROVED'].includes(p.status)).length;
   const newBriefsCount = stats?.newBriefs ?? briefs.length;
 
+  const filteredProjects = useMemo(() => {
+    let result = projects;
+    if (statusFilter) {
+      if (statusFilter === 'ACTIVE') result = result.filter((p) => !['DELIVERED', 'APPROVED'].includes(p.status));
+      else if (statusFilter === 'COMPLETED') result = result.filter((p) => ['DELIVERED', 'APPROVED'].includes(p.status));
+      else result = result.filter((p) => p.status === statusFilter);
+    }
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter((p) =>
+        (p.brandProfile?.businessName || '').toLowerCase().includes(q) ||
+        (p.match?.contentRequest?.contentType || '').toLowerCase().includes(q)
+      );
+    }
+    return result;
+  }, [projects, search, statusFilter]);
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
+      {/* Availability banner */}
+      {profile?.isAvailable === false && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 flex items-center justify-between">
+          <p className="text-sm text-yellow-800 font-body">
+            You're currently set to <span className="font-semibold">unavailable</span>. You won't receive new briefs.
+          </p>
+          <button
+            onClick={() => navigate('/creator/settings')}
+            className="text-sm font-semibold text-yellow-800 hover:text-yellow-900 underline"
+          >
+            Go to Settings
+          </button>
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
           <p className="text-sm text-red-700 font-body">{error}</p>
@@ -152,7 +187,36 @@ export default function Dashboard() {
           Active Projects
         </h2>
 
-        {projects.length === 0 ? (
+        {/* Search + Filter */}
+        {projects.length > 0 && (
+          <div className="mb-4 space-y-3">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by brand or content type..."
+              aria-label="Search projects"
+              className="input input-creator w-full text-sm"
+            />
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'All', value: '' },
+                { label: 'Active', value: 'ACTIVE' },
+                { label: 'Completed', value: 'COMPLETED' },
+              ].map((f) => (
+                <Chip
+                  key={f.value}
+                  label={f.label}
+                  selected={statusFilter === f.value}
+                  creator
+                  onClick={() => setStatusFilter(f.value)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {filteredProjects.length === 0 ? (
           <div className="card">
             <EmptyState
               icon={<svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 21h18M3 21a2.25 2.25 0 01-2.25-2.25V5.25A2.25 2.25 0 013 3h18a2.25 2.25 0 012.25 2.25v13.5A2.25 2.25 0 0121 21" /></svg>}
@@ -162,7 +226,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="space-y-3">
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <CreatorProjectCard
                 key={project.id || project._id}
                 project={project}

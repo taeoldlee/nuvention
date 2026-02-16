@@ -21,6 +21,8 @@ model User {
 
   brandProfile   BrandProfile?
   creatorProfile CreatorProfile?
+  messages       Message[]
+  notifications  Notification[]
 }
 
 enum UserRole {
@@ -89,6 +91,7 @@ model CreatorProfile {
   tier CreatorTier? @default(NEW)
 
   profilePhotoUrl String?
+  isAvailable     Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -190,6 +193,7 @@ model Match {
 
   status MatchStatus @default(PRESENTED)
   viewedAt DateTime?
+  preAcceptMessages Json?
 
   createdAt DateTime @default(now())
 
@@ -229,6 +233,7 @@ model Project {
 
   drafts      ProjectDraft[]
   transaction Transaction?
+  messages    Message[]
 }
 
 enum ProjectStatus {
@@ -301,4 +306,34 @@ enum TransactionStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+// ─── MESSAGES ───
+
+model Message {
+  id        String   @id @default(uuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+// ─── NOTIFICATIONS ───
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  type      String
+  title     String
+  body      String
+  linkUrl   String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read, createdAt])
 }

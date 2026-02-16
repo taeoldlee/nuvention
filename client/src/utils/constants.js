@@ -136,6 +136,13 @@ export function formatDate(dateStr) {
   });
 }
 
+export function parseRightsDuration(rights) {
+  if (!rights) return 12;
+  const match = rights.match(/(\d+)\s*(month|year)/i);
+  if (!match) return 12;
+  return match[2].toLowerCase().startsWith('year') ? parseInt(match[1]) * 12 : parseInt(match[1]);
+}
+
 export function formatRelativeDate(dateStr) {
   const now = new Date();
   const date = new Date(dateStr);
