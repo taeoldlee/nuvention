@@ -159,6 +159,9 @@ export default function Settings() {
           </div>
           <button
             type="button"
+            role="switch"
+            aria-checked={isAvailable}
+            aria-label="Available for new briefs"
             onClick={() => { setIsAvailable(!isAvailable); clearSuccess(); }}
             className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
               isAvailable ? 'bg-creatorAccent' : 'bg-gray-300'

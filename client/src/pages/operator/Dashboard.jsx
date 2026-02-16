@@ -5,6 +5,7 @@ import { getOperatorStats, getProjects } from '../../api';
 import {
   PROJECT_STATUS_LABELS,
   formatRelativeDate,
+  parseRightsDuration,
 } from '../../utils/constants';
 import Chip from '../../components/common/Chip';
 import { creatorDisplayName } from '../../utils/extractors';
@@ -80,14 +81,6 @@ export default function Dashboard() {
   const approvedContent = projects.filter(
     (p) => p.status === 'APPROVED' || p.status === 'DELIVERED'
   );
-
-  // Parse usage rights duration string to months
-  const parseRightsDuration = (rights) => {
-    if (!rights) return 12;
-    const match = rights.match(/(\d+)\s*(month|year)/i);
-    if (!match) return 12;
-    return match[2].toLowerCase().startsWith('year') ? parseInt(match[1]) * 12 : parseInt(match[1]);
-  };
 
   // Find projects with expiring usage rights (within 30 days)
   const expiringProjects = useMemo(() => {
@@ -218,6 +211,7 @@ export default function Dashboard() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by creator, content type..."
+                aria-label="Search active projects"
                 className="input w-full text-sm"
               />
               <div className="flex flex-wrap gap-2">

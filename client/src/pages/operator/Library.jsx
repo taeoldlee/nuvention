@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProjects } from '../../api';
-import { CONTENT_TYPES, formatDate } from '../../utils/constants';
+import { CONTENT_TYPES, formatDate, parseRightsDuration } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import Chip from '../../components/common/Chip';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -43,13 +43,6 @@ export default function Library() {
 
   const getContentType = (p) =>
     p.match?.contentRequest?.contentType || p.contentType || '';
-
-  const parseRightsDuration = (rights) => {
-    if (!rights) return 12;
-    const match = rights.match(/(\d+)\s*(month|year)/i);
-    if (!match) return 12;
-    return match[2].toLowerCase().startsWith('year') ? parseInt(match[1]) * 12 : parseInt(match[1]);
-  };
 
   const getExpiryDays = (p) => {
     const months = parseRightsDuration(p.usageRights);

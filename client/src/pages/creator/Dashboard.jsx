@@ -195,6 +195,7 @@ export default function Dashboard() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by brand or content type..."
+              aria-label="Search projects"
               className="input input-creator w-full text-sm"
             />
             <div className="flex flex-wrap gap-2">

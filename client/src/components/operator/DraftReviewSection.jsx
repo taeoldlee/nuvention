@@ -42,7 +42,7 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
       {/* Draft Images with per-image approval */}
       {images?.length > 0 && (
         <>
-          <p className="text-xs text-muted font-body mb-2">Click images to mark for revision:</p>
+          <p className="text-xs text-muted font-body mb-2">Click or press Enter/Space on images to mark for revision:</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
             {images.map((img, i) => {
               const isRejected = rejectedIndexes.has(i);
@@ -50,6 +50,7 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
                 <button
                   key={i}
                   type="button"
+                  aria-label={`Image ${i + 1}: ${isRejected ? 'marked for revision, click to approve' : 'approved, click to reject'}`}
                   onClick={() => toggleImage(i)}
                   className={`relative aspect-square rounded-xl border-2 overflow-hidden bg-bgTan transition-all ${
                     isRejected ? 'border-red-400 ring-2 ring-red-200' : 'border-border hover:border-accent/40'

@@ -31,6 +31,19 @@ router.get("/unread-count", async (req, res, next) => {
   }
 });
 
+/** POST /api/notifications/read-all — mark all as read (must be before /:id/read) */
+router.post("/read-all", async (req, res, next) => {
+  try {
+    await prisma.notification.updateMany({
+      where: { userId: req.user.id, read: false },
+      data: { read: true },
+    });
+    res.json({ message: "All marked as read" });
+  } catch (err) {
+    next(err);
+  }
+});
+
 /** POST /api/notifications/:id/read — mark one as read */
 router.post("/:id/read", async (req, res, next) => {
   try {
@@ -45,19 +58,6 @@ router.post("/:id/read", async (req, res, next) => {
       data: { read: true },
     });
     res.json({ message: "Marked as read" });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/** POST /api/notifications/read-all — mark all as read */
-router.post("/read-all", async (req, res, next) => {
-  try {
-    await prisma.notification.updateMany({
-      where: { userId: req.user.id, read: false },
-      data: { read: true },
-    });
-    res.json({ message: "All marked as read" });
   } catch (err) {
     next(err);
   }
