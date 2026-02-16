@@ -7,6 +7,12 @@ import { useRef, useEffect } from 'react';
 export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }) {
   const inputRef = useRef(null);
   const autocompleteRef = useRef(null);
+  const callbackRef = useRef(onPlaceSelected);
+
+  // Keep callback ref up to date without re-running the effect
+  useEffect(() => {
+    callbackRef.current = onPlaceSelected;
+  }, [onPlaceSelected]);
 
   useEffect(() => {
     if (!window.google?.maps?.places || !inputRef.current || autocompleteRef.current) return;
@@ -49,7 +55,7 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
         googleMapsUrl: `https://www.google.com/maps/place/?q=place_id:${place.place_id}`,
       };
 
-      onPlaceSelected(placeData);
+      callbackRef.current(placeData);
     });
 
     autocompleteRef.current = autocomplete;
@@ -57,9 +63,10 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
     return () => {
       if (autocompleteRef.current) {
         window.google.maps.event.clearInstanceListeners(autocompleteRef.current);
+        autocompleteRef.current = null;
       }
     };
-  }, [onPlaceSelected]);
+  }, []); // Run once on mount — callback accessed via ref
 
   return (
     <input

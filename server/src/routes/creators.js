@@ -263,6 +263,10 @@ router.get("/portfolio", async (req, res, next) => {
  */
 router.post("/import-social", async (req, res, next) => {
   try {
+    if (req.user.role !== "CREATOR") {
+      return res.status(403).json({ error: "Only creators can import social profiles" });
+    }
+
     const { instagramHandle, tiktokHandle } = req.body;
 
     if (!instagramHandle && !tiktokHandle) {

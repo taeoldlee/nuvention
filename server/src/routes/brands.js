@@ -333,6 +333,10 @@ router.post("/auto-import", async (req, res, next) => {
  */
 router.post("/analyze-place", async (req, res, next) => {
   try {
+    if (req.user.role !== "OPERATOR") {
+      return res.status(403).json({ error: "Only operators can analyze brands" });
+    }
+
     const { name, address, types, rating, reviews, photoUrls, googleMapsUrl } = req.body;
 
     if (!name) {

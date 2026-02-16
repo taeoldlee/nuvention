@@ -11,7 +11,6 @@ import CreatorStepDone from '../../components/creator/CreatorStepDone';
 const STEPS = ['Import', 'Review', 'Done'];
 
 export default function Onboarding() {
-  const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
   const formActions = useCreatorOnboardingForm();
 
