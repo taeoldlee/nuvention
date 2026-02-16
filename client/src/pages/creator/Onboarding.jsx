@@ -31,6 +31,7 @@ export default function Onboarding() {
   const [error, setError] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   const handleSubmit = async () => {
     setSaving(true);
@@ -70,6 +71,7 @@ export default function Onboarding() {
         }).catch((err) => {
           console.warn('Portfolio upload failed:', err.message);
           setUploading(false);
+          setUploadError('Portfolio upload failed. Please try again by refreshing the page.');
         });
       }
     } catch (err) {
@@ -118,7 +120,7 @@ export default function Onboarding() {
           {step === 0 && <CreatorStepProfile formActions={formActions} />}
           {step === 1 && <CreatorStepStyle formActions={formActions} />}
           {step === 2 && <CreatorStepPortfolio formActions={formActions} />}
-          {step === 3 && <CreatorStepDone uploading={uploading} uploadProgress={uploadProgress} />}
+          {step === 3 && <CreatorStepDone uploading={uploading} uploadProgress={uploadProgress} uploadError={uploadError} />}
         </div>
 
         {error && (

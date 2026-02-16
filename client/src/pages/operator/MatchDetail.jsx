@@ -70,6 +70,7 @@ export default function MatchDetail() {
   const handleConfirm = async () => {
     if (!requestId || !matchId) return;
     setConfirming(true);
+    setError('');
     try {
       const res = await selectMatch(requestId, matchId);
       const project = res.data.project;
