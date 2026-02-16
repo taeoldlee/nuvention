@@ -163,22 +163,22 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0D12] text-white">
+    <div className="min-h-screen bg-bgTan text-dark">
       <Navbar />
 
       <main id="main-content" className="relative">
         <section className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 px-6 pb-20 pt-20 text-center sm:px-10 sm:pt-28 lg:px-16">
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(93,115,255,0.25),transparent_60%)]" />
-          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(77,212,166,0.18),transparent_45%)]" />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top,rgba(184,80,66,0.08),transparent_60%)]" />
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_20%_20%,rgba(184,80,66,0.05),transparent_45%)]" />
 
           <FadeIn className="flex flex-col items-center gap-6">
-            <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300/80">
+            <span className="rounded-full border border-border bg-white px-4 py-2 text-xs uppercase tracking-[0.3em] text-muted">
               For restaurants & cafés
             </span>
-            <h1 className="max-w-3xl font-display text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
+            <h1 className="max-w-3xl font-display text-4xl font-semibold text-dark sm:text-5xl lg:text-6xl">
               Get content that looks like your place.
             </h1>
-            <p className="max-w-2xl text-base text-slate-300/80 sm:text-lg">
+            <p className="max-w-2xl text-base text-mid sm:text-lg">
               We match you with local creators who already shoot your vibe. Pick from 3 options, approve what fits, and post. No negotiations, no management.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
@@ -198,7 +198,7 @@ export default function Landing() {
             ].map((item) => (
               <span
                 key={item}
-                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-slate-300/80"
+                className="rounded-full border border-border bg-white px-4 py-2 text-xs text-muted"
               >
                 {item}
               </span>
@@ -207,19 +207,19 @@ export default function Landing() {
         </section>
 
         <section className="mx-auto max-w-6xl px-6 pb-16 sm:px-10 lg:px-16">
-          <FadeIn className="glass-panel gradient-border flex flex-col items-center justify-between gap-6 rounded-3xl p-6 text-center sm:flex-row sm:text-left">
+          <FadeIn className="card flex flex-col items-center justify-between gap-6 rounded-3xl p-6 text-center sm:flex-row sm:text-left">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Trust strip</p>
-              <p className="mt-3 text-lg text-white">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted">Trust strip</p>
+              <p className="mt-3 text-lg text-dark">
                 Built for busy owners who don't have time to manage creators.
               </p>
-              <p className="mt-2 text-sm text-slate-300/70">
+              <p className="mt-2 text-sm text-muted">
                 Every creator is matched to your vibe before you see their profile — so you're choosing content, not followers.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
               {['Style over followers', 'Just 3 options', 'Nothing posts without approval'].map((label) => (
-                <span key={label} className="rounded-full border border-white/10 px-4 py-2 text-xs text-slate-300/80">
+                <span key={label} className="rounded-full border border-border bg-white px-4 py-2 text-xs text-muted">
                   {label}
                 </span>
               ))}
@@ -272,43 +272,43 @@ export default function Landing() {
               <div className="mt-8 space-y-5">
                 {trustPoints.map((item) => (
                   <div key={item.title} className="flex items-start gap-4">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">
-                      <item.icon className="h-5 w-5 text-emerald-300" />
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accentLight">
+                      <item.icon className="h-5 w-5 text-accent" />
                     </div>
                     <div>
-                      <h3 className="text-base font-semibold text-white">{item.title}</h3>
-                      <p className="text-sm text-slate-300/80">{item.description}</p>
+                      <h3 className="text-base font-semibold text-dark">{item.title}</h3>
+                      <p className="text-sm text-mid">{item.description}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </FadeIn>
 
-            <FadeIn className="glass-panel gradient-border rounded-3xl p-8">
+            <FadeIn className="card rounded-3xl p-8">
               <div className="flex items-center gap-3">
-                <div className="h-11 w-11 rounded-2xl bg-white/10 flex items-center justify-center">
-                  <BadgeCheck className="h-5 w-5 text-[#7D8BFF]" />
+                <div className="h-11 w-11 rounded-2xl bg-accentLight flex items-center justify-center">
+                  <BadgeCheck className="h-5 w-5 text-accent" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Match evidence</p>
-                  <p className="text-base text-white">What you'll see on every shortlist card</p>
+                  <p className="text-xs uppercase tracking-[0.3em] text-muted">Match evidence</p>
+                  <p className="text-base text-dark">What you'll see on every shortlist card</p>
                 </div>
               </div>
-              <ul className="mt-6 space-y-4 text-sm text-slate-300/80">
+              <ul className="mt-6 space-y-4 text-sm text-mid">
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
                   Venue similarity and neighborhood overlap
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
                   Aesthetic markers aligned with your vibe
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
                   Community signals and creator tier context
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#7D8BFF]" />
+                  <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
                   Past outcomes and turnaround history
                 </li>
               </ul>
@@ -351,13 +351,13 @@ export default function Landing() {
         </section>
 
         <section id="cta" className="mx-auto max-w-6xl px-6 pb-24 sm:px-10 lg:px-16">
-          <FadeIn className="glass-panel gradient-border flex flex-col items-center justify-between gap-8 rounded-3xl p-10 text-center sm:flex-row sm:text-left">
+          <FadeIn className="card flex flex-col items-center justify-between gap-8 rounded-3xl p-10 text-center sm:flex-row sm:text-left">
             <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Ready when you are</p>
-              <h2 className="mt-4 font-display text-3xl font-semibold text-white">
+              <p className="text-xs uppercase tracking-[0.3em] text-muted">Ready when you are</p>
+              <h2 className="mt-4 font-display text-3xl font-semibold text-dark">
                 Ready to get content that actually looks like your place?
               </h2>
-              <p className="mt-3 text-sm text-slate-300/80">
+              <p className="mt-3 text-sm text-mid">
                 Set your vibe once, pick from 3 options, and post. We'll walk you through it.
               </p>
             </div>
@@ -370,16 +370,16 @@ export default function Landing() {
       </main>
 
       <footer className="mx-auto max-w-6xl px-6 pb-10 sm:px-10 lg:px-16">
-        <div className="flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 text-sm text-slate-300/60 sm:flex-row">
+        <div className="flex flex-col items-center justify-between gap-4 border-t border-border pt-8 text-sm text-muted sm:flex-row">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-[#7D8BFF] to-[#4DD4A6]" />
-            <span className="font-display text-white">Locale</span>
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-accent to-accent/60" />
+            <span className="font-display text-dark">Locale</span>
           </div>
           <div className="flex flex-wrap items-center gap-5">
-            <a className="hover:text-white transition-colors" href="#how-it-works">How it works</a>
-            <a className="hover:text-white transition-colors" href="#features">Features</a>
-            <a className="hover:text-white transition-colors" href="#trust">Trust</a>
-            <a className="hover:text-white transition-colors" href="#pricing">Pricing</a>
+            <a className="hover:text-dark transition-colors" href="#how-it-works">How it works</a>
+            <a className="hover:text-dark transition-colors" href="#features">Features</a>
+            <a className="hover:text-dark transition-colors" href="#trust">Trust</a>
+            <a className="hover:text-dark transition-colors" href="#pricing">Pricing</a>
           </div>
           <p>© 2026 Locale</p>
         </div>

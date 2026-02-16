@@ -18,18 +18,18 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0B0D12]/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-white/95 backdrop-blur-sm">
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-dark">
         Skip to content
       </a>
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 sm:px-10 lg:px-16">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#7D8BFF] to-[#4DD4A6]" />
-          <span className="font-display text-lg font-semibold text-white">Locale</span>
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-accent to-accent/60" />
+          <span className="font-display text-lg font-semibold text-dark">Locale</span>
         </div>
-        <div className="hidden items-center gap-6 text-sm text-slate-300/80 md:flex">
+        <div className="hidden items-center gap-6 text-sm text-muted md:flex">
           {links.map((link) => (
-            <a key={link.href} href={link.href} className="hover:text-white transition-colors">
+            <a key={link.href} href={link.href} className="hover:text-dark transition-colors">
               {link.label}
             </a>
           ))}
@@ -39,7 +39,7 @@ export default function Navbar() {
           {/* Hamburger button — visible below md */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-slate-300 hover:text-white transition-colors"
+            className="md:hidden flex items-center justify-center w-11 h-11 rounded-lg text-muted hover:text-dark transition-colors"
             aria-label="Toggle navigation menu"
             aria-expanded={mobileOpen}
           >
@@ -65,14 +65,14 @@ export default function Navbar() {
 
       {/* Mobile menu panel */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-white/5 bg-[#0B0D12]/95 backdrop-blur-xl">
+        <div className="md:hidden border-t border-border bg-white/98 backdrop-blur-sm">
           <div className="px-6 py-4 space-y-1">
             {links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileOpen(false)}
-                className="block py-3 text-base text-slate-300/90 hover:text-white transition-colors"
+                className="block py-3 text-base text-mid hover:text-dark transition-colors"
               >
                 {link.label}
               </a>

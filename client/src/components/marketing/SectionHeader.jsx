@@ -8,14 +8,14 @@ export default function SectionHeader({
 
   return (
     <div className={`flex flex-col gap-4 ${alignClass}`}>
-      <span className="text-xs uppercase tracking-[0.3em] text-slate-400/70">
+      <span className="text-xs uppercase tracking-[0.3em] text-muted">
         {eyebrow}
       </span>
-      <h2 className="font-display text-3xl font-semibold text-white sm:text-4xl">
+      <h2 className="font-display text-3xl font-semibold text-dark sm:text-4xl">
         {title}
       </h2>
       {description && (
-        <p className="max-w-2xl text-base text-slate-300/80 sm:text-lg">
+        <p className="max-w-2xl text-base text-mid sm:text-lg">
           {description}
         </p>
       )}
