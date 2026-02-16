@@ -22,6 +22,10 @@ export default function useCreatorOnboardingForm() {
   const [portfolioFiles, setPortfolioFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
 
+  // Imported portfolio from social media scraping
+  const [importedPortfolio, setImportedPortfolio] = useState([]);
+  const [vibeTags, setVibeTags] = useState([]);
+
   // Keep ref in sync and revoke all URLs on unmount
   useEffect(() => {
     previewsRef.current = previews;
@@ -65,10 +69,31 @@ export default function useCreatorOnboardingForm() {
     setPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const removeImportedPortfolioItem = (index) => {
+    setImportedPortfolio((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const applyImportData = (data) => {
+    if (data.bio) setBio(data.bio);
+    if (data.contentStyles?.length) setContentStyles(data.contentStyles);
+    if (data.strengths?.length) setStrengths(data.strengths);
+    if (data.neighborhoods?.length) setNeighborhoods(data.neighborhoods);
+    if (data.cuisineSpecialties?.length) setCuisineSpecialties(data.cuisineSpecialties);
+    if (data.vibeTags?.length) setVibeTags(data.vibeTags);
+    if (data.importedPortfolio?.length) setImportedPortfolio(data.importedPortfolio);
+  };
+
   const canProceedFromStep = (step) => {
     if (step === 0) return displayName.trim().length > 0 && bio.trim().length > 0;
     if (step === 1) return contentStyles.length > 0 && strengths.length > 0 && neighborhoods.length > 0;
     if (step === 2) return portfolioFiles.length >= 2;
+    return true;
+  };
+
+  // For 2-step import flow: can proceed from import step
+  const canProceedFromImport = (step) => {
+    if (step === 0) return displayName.trim().length > 0;
+    if (step === 1) return displayName.trim().length > 0 && bio.trim().length > 0 && contentStyles.length > 0 && strengths.length > 0 && neighborhoods.length > 0;
     return true;
   };
 
@@ -82,6 +107,7 @@ export default function useCreatorOnboardingForm() {
     neighborhoods,
     dreamBrands: dreamBrands.length > 0 ? dreamBrands : undefined,
     cuisineSpecialties: cuisineSpecialties.length > 0 ? cuisineSpecialties : undefined,
+    vibeTags: vibeTags.length > 0 ? vibeTags : undefined,
   });
 
   return {
@@ -96,8 +122,10 @@ export default function useCreatorOnboardingForm() {
     neighborhoods, setNeighborhoods,
     dreamBrands, brandInput, setBrandInput,
     portfolioFiles, previews,
+    importedPortfolio, vibeTags,
     toggleItem, addDreamBrand, removeDreamBrand,
     handleFilesSelected, removeFile,
-    canProceedFromStep, buildProfileData,
+    removeImportedPortfolioItem, applyImportData,
+    canProceedFromStep, canProceedFromImport, buildProfileData,
   };
 }

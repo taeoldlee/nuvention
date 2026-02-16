@@ -9,6 +9,7 @@ export const getBrandProfile = () => client.get('/brands/profile');
 export const createBrandProfile = (data) => client.post('/brands/profile', data);
 export const updateBrandProfile = (data) => client.put('/brands/profile', data);
 export const autoImportBrand = (url) => client.post('/brands/auto-import', { url });
+export const analyzeBrandFromPlace = (placeData) => client.post('/brands/analyze-place', placeData);
 
 // ─── Creator Profiles ───
 export const getCreatorProfile = () => client.get('/creators/profile');
@@ -20,6 +21,7 @@ export const uploadPortfolio = (formData, { onUploadProgress } = {}) =>
     onUploadProgress,
   });
 export const getPortfolio = () => client.get('/creators/portfolio');
+export const importCreatorSocial = (data) => client.post('/creators/import-social', data);
 
 // ─── Content Requests + Matching ───
 export const createContentRequest = (data) => client.post('/requests', data);

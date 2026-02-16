@@ -2,40 +2,65 @@ import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { autoImportBrand, createBrandProfile } from '../../api';
+import { autoImportBrand, createBrandProfile, analyzeBrandFromPlace } from '../../api';
 import useOnboardingForm from '../../hooks/useOnboardingForm';
+import useGooglePlaces from '../../hooks/useGooglePlaces';
 import ProgressBar from '../../components/common/ProgressBar';
+import OnboardingStepSearch from '../../components/operator/OnboardingStepSearch';
 import OnboardingStepImport from '../../components/operator/OnboardingStepImport';
-import OnboardingStepBrand from '../../components/operator/OnboardingStepBrand';
-import OnboardingStepCuisine from '../../components/operator/OnboardingStepCuisine';
-import OnboardingStepBudget from '../../components/operator/OnboardingStepBudget';
-import OnboardingStepConfirm from '../../components/operator/OnboardingStepConfirm';
-
-const STEPS = ['Import', 'Brand', 'Cuisine', 'Budget', 'Confirm'];
+import OnboardingStepReview from '../../components/operator/OnboardingStepReview';
 
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
   const { addToast } = useToast();
   const formActions = useOnboardingForm();
+  const { isLoaded: placesLoaded, isAvailable: placesAvailable } = useGooglePlaces();
 
-  // Redirect to landing if not logged in
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
   const { form } = formActions;
 
+  // Determine flow: Google Places (2-step) or URL paste fallback (2-step)
+  const useGoogleFlow = placesAvailable && placesLoaded;
+  const STEPS = ['Search', 'Review'];
+
   const [step, setStep] = useState(0);
-  const [importUrl, setImportUrl] = useState('');
-  const [importing, setImporting] = useState(false);
-  const [importError, setImportError] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
-  const back = () => setStep((s) => Math.max(s - 1, 0));
+  // Fallback URL import state (when no Google Places key)
+  const [importUrl, setImportUrl] = useState('');
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState('');
 
+  // Google Places: user selected a place from autocomplete
+  const handlePlaceSelected = async (placeData) => {
+    setAnalyzing(true);
+    setAnalyzeError('');
+    try {
+      const res = await analyzeBrandFromPlace(placeData);
+      const data = res.data?.data || res.data;
+      formActions.applyImportData(data);
+      // Also store Google Maps URL and photo URLs as visual refs
+      if (placeData.googleMapsUrl) {
+        formActions.updateForm('googleMapsUrl', placeData.googleMapsUrl);
+      }
+      setStep(1);
+    } catch (err) {
+      setAnalyzeError(
+        err.response?.data?.error || 'Analysis failed. Try searching again or set up manually.'
+      );
+    } finally {
+      setAnalyzing(false);
+    }
+  };
+
+  // Fallback: URL paste import
   const handleImport = async () => {
     if (!importUrl.trim()) return;
     setImporting(true);
@@ -55,6 +80,11 @@ export default function Onboarding() {
     } finally {
       setImporting(false);
     }
+  };
+
+  // Manual setup: skip to review with empty form
+  const handleManualSetup = () => {
+    setStep(1);
   };
 
   const handleSubmit = async () => {
@@ -95,53 +125,39 @@ export default function Onboarding() {
             Set up your brand
           </h1>
           <p className="font-body text-muted">
-            Tell us about your business so we can find the right creators.
+            {step === 0
+              ? 'Find your business and we\'ll handle the rest.'
+              : 'Review and tweak your AI-generated profile.'}
           </p>
         </div>
 
         <ProgressBar steps={STEPS} currentStep={step} className="mb-10" />
 
-        {step === 0 && (
+        {step === 0 && useGoogleFlow && (
+          <OnboardingStepSearch
+            analyzing={analyzing}
+            error={analyzeError}
+            onPlaceSelected={handlePlaceSelected}
+            onManualSetup={handleManualSetup}
+          />
+        )}
+
+        {step === 0 && !useGoogleFlow && (
           <OnboardingStepImport
             importUrl={importUrl}
             setImportUrl={setImportUrl}
             importing={importing}
             importError={importError}
             onImport={handleImport}
-            onSkip={() => setStep(1)}
+            onSkip={handleManualSetup}
           />
         )}
 
         {step === 1 && (
-          <OnboardingStepBrand
+          <OnboardingStepReview
             formActions={formActions}
-            onBack={back}
-            onNext={next}
-          />
-        )}
-
-        {step === 2 && (
-          <OnboardingStepCuisine
-            formActions={formActions}
-            onBack={back}
-            onNext={next}
-          />
-        )}
-
-        {step === 3 && (
-          <OnboardingStepBudget
-            formActions={formActions}
-            onBack={back}
-            onNext={next}
-          />
-        )}
-
-        {step === 4 && (
-          <OnboardingStepConfirm
-            form={form}
             saving={saving}
             saveError={saveError}
-            onBack={back}
             onSubmit={handleSubmit}
           />
         )}

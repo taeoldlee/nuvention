@@ -125,6 +125,14 @@ export default function useOnboardingForm() {
       contentComfortZones: data.contentComfortZones?.length
         ? data.contentComfortZones
         : prev.contentComfortZones,
+      // Extended fields for AI-powered onboarding
+      ...(data.vibeScales && { vibeScales: { ...prev.vibeScales, ...data.vibeScales } }),
+      ...(data.guestExperienceKeywords?.length && { guestExperienceKeywords: data.guestExperienceKeywords }),
+      ...(data.cuisineTypes?.length && { cuisineTypes: data.cuisineTypes }),
+      ...(data.budgetMin != null && { budgetMin: data.budgetMin }),
+      ...(data.budgetMax != null && { budgetMax: data.budgetMax }),
+      ...(data.contentNoGos != null && { contentNoGos: data.contentNoGos }),
+      ...(data.visualRefUrls?.length && { visualRefUrls: data.visualRefUrls }),
     }));
   };
 
@@ -140,6 +148,15 @@ export default function useOnboardingForm() {
 
   const canProceedFromStep2 =
     form.budgetMin > 0 && form.budgetMax >= form.budgetMin;
+
+  const canSubmitReview =
+    form.businessName.trim() &&
+    effectiveNeighborhood &&
+    form.vibes.length > 0 &&
+    form.values.length > 0 &&
+    form.contentComfortZones.length > 0 &&
+    form.budgetMin > 0 &&
+    form.budgetMax >= form.budgetMin;
 
   return {
     form,
@@ -158,5 +175,6 @@ export default function useOnboardingForm() {
     effectiveNeighborhood,
     canProceedFromStep1,
     canProceedFromStep2,
+    canSubmitReview,
   };
 }
