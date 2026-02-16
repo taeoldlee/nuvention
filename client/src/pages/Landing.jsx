@@ -23,80 +23,80 @@ import Button from '../components/marketing/Button';
 const steps = [
   {
     step: '01',
-    title: 'Brand alignment intake',
+    title: 'Set your vibe',
     description:
-      'Capture vibe sliders, values, guest‑experience keywords, and optional visual references so creators understand your brand before anything else.',
+      'Answer a few quick questions about your place. We use this to find creators who already shoot your style.',
   },
   {
     step: '02',
-    title: 'Evidence‑based shortlist',
+    title: 'Pick from 3 options',
     description:
-      'Review a maximum of three creators with content previews first and clear evidence: venue similarity, aesthetic markers, and community signals.',
+      'See real content samples from creators matched to your vibe. No follower counts, no profiles — just the work.',
   },
   {
     step: '03',
-    title: 'Commission with clarity',
+    title: 'Approve and post',
     description:
-      'Launch a standardized brief, review drafts in‑platform, allow one minor revision, and receive usage rights documentation with escrow protection.',
+      'Review the draft, request one tweak if needed, and download your content with full usage rights. That\'s it.',
   },
 ];
 
 const features = [
   {
     icon: Fingerprint,
-    title: 'Anonymous creator evaluation',
+    title: 'Content first, profile later',
     description:
-      'Assess content quality before identity is revealed. Bias stays low and brand fit stays high.',
+      'See the work before you see the creator. You\'re picking content, not followers.',
   },
   {
     icon: MapPin,
-    title: 'Hyperlocal context',
+    title: 'Creators who know your neighborhood',
     description:
-      'Creators are matched based on real neighborhood proximity and venue similarity.',
+      'We match based on where they shoot — so the content already looks like it belongs.',
   },
   {
     icon: Sparkles,
-    title: 'Clear creative direction',
+    title: 'No writing briefs from scratch',
     description:
-      'Brief templates make it easy to specify goals, subject, and tone without writing from scratch.',
+      'Pick from templates. Tell us what you need photos of. We handle the rest.',
   },
   {
     icon: ClipboardCheck,
-    title: 'In‑platform review',
+    title: 'Review and approve in one place',
     description:
-      'Approve drafts, request one revision, and track delivery without switching tools.',
+      'See drafts, request one tweak, download finals. No email chains.',
   },
   {
     icon: FileText,
-    title: 'Usage rights built‑in',
+    title: 'Full usage rights, documented',
     description:
-      'Every project includes a clean usage rights document you can file with confidence.',
+      'Post anywhere, run ads, repurpose freely. The paperwork is already done.',
   },
   {
     icon: Wallet,
-    title: 'Payment protection',
+    title: 'Pay when you approve',
     description:
-      'Escrow‑style handling protects both sides and keeps projects on schedule.',
+      'Your payment is held until you\'re happy with the content. No risk.',
   },
 ];
 
 const trustPoints = [
   {
-    title: 'Brand safety by design',
+    title: 'Matched by style, not follower count',
     description:
-      'Creators are vetted and matched through evidence signals, not follower counts or popularity.',
+      'We look at what creators shoot, not how many people follow them.',
     icon: ShieldCheck,
   },
   {
-    title: 'Review before posting',
+    title: 'Approve before anything goes live',
     description:
-      'Nothing goes live without your approval, with one included round of minor revisions.',
+      'Review drafts, request one tweak, then download. You\'re always in control.',
     icon: Eye,
   },
   {
-    title: 'Usage rights documented',
+    title: 'Full rights, no questions',
     description:
-      'Clear documentation ensures everyone knows exactly how content can be used.',
+      'Post it, boost it, reuse it. The paperwork is handled.',
     icon: FileText,
   },
   {
@@ -109,21 +109,21 @@ const trustPoints = [
 
 const pricing = [
   {
-    title: 'Per‑project commission',
-    price: 'Flat commission',
-    description: 'Pay only when you commission a creator.',
+    title: 'Per‑project pricing',
+    price: 'Flat fee per project',
+    description: 'Pay only when you order content.',
     items: [
-      'Evidence‑based matching (max 3 creators)',
-      'Brief template + usage rights documentation',
-      'In‑platform review with one revision',
-      'Payment protection and escrow handling',
+      'Matched creators (max 3 options)',
+      'Brief template + full usage rights',
+      'In‑app review with one revision',
+      'Payment held until you approve',
     ],
     highlight: true,
   },
   {
     title: 'Multi‑location teams',
-    price: 'Transparent team plan',
-    description: 'Ideal for small brands managing multiple locations.',
+    price: 'One account, multiple locations',
+    description: 'Centralized billing, shared creator pool.',
     items: [
       'Centralized brand standards',
       'Shared creator pool with locality controls',
@@ -134,24 +134,24 @@ const pricing = [
 
 const faqs = [
   {
-    question: 'How do you make sure creators fit our brand?',
+    question: 'How do you match creators to my place?',
     answer:
-      'We capture your vibe, values, guest‑experience keywords, and references first, then match on evidence signals like venue similarity and aesthetic markers.',
+      'You tell us your vibe — we find creators who already shoot that style in your area. You see their work before you see their profile.',
   },
   {
-    question: 'Will we see creator profiles upfront?',
+    question: 'Do I see who the creator is before I choose?',
     answer:
-      'No. You evaluate content first. Creator identity is revealed only after you select a match.',
+      'No — and that\'s intentional. You pick based on the content, not the follower count. You see who they are after you choose.',
   },
   {
-    question: 'What protects us from posting risk?',
+    question: 'What if I don\'t like the content?',
     answer:
-      'You review drafts in‑platform, request one minor revision, and approve before anything goes live. Usage rights are documented.',
+      'You review everything before it\'s final. You get one round of revisions, and nothing goes anywhere until you approve. If it\'s still not right, you don\'t pay.',
   },
   {
-    question: 'Is this a marketplace or agency?',
+    question: 'Is this a marketplace or an agency?',
     answer:
-      'Neither. Locale is an opinionated commissioning product focused on brand safety, not bidding or creator discovery.',
+      'Neither. Think of it like ordering photography — you tell us what you need, we bring you options, you pick one.',
   },
 ];
 
@@ -173,16 +173,16 @@ export default function Landing() {
 
           <FadeIn className="flex flex-col items-center gap-6">
             <span className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.3em] text-slate-300/80">
-              Brand‑safe commissioning
+              For restaurants & cafés
             </span>
             <h1 className="max-w-3xl font-display text-4xl font-semibold text-white sm:text-5xl lg:text-6xl">
-              Commission local UGC with confidence.
+              Get content that looks like your place.
             </h1>
             <p className="max-w-2xl text-base text-slate-300/80 sm:text-lg">
-              Locale is an opinionated, hyperlocal UGC commissioning platform for restaurants and cafés. It helps you approve content fast because the match is brand‑safe and explainable.
+              We match you with local creators who already shoot your vibe. Pick from 3 options, approve what fits, and post. No negotiations, no management.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
-              <Button onClick={handleCreateBrief}>Create a brief</Button>
+              <Button onClick={handleCreateBrief}>Get started</Button>
               <Button onClick={handleCreateBrief} variant="secondary">
                 Request demo
               </Button>
@@ -191,10 +191,10 @@ export default function Landing() {
 
           <FadeIn className="flex flex-wrap items-center justify-center gap-3">
             {[
-              'Brand‑safe process',
-              'Evidence‑based matching',
-              'Usage rights included',
-              'Escrow protection',
+              '3 options, not 300',
+              'Full usage rights',
+              'Review before posting',
+              'Payment protected',
             ].map((item) => (
               <span
                 key={item}
@@ -211,14 +211,14 @@ export default function Landing() {
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Trust strip</p>
               <p className="mt-3 text-lg text-white">
-                Built for operators who need confidence, not just speed.
+                Built for busy owners who don't have time to manage creators.
               </p>
               <p className="mt-2 text-sm text-slate-300/70">
-                Locale prioritizes brand safety with evidence‑based matching and controlled identity disclosure.
+                Every creator is matched to your vibe before you see their profile — so you're choosing content, not followers.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {['No follower bias', 'Max 3 options', 'Review before posting'].map((label) => (
+              {['Style over followers', 'Just 3 options', 'Nothing posts without approval'].map((label) => (
                 <span key={label} className="rounded-full border border-white/10 px-4 py-2 text-xs text-slate-300/80">
                   {label}
                 </span>
@@ -231,8 +231,8 @@ export default function Landing() {
           <FadeIn>
             <SectionHeader
               eyebrow="How it works"
-              title="Three steps from brand alignment to approved content."
-              description="The flow is intentionally small so decision‑making stays fast and brand‑safe."
+              title="Three steps to content you'll actually post."
+              description="Tell us your vibe once, pick your favorite option, and you're done."
             />
           </FadeIn>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -248,8 +248,8 @@ export default function Landing() {
           <FadeIn>
             <SectionHeader
               eyebrow="Core features"
-              title="Built for trust, clarity, and calm approvals."
-              description="No discovery feeds, no bidding. Just a clean commissioning workflow designed for local operators."
+              title="Everything that makes creator content stressful — gone."
+              description="No browsing hundreds of profiles. No back‑and‑forth negotiations. No surprises."
             />
           </FadeIn>
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -266,8 +266,8 @@ export default function Landing() {
             <FadeIn>
               <SectionHeader
                 eyebrow="Trust & safety"
-                title="Brand safety is the product, not an add‑on."
-                description="Every step prioritizes clear expectations, controlled exposure, and documented rights."
+                title="You approve everything before it goes anywhere."
+                description="Clear terms upfront. One round of revisions. Full usage rights. Nothing surprises you."
               />
               <div className="mt-8 space-y-5">
                 {trustPoints.map((item) => (
@@ -320,8 +320,8 @@ export default function Landing() {
           <FadeIn>
             <SectionHeader
               eyebrow="Pricing"
-              title="Simple, transparent pricing for local teams."
-              description="Pay per project with a clear commission model, or consolidate multiple locations."
+              title="Pay per project. No subscriptions, no surprises."
+              description="Flat fee per project, or consolidate multiple locations under one account."
               align="center"
             />
           </FadeIn>
@@ -338,7 +338,7 @@ export default function Landing() {
           <FadeIn>
             <SectionHeader
               eyebrow="FAQ"
-              title="Short answers for busy operators."
+              title="Common questions"
               description="If you need more detail, we'll walk you through a live flow in minutes."
               align="center"
             />
@@ -355,14 +355,14 @@ export default function Landing() {
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-slate-300/70">Ready when you are</p>
               <h2 className="mt-4 font-display text-3xl font-semibold text-white">
-                Commission your next UGC project with confidence.
+                Ready to get content that actually looks like your place?
               </h2>
               <p className="mt-3 text-sm text-slate-300/80">
-                We'll guide your team through brand alignment, evidence‑based matching, and an in‑platform review flow.
+                Set your vibe once, pick from 3 options, and post. We'll walk you through it.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button onClick={handleCreateBrief}>Create a brief</Button>
+              <Button onClick={handleCreateBrief}>Get started</Button>
               <Button onClick={handleCreateBrief} variant="secondary">Request demo</Button>
             </div>
           </FadeIn>
