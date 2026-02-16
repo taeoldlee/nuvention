@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { autoImportBrand, createBrandProfile } from '../../api';
 import useOnboardingForm from '../../hooks/useOnboardingForm';
 import ProgressBar from '../../components/common/ProgressBar';
@@ -15,6 +16,7 @@ const STEPS = ['Import', 'Brand', 'Cuisine', 'Budget', 'Confirm'];
 export default function Onboarding() {
   const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
+  const { addToast } = useToast();
   const formActions = useOnboardingForm();
 
   // Redirect to landing if not logged in
@@ -42,6 +44,9 @@ export default function Onboarding() {
       const res = await autoImportBrand(importUrl.trim());
       const data = res.data?.data || res.data;
       formActions.applyImportData(data);
+      if (res.data?.source === 'manual') {
+        addToast('Could not auto-detect brand info. Please fill in manually.', 'info');
+      }
       setStep(1);
     } catch (err) {
       setImportError(

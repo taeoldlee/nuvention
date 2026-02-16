@@ -193,10 +193,14 @@ router.post("/portfolio", (req, res, next) => {
       let captions = [];
       let contentTypes = [];
       try {
-        captions = req.body.captions ? JSON.parse(req.body.captions) : [];
-        contentTypes = req.body.contentTypes ? JSON.parse(req.body.contentTypes) : [];
+        if (req.body.captions) captions = JSON.parse(req.body.captions);
       } catch {
-        return res.status(400).json({ error: "Invalid JSON in captions or contentTypes" });
+        return res.status(400).json({ error: "Invalid JSON in captions" });
+      }
+      try {
+        if (req.body.contentTypes) contentTypes = JSON.parse(req.body.contentTypes);
+      } catch {
+        return res.status(400).json({ error: "Invalid JSON in contentTypes" });
       }
 
       const portfolioItems = [];

@@ -71,7 +71,7 @@ export default function Onboarding() {
         }).catch((err) => {
           console.warn('Portfolio upload failed:', err.message);
           setUploading(false);
-          setUploadError('Portfolio upload failed. You can re-upload from Settings later.');
+          setUploadError('Portfolio upload failed. Please try again by refreshing the page.');
         });
       }
     } catch (err) {
