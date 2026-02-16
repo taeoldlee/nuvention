@@ -4,6 +4,7 @@ const prisma = require("../config/db");
 const { requireAuth, requireOperatorWithBrand, requireCreatorWithProfile } = require("../middleware/auth");
 const { createPayout } = require("../services/payments");
 const { generateUsageRightsPDF } = require("../services/documents");
+const { createNotification } = require("../services/notifications");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -256,6 +257,20 @@ router.post("/:id/drafts", requireCreatorWithProfile, async (req, res, next) => 
       return newDraft;
     });
 
+    // Notify operator about new draft
+    const projectWithBrand = await prisma.project.findUnique({
+      where: { id: project.id },
+      include: { brandProfile: { select: { userId: true } } },
+    });
+    if (projectWithBrand?.brandProfile?.userId) {
+      createNotification(projectWithBrand.brandProfile.userId, {
+        type: "DRAFT_SUBMITTED",
+        title: "New draft submitted",
+        body: `A creator submitted a new draft for review.`,
+        linkUrl: `/operator/project/${project.id}`,
+      }).catch(() => {});
+    }
+
     res.status(201).json({ draft });
   } catch (err) {
     next(err);
@@ -326,6 +341,20 @@ router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req
       return d;
     });
 
+    // Notify creator
+    const projWithCreator = await prisma.project.findUnique({
+      where: { id: project.id },
+      include: { creatorProfile: { select: { userId: true } } },
+    });
+    if (projWithCreator?.creatorProfile?.userId) {
+      createNotification(projWithCreator.creatorProfile.userId, {
+        type: "APPROVED",
+        title: "Your draft was approved!",
+        body: "Great work! The brand approved your submission.",
+        linkUrl: `/creator/project/${project.id}`,
+      }).catch(() => {});
+    }
+
     res.json({ draft: updatedDraft });
   } catch (err) {
     next(err);
@@ -377,6 +406,20 @@ router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (re
 
       return d;
     });
+
+    // Notify creator
+    const projForRevision = await prisma.project.findUnique({
+      where: { id: project.id },
+      include: { creatorProfile: { select: { userId: true } } },
+    });
+    if (projForRevision?.creatorProfile?.userId) {
+      createNotification(projForRevision.creatorProfile.userId, {
+        type: "REVISION_REQUESTED",
+        title: "Revision requested",
+        body: feedback.slice(0, 100),
+        linkUrl: `/creator/project/${project.id}`,
+      }).catch(() => {});
+    }
 
     res.json({ draft: updatedDraft });
   } catch (err) {
@@ -438,6 +481,16 @@ router.post("/:id/deliver", requireOperatorWithBrand, async (req, res, next) => 
         where: { id: updatedProject.match.contentRequestId },
         data: { status: "COMPLETED" },
       });
+    }
+
+    // Notify creator
+    if (updatedProject.creatorProfile?.user?.id) {
+      createNotification(updatedProject.creatorProfile.user.id, {
+        type: "DELIVERED",
+        title: "Project delivered!",
+        body: "Your project has been marked as delivered. Payment released.",
+        linkUrl: `/creator/project/${project.id}`,
+      }).catch(() => {});
     }
 
     res.json({ project: updatedProject });

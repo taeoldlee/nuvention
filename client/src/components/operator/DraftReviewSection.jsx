@@ -5,8 +5,28 @@ import Btn from '../common/Btn';
 export default function DraftReviewSection({ draft, error, onApprove, onRevision, actionLoading }) {
   const [showRevisionInput, setShowRevisionInput] = useState(false);
   const [revisionNotes, setRevisionNotes] = useState('');
+  const [rejectedIndexes, setRejectedIndexes] = useState(new Set());
 
   const images = draft.fileUrls || draft.images;
+
+  const toggleImage = (index) => {
+    setRejectedIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index);
+      else next.add(index);
+      return next;
+    });
+  };
+
+  const handleRevisionSubmit = () => {
+    let notes = revisionNotes.trim();
+    if (rejectedIndexes.size > 0) {
+      const nums = Array.from(rejectedIndexes).sort((a, b) => a - b).map((i) => `#${i + 1}`);
+      const prefix = `Please re-shoot image${nums.length > 1 ? 's' : ''} ${nums.join(', ')}.`;
+      notes = notes ? `${prefix} ${notes}` : prefix;
+    }
+    onRevision(draft.id, notes);
+  };
 
   return (
     <div className="card hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-shadow duration-300">
@@ -19,23 +39,52 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
         </span>
       </div>
 
-      {/* Draft Images */}
+      {/* Draft Images with per-image approval */}
       {images?.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
-          {images.map((img, i) => (
-            <div
-              key={i}
-              className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan"
-            >
-              <img
-                src={typeof img === 'string' ? img : img.url}
-                alt={`Draft ${i + 1}`}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
-          ))}
-        </div>
+        <>
+          <p className="text-xs text-muted font-body mb-2">Click images to mark for revision:</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+            {images.map((img, i) => {
+              const isRejected = rejectedIndexes.has(i);
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => toggleImage(i)}
+                  className={`relative aspect-square rounded-xl border-2 overflow-hidden bg-bgTan transition-all ${
+                    isRejected ? 'border-red-400 ring-2 ring-red-200' : 'border-border hover:border-accent/40'
+                  }`}
+                >
+                  <img
+                    src={typeof img === 'string' ? img : img.url}
+                    alt={`Draft ${i + 1}`}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  {/* Status overlay */}
+                  <div className={`absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center ${
+                    isRejected ? 'bg-red-500' : 'bg-green/90'
+                  }`}>
+                    {isRejected ? (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+          {rejectedIndexes.size > 0 && (
+            <p className="text-xs text-red-600 font-body mb-3">
+              {rejectedIndexes.size} image{rejectedIndexes.size !== 1 ? 's' : ''} marked for revision
+            </p>
+          )}
+        </>
       )}
 
       {/* Creator Notes */}
@@ -70,9 +119,9 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
           <div className="flex gap-2">
             <Btn
               size="sm"
-              onClick={() => onRevision(draft.id, revisionNotes.trim())}
+              onClick={handleRevisionSubmit}
               loading={actionLoading === 'revision'}
-              disabled={!revisionNotes.trim()}
+              disabled={!revisionNotes.trim() && rejectedIndexes.size === 0}
             >
               Send Revision Request
             </Btn>
@@ -94,11 +143,12 @@ export default function DraftReviewSection({ draft, error, onApprove, onRevision
             onClick={() => onApprove(draft.id)}
             loading={actionLoading === 'approve'}
             className="flex-1"
+            disabled={rejectedIndexes.size > 0}
           >
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Approve
+            {rejectedIndexes.size > 0 ? 'Deselect rejected to approve' : 'Approve All'}
           </Btn>
           <Btn
             variant="secondary"

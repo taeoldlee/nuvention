@@ -429,8 +429,21 @@ async function generateMatches(brand, request, allCreators) {
     return [];
   }
 
+  // Filter out unavailable creators and those with 3+ active projects
+  const available = allCreators.filter((creator) => {
+    if (creator.isAvailable === false) return false;
+    const activeProjects = Array.isArray(creator.projects)
+      ? creator.projects.filter((p) =>
+          ["BRIEF_SENT", "DRAFT_SUBMITTED", "REVISION_REQUESTED"].includes(p.status)
+        )
+      : [];
+    return activeProjects.length < 3;
+  });
+
+  const pool = available.length > 0 ? available : allCreators;
+
   // Score all creators
-  const scored = allCreators.map((creator) => ({
+  const scored = pool.map((creator) => ({
     creator,
     score: scoreCreator(brand, request, creator),
   }));

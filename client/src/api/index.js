@@ -21,6 +21,7 @@ export const uploadPortfolio = (formData, { onUploadProgress } = {}) =>
     onUploadProgress,
   });
 export const getPortfolio = () => client.get('/creators/portfolio');
+export const deletePortfolioItem = (id) => client.delete(`/creators/portfolio/${id}`);
 export const importCreatorSocial = (data) => client.post('/creators/import-social', data);
 
 // ─── Content Requests + Matching ───
@@ -44,11 +45,24 @@ export const deliverProject = (projectId) =>
 export const downloadUsageRightsPDF = (projectId) =>
   client.get(`/projects/${projectId}/usage-rights-pdf`, { responseType: 'blob' });
 
+// ─── Messages ───
+export const getProjectMessages = (projectId) => client.get(`/projects/${projectId}/messages`);
+export const sendProjectMessage = (projectId, text) =>
+  client.post(`/projects/${projectId}/messages`, { text });
+
 // ─── Briefs (Creator) ───
 export const getBriefs = () => client.get('/briefs');
 export const markBriefViewed = (matchId) => client.post(`/briefs/${matchId}/view`);
 export const acceptBrief = (matchId) => client.post(`/briefs/${matchId}/accept`);
 export const declineBrief = (matchId) => client.post(`/briefs/${matchId}/decline`);
+export const askBriefQuestion = (matchId, text) =>
+  client.post(`/briefs/${matchId}/question`, { text });
+
+// ─── Notifications ───
+export const getNotifications = () => client.get('/notifications');
+export const getUnreadCount = () => client.get('/notifications/unread-count');
+export const markNotificationRead = (id) => client.post(`/notifications/${id}/read`);
+export const markAllNotificationsRead = () => client.post('/notifications/read-all');
 
 // ─── AI ───
 export const analyzeBrand = (data) => client.post('/ai/analyze-brand', data);

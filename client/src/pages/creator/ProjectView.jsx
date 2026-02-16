@@ -10,6 +10,7 @@ import ProjectDetailsCard from '../../components/creator/ProjectDetailsCard';
 import DraftUploadSection from '../../components/creator/DraftUploadSection';
 import { DraftSubmittedView, ApprovedView } from '../../components/creator/DraftStatusView';
 import useDraftSubmission from '../../hooks/useDraftSubmission';
+import MessageThread from '../../components/common/MessageThread';
 import FadeIn from '../../components/marketing/FadeIn';
 
 export default function ProjectView() {
@@ -105,6 +106,8 @@ export default function ProjectView() {
       {status === 'DRAFT_SUBMITTED' && latestDraft && <DraftSubmittedView latestDraft={latestDraft} />}
 
       {(status === 'APPROVED' || status === 'DELIVERED') && <ApprovedView isDelivered={status === 'DELIVERED'} latestDraft={latestDraft} navigate={navigate} />}
+
+      <MessageThread projectId={id} />
 
       {/* Payment Section */}
       {project.transaction && (

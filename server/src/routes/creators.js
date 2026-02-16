@@ -133,6 +133,7 @@ router.put("/profile", async (req, res, next) => {
       vibeTags,
       profilePhotoUrl,
       cuisineSpecialties,
+      isAvailable,
     } = req.body;
 
     const profile = await prisma.creatorProfile.update({
@@ -149,6 +150,7 @@ router.put("/profile", async (req, res, next) => {
         ...(vibeTags !== undefined && { vibeTags }),
         ...(profilePhotoUrl !== undefined && { profilePhotoUrl }),
         ...(cuisineSpecialties !== undefined && { cuisineSpecialties }),
+        ...(isAvailable !== undefined && { isAvailable }),
       },
       include: {
         portfolioItems: {
@@ -251,6 +253,39 @@ router.get("/portfolio", async (req, res, next) => {
     });
 
     res.json({ portfolioItems });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/creators/portfolio/:id
+ * Delete a portfolio item (verify ownership).
+ */
+router.delete("/portfolio/:id", async (req, res, next) => {
+  try {
+    if (req.user.role !== "CREATOR") {
+      return res.status(403).json({ error: "Only creators can delete portfolio items" });
+    }
+
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!creatorProfile) {
+      return res.status(404).json({ error: "Creator profile not found" });
+    }
+
+    const item = await prisma.portfolioItem.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!item || item.creatorProfileId !== creatorProfile.id) {
+      return res.status(404).json({ error: "Portfolio item not found" });
+    }
+
+    await prisma.portfolioItem.delete({ where: { id: req.params.id } });
+    res.json({ message: "Portfolio item deleted" });
   } catch (err) {
     next(err);
   }

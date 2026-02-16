@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBriefs, markBriefViewed, acceptBrief, declineBrief } from '../../api';
+import { getBriefs, markBriefViewed, acceptBrief, declineBrief, askBriefQuestion } from '../../api';
 import { formatCompensation } from '../../utils/constants';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -19,6 +19,9 @@ export default function BriefDetail() {
   const [accepted, setAccepted] = useState(false);
   const [acceptedData, setAcceptedData] = useState(null);
   const [error, setError] = useState(null);
+  const [question, setQuestion] = useState('');
+  const [askingQuestion, setAskingQuestion] = useState(false);
+  const [preAcceptMessages, setPreAcceptMessages] = useState([]);
 
   useEffect(() => {
     async function fetchBrief() {
@@ -31,6 +34,7 @@ export default function BriefDetail() {
         );
         if (found) {
           setBrief(found);
+          setPreAcceptMessages(found.preAcceptMessages || []);
         } else {
           setError('Brief not found.');
         }
@@ -63,6 +67,20 @@ export default function BriefDetail() {
       );
     } finally {
       setAccepting(false);
+    }
+  };
+
+  const handleAskQuestion = async () => {
+    if (!question.trim() || askingQuestion) return;
+    setAskingQuestion(true);
+    try {
+      const res = await askBriefQuestion(matchId, question.trim());
+      setPreAcceptMessages(res.data.preAcceptMessages || []);
+      setQuestion('');
+    } catch {
+      setError('Could not send question. Please try again.');
+    } finally {
+      setAskingQuestion(false);
     }
   };
 
@@ -312,6 +330,85 @@ export default function BriefDetail() {
         </div>
       </div>
       </FadeIn>
+
+      {/* Brand Context Clues */}
+      {brief?.brand && (
+        <div className="card mb-6">
+          <h3 className="font-display text-base font-semibold text-dark mb-3">About this brand</h3>
+          <div className="space-y-2">
+            {brief.brand.neighborhood && (
+              <div className="flex items-center gap-2 text-sm font-body text-mid">
+                <svg className="w-4 h-4 text-creatorAccent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+                </svg>
+                <span>{brief.brand.neighborhood}</span>
+              </div>
+            )}
+            {brief.brand.cuisineTypes?.length > 0 && (
+              <div className="flex items-center gap-2 text-sm font-body text-mid">
+                <svg className="w-4 h-4 text-creatorAccent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8.25v-1.5m0 1.5c-1.355 0-2.697.056-4.024.166C6.845 8.51 6 9.473 6 10.608v2.513m6-4.87c1.355 0 2.697.055 4.024.165C17.155 8.51 18 9.473 18 10.608v2.513m-3-4.87v-1.5m-6 1.5v-1.5m12 9.75l-1.5.75a3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0 3.354 3.354 0 00-3 0 3.354 3.354 0 01-3 0L3 16.5m18-12.276a2.285 2.285 0 00-.921-.421l-.879-.22a.75.75 0 01-.576-.672l-.1-.8A2.25 2.25 0 0016.3 1.5h-4.6a2.25 2.25 0 00-2.224 1.611l-.1.8a.75.75 0 01-.576.672l-.879.22a2.285 2.285 0 00-.921.421" />
+                </svg>
+                <span>{brief.brand.cuisineTypes.join(', ')}</span>
+              </div>
+            )}
+            {brief.brand.contentComfortZones?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {brief.brand.contentComfortZones.map((zone) => (
+                  <span key={zone} className="px-2.5 py-1 rounded-full text-xs font-medium bg-bgWarm text-mid border border-border">
+                    {zone}
+                  </span>
+                ))}
+              </div>
+            )}
+            {brief.brand.vibe?.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-1">
+                {brief.brand.vibe.map((v) => (
+                  <span key={v} className="px-2.5 py-1 rounded-full text-xs font-medium bg-creatorLight text-creatorAccent">
+                    {v}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Ask a Question */}
+      <div className="card mb-6">
+        <h3 className="font-display text-base font-semibold text-dark mb-3">Ask a Question</h3>
+        <p className="text-xs text-muted font-body mb-3">Have questions before accepting? Ask the brand directly.</p>
+
+        {preAcceptMessages.length > 0 && (
+          <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+            {preAcceptMessages.map((msg, i) => (
+              <div key={i} className="bg-bgWarm rounded-lg px-3 py-2">
+                <p className="text-xs font-semibold text-dark font-body">{msg.name}</p>
+                <p className="text-sm text-mid font-body">{msg.text}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <form onSubmit={(e) => { e.preventDefault(); handleAskQuestion(); }} className="flex gap-2">
+          <input
+            type="text"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Type your question..."
+            className="input input-creator flex-1 text-sm"
+            maxLength={500}
+          />
+          <button
+            type="submit"
+            disabled={!question.trim() || askingQuestion}
+            className="px-4 py-2 bg-creatorAccent text-white rounded-xl text-sm font-medium hover:bg-creatorAccent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {askingQuestion ? '...' : 'Ask'}
+          </button>
+        </form>
+      </div>
 
       {/* Error */}
       {error && (

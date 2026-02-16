@@ -15,6 +15,7 @@ export default function Library() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filter, setFilter] = useState('');
+  const [expiryFilter, setExpiryFilter] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -43,10 +44,27 @@ export default function Library() {
   const getContentType = (p) =>
     p.match?.contentRequest?.contentType || p.contentType || '';
 
+  const parseRightsDuration = (rights) => {
+    if (!rights) return 12;
+    const match = rights.match(/(\d+)\s*(month|year)/i);
+    if (!match) return 12;
+    return match[2].toLowerCase().startsWith('year') ? parseInt(match[1]) * 12 : parseInt(match[1]);
+  };
+
+  const getExpiryDays = (p) => {
+    const months = parseRightsDuration(p.usageRights);
+    const deliveredAt = new Date(p.updatedAt);
+    const expiresAt = new Date(deliveredAt);
+    expiresAt.setMonth(expiresAt.getMonth() + months);
+    return Math.ceil((expiresAt - new Date()) / (1000 * 60 * 60 * 24));
+  };
+
   const filteredProjects = useMemo(() => {
-    if (!filter) return completedProjects;
-    return completedProjects.filter((p) => getContentType(p) === filter);
-  }, [completedProjects, filter]);
+    let result = completedProjects;
+    if (filter) result = result.filter((p) => getContentType(p) === filter);
+    if (expiryFilter) result = result.filter((p) => getExpiryDays(p) <= 30);
+    return result;
+  }, [completedProjects, filter, expiryFilter]);
 
   // Collect unique content types that actually exist
   const availableTypes = useMemo(() => {
@@ -101,17 +119,22 @@ export default function Library() {
           <div className="flex flex-wrap gap-2 mb-6">
             <Chip
               label="All"
-              selected={!filter}
-              onClick={() => setFilter('')}
+              selected={!filter && !expiryFilter}
+              onClick={() => { setFilter(''); setExpiryFilter(false); }}
             />
             {availableTypes.map((type) => (
               <Chip
                 key={type}
                 label={type}
                 selected={filter === type}
-                onClick={() => setFilter((prev) => (prev === type ? '' : type))}
+                onClick={() => { setFilter((prev) => (prev === type ? '' : type)); setExpiryFilter(false); }}
               />
             ))}
+            <Chip
+              label="Expiring Soon"
+              selected={expiryFilter}
+              onClick={() => { setExpiryFilter(!expiryFilter); setFilter(''); }}
+            />
           </div>
         )}
 
@@ -207,6 +230,21 @@ export default function Library() {
                       ) : null}
                     </div>
                   </div>
+
+                  {/* Usage Rights Expiration Badge */}
+                  {(() => {
+                    const days = getExpiryDays(project);
+                    if (days <= 0) return (
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700">Expired</span>
+                    );
+                    if (days <= 30) return (
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-orange-100 text-orange-700">Expires in {days}d</span>
+                    );
+                    if (days <= 90) return (
+                      <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-100 text-yellow-700">Expires in {Math.floor(days / 30)}mo</span>
+                    );
+                    return null;
+                  })()}
 
                   {/* Deliverables preview */}
                   {project.deliverables && (

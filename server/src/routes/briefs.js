@@ -4,6 +4,7 @@ const prisma = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
 const { generateUsageRightsDoc } = require("../services/documents");
 const { createCharge } = require("../services/payments");
+const { createNotification } = require("../services/notifications");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -66,6 +67,7 @@ router.get("/", async (req, res, next) => {
       style: match.style,
       compensationType: match.contentRequest?.compensationType || "FLAT_FEE",
       compensationDetails: match.contentRequest?.compensationDetails || null,
+      preAcceptMessages: match.preAcceptMessages || [],
       contentRequest: {
         id: match.contentRequest.id,
         contentType: match.contentRequest.contentType,
@@ -76,6 +78,8 @@ router.get("/", async (req, res, next) => {
         businessName: match.contentRequest.brandProfile.businessName,
         neighborhood: match.contentRequest.brandProfile.neighborhood,
         vibe: match.contentRequest.brandProfile.vibe,
+        contentComfortZones: match.contentRequest.brandProfile.contentComfortZones,
+        cuisineTypes: match.contentRequest.brandProfile.cuisineTypes,
         profilePhotoUrl: match.contentRequest.brandProfile.profilePhotoUrl,
         user: match.contentRequest.brandProfile.user,
       },
@@ -248,12 +252,84 @@ router.post("/:matchId/accept", async (req, res, next) => {
       await createCharge(project.id, match.price);
     }
 
+    // Notify operator that creator accepted
+    const operatorUserId = project.brandProfile?.user?.id || project.brandProfile?.userId;
+    if (operatorUserId) {
+      createNotification(operatorUserId, {
+        type: "BRIEF_ACCEPTED",
+        title: "Creator accepted your brief",
+        body: `${creatorProfile.displayName || req.user.name} accepted your ${match.contentRequest?.contentType || "content"} brief.`,
+        linkUrl: `/operator/project/${project.id}`,
+      }).catch(() => {});
+    }
+
     res.json({
       message: "Brief accepted",
       project,
       brandName: project.brandProfile?.businessName || project.brandProfile?.user?.name,
       projectId: project.id,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/briefs/:matchId/question
+ * Creator asks a pre-accept question on a match.
+ * Body: { text }
+ */
+router.post("/:matchId/question", async (req, res, next) => {
+  try {
+    if (req.user.role !== "CREATOR") {
+      return res.status(403).json({ error: "Only creators can ask questions" });
+    }
+
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: "text is required" });
+    }
+
+    const creatorProfile = await prisma.creatorProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+    if (!creatorProfile) {
+      return res.status(404).json({ error: "Creator profile not found" });
+    }
+
+    const match = await prisma.match.findUnique({
+      where: { id: req.params.matchId },
+      include: {
+        contentRequest: {
+          include: { brandProfile: { select: { userId: true } } },
+        },
+      },
+    });
+
+    if (!match) return res.status(404).json({ error: "Brief not found" });
+    if (match.creatorProfileId !== creatorProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const existing = Array.isArray(match.preAcceptMessages) ? match.preAcceptMessages : [];
+    const newMsg = { userId: req.user.id, name: req.user.name, text: text.trim(), createdAt: new Date().toISOString() };
+    const updated = await prisma.match.update({
+      where: { id: match.id },
+      data: { preAcceptMessages: [...existing, newMsg] },
+    });
+
+    // Notify operator
+    const operatorUserId = match.contentRequest?.brandProfile?.userId;
+    if (operatorUserId) {
+      createNotification(operatorUserId, {
+        type: "BRIEF_QUESTION",
+        title: `Question from ${creatorProfile.displayName || req.user.name}`,
+        body: text.trim().slice(0, 100),
+        linkUrl: `/operator/dashboard`,
+      }).catch(() => {});
+    }
+
+    res.json({ preAcceptMessages: updated.preAcceptMessages });
   } catch (err) {
     next(err);
   }

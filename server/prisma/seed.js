@@ -8,6 +8,8 @@ async function main() {
   // ─── CLEAN SLATE ───────────────────────────────────────────────
   // Delete in reverse-dependency order to respect foreign keys.
   console.log('Clearing existing data...');
+  await prisma.notification.deleteMany();
+  await prisma.message.deleteMany();
   await prisma.transaction.deleteMany();
   await prisma.projectDraft.deleteMany();
   await prisma.project.deleteMany();
@@ -906,6 +908,33 @@ async function main() {
   });
   console.log('  Transaction for Project 5: $280.00 (PENDING)\n');
 
+  // ─── MESSAGES ──────────────────────────────────────────────────
+  console.log('Creating messages...');
+  await prisma.message.createMany({
+    data: [
+      { projectId: project1.id, userId: josh.id, text: 'Hey Shaurya! Excited to see your take on our space.', createdAt: new Date('2026-02-10T10:00:00Z') },
+      { projectId: project1.id, userId: shaurya.id, text: 'Thanks Josh! I love the Colectivo vibe. Planning to shoot during golden hour.', createdAt: new Date('2026-02-10T10:30:00Z') },
+      { projectId: project1.id, userId: josh.id, text: 'Perfect - the light is amazing around 4pm through the west windows.', createdAt: new Date('2026-02-10T11:00:00Z') },
+      { projectId: project2.id, userId: josh.id, text: 'The latte art shots look great so far!', createdAt: new Date('2026-02-12T14:00:00Z') },
+      { projectId: project2.id, userId: shaurya.id, text: 'Thanks! I\'ll have the full set ready by Friday.', createdAt: new Date('2026-02-12T14:15:00Z') },
+    ],
+  });
+  console.log('  Created 5 messages across 2 projects');
+
+  // ─── NOTIFICATIONS ────────────────────────────────────────────
+  console.log('Creating notifications...');
+  await prisma.notification.createMany({
+    data: [
+      { userId: josh.id, type: 'DRAFT_SUBMITTED', title: 'New draft submitted', body: 'Shaurya submitted a draft for your Ambiance project.', linkUrl: `/operator/project/${project1.id}`, read: false, createdAt: new Date('2026-02-14T09:00:00Z') },
+      { userId: josh.id, type: 'BRIEF_ACCEPTED', title: 'Creator accepted your brief', body: 'Shaurya accepted your Food & Drink brief.', linkUrl: `/operator/project/${project2.id}`, read: true, createdAt: new Date('2026-02-11T08:00:00Z') },
+      { userId: josh.id, type: 'MESSAGE', title: 'New message from Shaurya', body: "Thanks! I'll have the full set ready by Friday.", linkUrl: `/operator/project/${project2.id}`, read: false, createdAt: new Date('2026-02-12T14:15:00Z') },
+      { userId: shaurya.id, type: 'APPROVED', title: 'Your draft was approved!', body: 'Great work! The brand approved your submission.', linkUrl: `/creator/project/${project4.id}`, read: true, createdAt: new Date('2026-02-13T16:00:00Z') },
+      { userId: shaurya.id, type: 'REVISION_REQUESTED', title: 'Revision requested', body: 'Could you reshoot the interior shots with warmer tones?', linkUrl: `/creator/project/${project3.id}`, read: false, createdAt: new Date('2026-02-15T10:00:00Z') },
+      { userId: katelyn.id, type: 'BRIEF_RECEIVED', title: 'New brief waiting for you', body: 'A local bakery wants food photography content.', linkUrl: '/creator/dashboard', read: false, createdAt: new Date('2026-02-14T12:00:00Z') },
+    ],
+  });
+  console.log('  Created 6 notifications for 3 users\n');
+
   // ─── SUMMARY ───────────────────────────────────────────────────
   console.log('=== Seed complete ===');
   console.log('  7 users (4 operators, 3 creators)');
@@ -917,6 +946,8 @@ async function main() {
   console.log('  5 projects');
   console.log('  3 project drafts');
   console.log('  5 transactions');
+  console.log('  5 messages');
+  console.log('  6 notifications');
   console.log('\nDemo accounts:');
   console.log('  Operators: josh@colectivo.com, marie@coralie.com, ellen@hewn.com, josie@coffeelab.com');
   console.log('  Creators:  shaurya@locale.app, katelyn@locale.app, newcreator@locale.app');
