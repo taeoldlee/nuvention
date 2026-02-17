@@ -124,7 +124,7 @@ export default function TourOverlay({ steps, currentStep, isCreator, onNext, onP
   // Keyboard navigation
   useEffect(() => {
     function handleKey(e) {
-      if (e.key === 'Escape') { onSkip(user?.id); return; }
+      if (e.key === 'Escape') return; // Don't dismiss on Escape — require explicit skip
       if (e.key === 'ArrowRight' || e.key === 'Enter') {
         if (isLast) onComplete(user?.id);
         else onNext();
@@ -146,8 +146,8 @@ export default function TourOverlay({ steps, currentStep, isCreator, onNext, onP
 
   return createPortal(
     <div className="fixed inset-0 z-[60]" aria-modal="true" role="dialog">
-      {/* Backdrop — click to skip */}
-      <div className="fixed inset-0" style={{ background: 'transparent' }} onClick={() => onSkip(user?.id)} />
+      {/* Backdrop — blocks clicks but does NOT dismiss tour */}
+      <div className="fixed inset-0" style={{ background: 'transparent' }} />
 
       {/* Spotlight cutout */}
       <div
