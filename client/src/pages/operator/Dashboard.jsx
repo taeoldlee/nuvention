@@ -15,6 +15,7 @@ import Btn from '../../components/common/Btn';
 import { DashboardSkeleton } from '../../components/common/Skeleton';
 import EmptyState from '../../components/common/EmptyState';
 import FadeIn from '../../components/marketing/FadeIn';
+import { useTour } from '../../contexts/TourContext';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const { startTour, shouldAutoStart } = useTour();
 
   useEffect(() => {
     if (!profile) return;
@@ -47,6 +49,13 @@ export default function Dashboard() {
     }
     load();
   }, [user?.id, profile]);
+
+  useEffect(() => {
+    if (!loading && profile && user?.id && shouldAutoStart(user.id)) {
+      const timer = setTimeout(() => startTour('operator', user.id), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, profile, user?.id, shouldAutoStart, startTour]);
 
   const activeProjects = projects.filter(
     (p) => !['DELIVERED', 'CANCELLED'].includes(p.status)
@@ -129,7 +138,7 @@ export default function Dashboard() {
                 <p className="font-body text-muted">{profile.businessName}</p>
               )}
             </div>
-            <Btn onClick={() => navigate('/operator/request/new')}>
+            <Btn data-tour="operator-new-request" onClick={() => navigate('/operator/request/new')}>
               <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
               </svg>
@@ -140,7 +149,7 @@ export default function Dashboard() {
 
         {/* Stats Row */}
         <FadeIn delay={0.1}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+        <div data-tour="operator-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
           <StatCard
             label="Active Projects"
             value={stats?.activeProjects ?? activeProjects.length}
@@ -193,7 +202,7 @@ export default function Dashboard() {
 
         {/* Active Projects */}
         <FadeIn delay={0.2}>
-        <section className="mb-10">
+        <section data-tour="operator-active-projects" className="mb-10">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-dark">
               Active Projects
@@ -291,7 +300,7 @@ export default function Dashboard() {
 
         {/* Recent Content */}
         <FadeIn delay={0.3}>
-        <section>
+        <section data-tour="operator-recent-content">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-xl font-semibold text-dark">
               Recent Content

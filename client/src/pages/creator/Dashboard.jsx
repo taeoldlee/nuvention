@@ -10,6 +10,7 @@ import CreatorBriefCard from '../../components/creator/CreatorBriefCard';
 import CreatorProjectCard from '../../components/creator/CreatorProjectCard';
 import Chip from '../../components/common/Chip';
 import FadeIn from '../../components/marketing/FadeIn';
+import { useTour } from '../../contexts/TourContext';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function Dashboard() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const { startTour, shouldAutoStart } = useTour();
 
   useEffect(() => {
     if (!profile) return;
@@ -46,6 +48,13 @@ export default function Dashboard() {
     }
     fetchData();
   }, [profile?.id]);
+
+  useEffect(() => {
+    if (!loading && profile && user?.id && shouldAutoStart(user.id)) {
+      const timer = setTimeout(() => startTour('creator', user.id), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, profile, user?.id, shouldAutoStart, startTour]);
 
   const displayName = profile?.displayName || 'Creator';
   const neighborhood = profile?.neighborhoods?.[0] || '';
@@ -112,7 +121,7 @@ export default function Dashboard() {
 
       {/* Greeting */}
       <FadeIn>
-      <div className="mb-8">
+      <div data-tour="creator-greeting" className="mb-8">
         <p className="section-label mb-2">Dashboard</p>
         <h1 className="font-display text-2xl sm:text-3xl font-bold text-dark mb-1">
           Hey, {displayName}
@@ -131,7 +140,7 @@ export default function Dashboard() {
 
       {/* Stat cards */}
       <FadeIn delay={0.1}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+      <div data-tour="creator-stats" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
         <StatCard
           label="Monthly Earnings"
           value={formatCents(monthlyEarnings)}
@@ -155,7 +164,7 @@ export default function Dashboard() {
 
       {/* Incoming Briefs */}
       <FadeIn delay={0.2}>
-      <section className="mb-10">
+      <section data-tour="creator-briefs" className="mb-10">
         <h2 className="font-display text-xl font-bold text-dark mb-4">
           Incoming Briefs
         </h2>
@@ -184,7 +193,7 @@ export default function Dashboard() {
 
       {/* Active Projects */}
       <FadeIn delay={0.3}>
-      <section>
+      <section data-tour="creator-projects">
         <h2 className="font-display text-xl font-bold text-dark mb-4">
           Active Projects
         </h2>

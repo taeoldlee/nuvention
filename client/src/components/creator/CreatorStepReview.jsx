@@ -2,17 +2,10 @@ import { CONTENT_STYLES, CREATOR_STRENGTHS, NEIGHBORHOODS, CUISINE_OPTIONS } fro
 import Chip from '../common/Chip';
 import Btn from '../common/Btn';
 
-function Section({ label, aiSuggested, children }) {
+function Section({ label, children }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <label className="label mb-0">{label}</label>
-        {aiSuggested && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-creatorLight text-creator border border-creator/20">
-            AI-suggested
-          </span>
-        )}
-      </div>
+      <label className="label mb-2">{label}</label>
       {children}
     </div>
   );
@@ -46,7 +39,7 @@ export default function CreatorStepReview({
       <div>
         <h2 className="font-display text-2xl font-bold text-dark mb-1">Review your profile</h2>
         <p className="font-body text-muted text-sm">
-          We've pre-filled everything from your social media. Tweak anything that doesn't look right.
+          We've pulled in info from your social media. Tweak anything that doesn't look right.
         </p>
       </div>
 
@@ -54,11 +47,11 @@ export default function CreatorStepReview({
       <div className="bg-creatorLight/30 rounded-xl p-5 space-y-4">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Profile</p>
 
-        <Section label="Display Name" aiSuggested={false}>
+        <Section label="Display Name">
           <input type="text" value={displayName} onChange={(e) => setDisplayName(e.target.value)} placeholder="e.g. Maya Chen" className="input input-creator" />
         </Section>
 
-        <Section label="Bio" aiSuggested>
+        <Section label="Bio">
           <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="A few words about what you love to shoot..." rows={3} maxLength={280} className="input input-creator resize-none" />
           <p className="text-xs text-muted mt-1 text-right">{bio.length}/280</p>
         </Section>
@@ -85,7 +78,7 @@ export default function CreatorStepReview({
       <div className="bg-creatorLight/30 rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Style & Strengths</p>
 
-        <Section label="Content Styles *" aiSuggested>
+        <Section label="Content Styles *">
           <div className="flex flex-wrap gap-2">
             {CONTENT_STYLES.map((style) => (
               <Chip key={style} label={style} selected={contentStyles.includes(style)} creator onClick={() => toggleItem(contentStyles, setContentStyles, style)} />
@@ -93,7 +86,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Strengths *" aiSuggested>
+        <Section label="Strengths *">
           <div className="flex flex-wrap gap-2">
             {CREATOR_STRENGTHS.map((s) => (
               <Chip key={s} label={s} selected={strengths.includes(s)} creator onClick={() => toggleItem(strengths, setStrengths, s)} />
@@ -101,7 +94,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Neighborhoods *" aiSuggested>
+        <Section label="Neighborhoods *">
           <div className="flex flex-wrap gap-2">
             {NEIGHBORHOODS.map((n) => (
               <Chip key={n} label={n} selected={neighborhoods.includes(n)} creator onClick={() => toggleItem(neighborhoods, setNeighborhoods, n)} />
@@ -109,7 +102,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Cuisines You Enjoy" aiSuggested>
+        <Section label="Cuisines You Enjoy">
           <div className="flex flex-wrap gap-2">
             {CUISINE_OPTIONS.map((c) => (
               <Chip key={c} label={c} selected={cuisineSpecialties.includes(c)} creator onClick={() => toggleItem(cuisineSpecialties, setCuisineSpecialties, c)} />
