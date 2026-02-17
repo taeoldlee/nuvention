@@ -331,52 +331,81 @@ async function analyzeBrandFromPlaceData(placeData) {
   try {
     const { name, address, types, rating, reviews, photoUrls } = placeData;
 
-    const prompt = `Analyze this business from Google Places data and return a complete brand profile for a hyperlocal UGC content platform.
+    // Sort reviews by length (descriptive ones first) and take up to 10
+    const sortedReviews = (reviews || [])
+      .filter(Boolean)
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 10);
 
-Business: ${name}
-Address: ${address || "Unknown"}
-Google Place Types: ${JSON.stringify(types || [])}
-Rating: ${rating || "N/A"}
-Sample Reviews: ${JSON.stringify((reviews || []).slice(0, 5))}
-Number of photos available: ${(photoUrls || []).length}
+    const prompt = `You are a creative director building brand profiles for a hyperlocal UGC content marketplace. Your job is to analyze real Google Places data and distill it into an actionable brand identity that helps match creators to businesses.
 
-Return a JSON object with ALL of these fields:
+## INPUT DATA
+- Business: ${name}
+- Address: ${address || "Unknown"}
+- Google Place Types: ${JSON.stringify(types || [])}
+- Rating: ${rating || "N/A"}
+- Reviews (${sortedReviews.length}): ${JSON.stringify(sortedReviews)}
+- Number of Google Photos: ${(photoUrls || []).length}
+
+## STEP 1: EXTRACT SIGNAL
+Before generating the profile, analyze the reviews for:
+- Descriptive language about atmosphere/ambiance (lighting, noise, decor, music)
+- Recurring themes (date night, study spot, brunch crowd, family-friendly)
+- Standout menu items or signature offerings
+- Staff/service mentions
+- Negative patterns or complaints
+
+List 5-8 key observations as bullet points in the "extractedSignal" field.
+
+## STEP 2: GENERATE BRAND PROFILE
+Based ONLY on the extracted signal and place data (not assumptions), return this JSON:
+
 {
+  "extractedSignal": ["5-8 bullet point observations from the reviews"],
   "businessName": "string",
-  "neighborhood": "string - use one of these if in Chicago area: Evanston, Rogers Park, Wicker Park, Logan Square, West Loop, Hyde Park, Lincoln Park, Uptown. Otherwise return the actual neighborhood.",
-  "vibe": ["2-3 from: Cozy & Warm, Minimalist & Clean, Energetic & Bold, Rustic & Raw, Polished & Editorial"],
-  "values": ["2-3 from: Community-first, Sustainability, Quality-obsessed, Inclusive, Design-forward"],
-  "contentComfortZones": ["2-3 from: Ambiance / Interior, Food & Drink, Staff & Culture, Community / Events, Behind the Scenes"],
+  "neighborhood": "string — if Chicago area, use: Evanston, Rogers Park, Wicker Park, Logan Square, West Loop, Hyde Park, Lincoln Park, Uptown, Andersonville, Pilsen, Bucktown, Old Town, Lakeview, River North, Chinatown, Bridgeport, Ukrainian Village. Otherwise use actual neighborhood.",
+  "vibe": ["2-3 tags from: Cozy & Warm, Minimalist & Clean, Energetic & Bold, Rustic & Raw, Polished & Editorial, Moody & Intimate, Bright & Airy, Eclectic & Curated, Neighborhood Staple, Fast & Functional"],
+  "values": ["2-3 from: Community-first, Sustainability, Quality-obsessed, Inclusive, Design-forward, Heritage & Tradition, Innovation, Hospitality-driven, Locally-sourced, Creator-friendly"],
+  "contentComfortZones": ["2-3 from: Ambiance / Interior, Food & Drink Close-ups, Staff & Culture, Community / Events, Behind the Scenes, Plating & Presentation, Street View / Exterior, Seasonal Specials"],
   "vibeScales": {
     "cozyEnergetic": 0-100,
     "quietBuzzy": 0-100,
     "classicModern": 0-100,
-    "casualElevated": 0-100
+    "casualElevated": 0-100,
+    "hiddenGemPopular": 0-100
   },
-  "guestExperienceKeywords": ["3 lowercase keywords describing the guest experience"],
-  "cuisineTypes": ["1-3 from: Italian, Mexican, Japanese, Thai, French, American, Mediterranean, Indian, Korean, Chinese, Vietnamese, Ethiopian, Middle Eastern, Bakery & Pastry, Coffee & Beverage, Farm-to-Table, Fusion"],
+  "guestExperienceKeywords": ["3-5 lowercase keywords derived directly from review language"],
+  "cuisineTypes": ["1-3 cuisine types"],
   "budgetMin": number (suggested min budget per content piece in dollars, 100-500),
   "budgetMax": number (suggested max budget, 200-1000),
-  "contentNoGos": "string - brief list of content to avoid based on the business type",
+  "contentNoGos": "string — things a creator should NOT post about this place, based on negative review patterns or brand sensitivity",
   "vibeAnalysis": {
-    "primaryVibe": "one-phrase summary",
-    "aestheticTags": ["5 lowercase hyphenated tags"],
-    "contentRecommendations": ["4 specific content ideas"],
-    "avoidTags": ["3 things to avoid"]
+    "primaryVibe": "one-phrase summary that a creator could immediately understand",
+    "aestheticTags": ["5 lowercase hyphenated tags e.g. warm-lighting, exposed-brick — must be visually specific"],
+    "contentRecommendations": ["4 specific filmable shot/content ideas grounded in what reviewers actually mention — think 'slow pour latte art in morning light' not 'show the food'"],
+    "avoidTags": ["3 content styles that would clash with this brand"],
+    "reviewEvidence": ["2-3 short quoted phrases from reviews that justify your vibe analysis"]
   }
 }
 
-Only return the JSON, no other text.`;
+## RULES
+- Every field must be justified by the input data. Do not infer vibes that contradict reviews.
+- If reviews are sparse or generic, say so in contentNoGos and keep vibeScales near 50 (uncertain).
+- aestheticTags should be visually specific (not generic like "nice-place").
+- contentRecommendations should be filmable — a creator should read one and know exactly what shot to set up.
+- Return ONLY the JSON object.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 1000,
+      temperature: 0.5,
+      max_tokens: 1500,
       response_format: { type: "json_object" },
     });
 
     const result = JSON.parse(completion.choices[0].message.content);
+    // Strip extractedSignal from the response (internal reasoning, not needed in profile)
+    delete result.extractedSignal;
     return result;
   } catch (err) {
     console.warn("[AI] analyzeBrandFromPlaceData failed:", err.message);
@@ -440,6 +469,7 @@ function fallbackPlaceAnalysis(placeData) {
       quietBuzzy: isCafe ? 35 : 55,
       classicModern: 50,
       casualElevated: isCafe ? 40 : 50,
+      hiddenGemPopular: 50,
     },
     guestExperienceKeywords: isCafe
       ? ["cozy", "welcoming", "neighborhood"]

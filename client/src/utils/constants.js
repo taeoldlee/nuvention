@@ -4,6 +4,11 @@ export const VIBE_OPTIONS = [
   'Energetic & Bold',
   'Rustic & Raw',
   'Polished & Editorial',
+  'Moody & Intimate',
+  'Bright & Airy',
+  'Eclectic & Curated',
+  'Neighborhood Staple',
+  'Fast & Functional',
 ];
 
 export const VALUE_OPTIONS = [
@@ -12,14 +17,22 @@ export const VALUE_OPTIONS = [
   'Quality-obsessed',
   'Inclusive',
   'Design-forward',
+  'Heritage & Tradition',
+  'Innovation',
+  'Hospitality-driven',
+  'Locally-sourced',
+  'Creator-friendly',
 ];
 
 export const CONTENT_COMFORT_ZONES = [
   'Ambiance / Interior',
-  'Food & Drink',
+  'Food & Drink Close-ups',
   'Staff & Culture',
   'Community / Events',
   'Behind the Scenes',
+  'Plating & Presentation',
+  'Street View / Exterior',
+  'Seasonal Specials',
 ];
 
 export const CONTENT_STYLES = [
@@ -55,6 +68,15 @@ export const NEIGHBORHOODS = [
   'Hyde Park',
   'Lincoln Park',
   'Uptown',
+  'Andersonville',
+  'Pilsen',
+  'Bucktown',
+  'Old Town',
+  'Lakeview',
+  'River North',
+  'Chinatown',
+  'Bridgeport',
+  'Ukrainian Village',
 ];
 
 export const VIBE_SCALES = [
@@ -62,6 +84,7 @@ export const VIBE_SCALES = [
   { key: 'quietBuzzy', left: 'Quiet', right: 'Buzzy' },
   { key: 'classicModern', left: 'Classic', right: 'Modern' },
   { key: 'casualElevated', left: 'Casual', right: 'Elevated' },
+  { key: 'hiddenGemPopular', left: 'Hidden Gem', right: 'Popular Spot' },
 ];
 
 export const CUISINE_OPTIONS = [

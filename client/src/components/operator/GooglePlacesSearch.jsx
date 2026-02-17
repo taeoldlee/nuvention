@@ -96,7 +96,13 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
       });
 
       // Extract review text
-      const reviews = (place.reviews || []).slice(0, 5).map((r) => r.text?.text || '');
+      // Prefer longer, descriptive reviews (3+ sentences have more signal)
+      const allReviews = (place.reviews || [])
+        .map((r) => r.text?.text || '')
+        .filter(Boolean);
+      const reviews = allReviews
+        .sort((a, b) => b.length - a.length)
+        .slice(0, 10);
 
       const placeData = {
         placeId,

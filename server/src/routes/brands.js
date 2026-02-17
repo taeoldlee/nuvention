@@ -362,7 +362,7 @@ router.post("/analyze-place", async (req, res, next) => {
           source: "fallback",
           data: {
             ...data,
-            vibeScales: { cozyEnergetic: 40, quietBuzzy: 40, classicModern: 50, casualElevated: 45 },
+            vibeScales: { cozyEnergetic: 40, quietBuzzy: 40, classicModern: 50, casualElevated: 45, hiddenGemPopular: 50 },
             guestExperienceKeywords: ["warm", "neighborhood", "welcoming"],
             cuisineTypes: ["Coffee & Beverage"],
             budgetMin: 150,
