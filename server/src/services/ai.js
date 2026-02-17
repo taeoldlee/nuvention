@@ -520,11 +520,11 @@ Return a JSON object:
   "bio": "string - a polished 1-2 sentence bio suggestion based on their content",
   "contentStyles": ["3-4 from: Warm, Editorial, Documentary, Candid, Clean, Minimal, Bold, Energetic, Moody, Cinematic, Bright, Lifestyle"],
   "strengths": ["3-4 from: Food Photography, Reels/Short Video, Ambiance Shots, Lifestyle, Portraits, Behind the Scenes"],
-  "neighborhoods": ["1-3 from: Evanston, Rogers Park, Wicker Park, Logan Square, West Loop, Hyde Park, Lincoln Park, Uptown"],
-  "cuisineSpecialties": ["1-3 from: Italian, Mexican, Japanese, Thai, French, American, Mediterranean, Indian, Korean, Chinese, Vietnamese, Ethiopian, Middle Eastern, Bakery & Pastry, Coffee & Beverage, Farm-to-Table, Fusion"],
   "vibeTags": ["5-6 lowercase hyphenated aesthetic tags"],
   "qualityScore": 1-10
 }
+
+Do NOT include neighborhoods or cuisine specialties — those cannot be determined from content alone and the creator will set them manually.
 
 Only return the JSON.`;
 
@@ -585,8 +585,8 @@ function fallbackCreatorSocialAnalysis(posts, profile) {
     bio,
     contentStyles,
     strengths: ["Food Photography", "Ambiance Shots", "Lifestyle"],
-    neighborhoods: ["Evanston", "Lincoln Park"],
-    cuisineSpecialties: ["Coffee & Beverage", "American"],
+    neighborhoods: [],
+    cuisineSpecialties: [],
     vibeTags: ["warm-tones", "authentic-moments", "local-vibes", "natural-light", "cozy-aesthetic"],
     qualityScore: 7,
   };

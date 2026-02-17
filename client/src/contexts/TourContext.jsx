@@ -15,7 +15,7 @@ export function TourProvider({ children }) {
   const [isCreator, setIsCreator] = useState(false);
 
   const startTour = useCallback((role, userId) => {
-    if (userId && localStorage.getItem(tourKey(userId))) return;
+    if (userId && sessionStorage.getItem(tourKey(userId))) return;
     const tourSteps = role === 'creator' ? CREATOR_TOUR_STEPS : OPERATOR_TOUR_STEPS;
     setSteps(tourSteps);
     setIsCreator(role === 'creator');
@@ -27,7 +27,7 @@ export function TourProvider({ children }) {
     setActive(false);
     setCurrentStep(0);
     setSteps([]);
-    if (userId) localStorage.setItem(tourKey(userId), '1');
+    if (userId) sessionStorage.setItem(tourKey(userId), '1');
   }, []);
 
   const nextStep = useCallback(() => {
@@ -46,11 +46,11 @@ export function TourProvider({ children }) {
   }, [completeTour]);
 
   const shouldAutoStart = useCallback((userId) => {
-    return !localStorage.getItem(tourKey(userId));
+    return !sessionStorage.getItem(tourKey(userId));
   }, []);
 
   const resetTour = useCallback((userId) => {
-    if (userId) localStorage.removeItem(tourKey(userId));
+    if (userId) sessionStorage.removeItem(tourKey(userId));
   }, []);
 
   return (

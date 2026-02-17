@@ -327,8 +327,18 @@ router.post("/import-social", async (req, res, next) => {
     // Run AI analysis on the scraped data
     const analysis = await analyzeCreatorFromSocial(scraped.posts, scraped.profile);
 
+    // Save profile picture to user's avatar if available
+    const profilePicUrl = scraped.profile?.profilePicUrl || "";
+    if (profilePicUrl) {
+      await prisma.user.update({
+        where: { id: req.user.id },
+        data: { avatarUrl: profilePicUrl },
+      });
+    }
+
     return res.json({
       source,
+      profilePicUrl,
       profile: {
         bio: analysis.bio || scraped.profile.bio || "",
         contentStyles: analysis.contentStyles || [],

@@ -81,14 +81,25 @@ export default function TourOverlay({ steps, currentStep, isCreator, onNext, onP
     setPlacement(dir);
   }, [step]);
 
-  // Scroll target into view and measure on step change
+  // Scroll target into view and measure on step change, with retries
   useEffect(() => {
     if (!step) return;
-    const el = document.querySelector(step.target);
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    // Delay measurement so scroll settles
-    const timer = setTimeout(measure, 350);
+    let attempts = 0;
+    const maxAttempts = 10;
+    let timer;
+
+    function tryFind() {
+      const el = document.querySelector(step.target);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        timer = setTimeout(measure, 400);
+      } else if (attempts < maxAttempts) {
+        attempts++;
+        timer = setTimeout(tryFind, 200);
+      }
+    }
+
+    tryFind();
     return () => clearTimeout(timer);
   }, [step, measure]);
 

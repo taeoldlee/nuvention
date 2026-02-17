@@ -109,6 +109,10 @@ async function fetchInstagramPosts(handle, count = 10) {
     const bio = profileData?.biography || "";
     const followerCount = profileData?.follower_count || 0;
     const fullName = profileData?.full_name || cleanHandle;
+    const profilePicUrl =
+      profileData?.hd_profile_pic_url_info?.url ||
+      profileData?.profile_pic_url ||
+      "";
 
     // Parse posts — limit to requested count
     const items = (mediaData?.posts || []).slice(0, count);
@@ -124,7 +128,7 @@ async function fetchInstagramPosts(handle, count = 10) {
       })
       .filter((p) => p.imageUrl);
 
-    return { posts, profile: { bio, followerCount, fullName } };
+    return { posts, profile: { bio, followerCount, fullName, profilePicUrl } };
   } catch (err) {
     console.warn("[SocialScraper] Instagram fetch failed:", err.message);
     return fallbackCreatorImport(handle);
@@ -154,6 +158,11 @@ async function fetchTiktokPosts(handle, count = 6) {
     const bio = userData?.data?.user?.signature || "";
     const followerCount = userData?.data?.stats?.followerCount || 0;
     const fullName = userData?.data?.user?.nickname || cleanHandle;
+    const profilePicUrl =
+      userData?.data?.user?.avatarLarger ||
+      userData?.data?.user?.avatarMedium ||
+      userData?.data?.user?.avatarThumb ||
+      "";
 
     const postsData = await rapidApiGet(
       host,
@@ -168,7 +177,7 @@ async function fetchTiktokPosts(handle, count = 6) {
       }))
       .filter((p) => p.imageUrl);
 
-    return { posts, profile: { bio, followerCount, fullName } };
+    return { posts, profile: { bio, followerCount, fullName, profilePicUrl } };
   } catch (err) {
     console.warn("[SocialScraper] TikTok fetch failed:", err.message);
     return fallbackCreatorImport(handle);

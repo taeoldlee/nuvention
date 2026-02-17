@@ -49,6 +49,11 @@ export default function Onboarding() {
         importedPortfolio: data.importedPortfolio,
       });
 
+      // Refresh user profile to pick up saved avatar from social import
+      if (data.profilePicUrl) {
+        await refreshProfile();
+      }
+
       setStep(1);
     } catch (err) {
       setImportError(
