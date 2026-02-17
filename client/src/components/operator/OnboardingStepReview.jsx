@@ -25,7 +25,7 @@ function Section({ label, aiSuggested, children }) {
   );
 }
 
-export default function OnboardingStepReview({ formActions, saving, saveError, onSubmit }) {
+export default function OnboardingStepReview({ formActions, saving, saveError, onSubmit, onBack }) {
   const {
     form,
     updateForm,
@@ -57,7 +57,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Business Info</p>
 
-        <Section label="Business Name" aiSuggested>
+        <Section label="Business Name">
           <input
             type="text"
             value={form.businessName}
@@ -67,7 +67,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
           />
         </Section>
 
-        <Section label="Neighborhood" aiSuggested>
+        <Section label="Neighborhood">
           <div className="flex flex-wrap gap-2">
             {NEIGHBORHOODS.map((n) => (
               <Chip key={n} label={n} selected={form.neighborhood === n} onClick={() => setSingleSelect('neighborhood', n)} />
@@ -277,10 +277,18 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
         <p className="text-sm text-red-600 font-body">{saveError}</p>
       )}
 
-      <div className="pt-2">
+      <div className="pt-2 space-y-3">
         <Btn onClick={onSubmit} loading={saving} disabled={!canSubmitReview} className="w-full" size="lg">
           Create Profile
         </Btn>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="w-full text-sm text-muted hover:text-dark font-body underline underline-offset-2 transition-colors"
+          >
+            Back to search
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -25,6 +25,7 @@ export default function Onboarding() {
 
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeReady, setAnalyzeReady] = useState(false);
   const [analyzeError, setAnalyzeError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -34,30 +35,60 @@ export default function Onboarding() {
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
 
+  // Track if user wants to continue while AI is still loading
+  const continueRequestedRef = useRef(false);
+
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  // Google Places: user selected a place from autocomplete
-  const handlePlaceSelected = async (placeData) => {
+  // Google Places: user selected a place — start AI in background
+  const handlePlaceSelected = (placeData) => {
     setAnalyzing(true);
+    setAnalyzeReady(false);
     setAnalyzeError('');
-    try {
-      const res = await analyzeBrandFromPlace(placeData);
-      const data = res.data?.data || res.data;
-      formActions.applyImportData(data);
-      // Also store Google Maps URL and photo URLs as visual refs
-      if (placeData.googleMapsUrl) {
-        formActions.updateForm('googleMapsUrl', placeData.googleMapsUrl);
-      }
+    continueRequestedRef.current = false;
+
+    // Fire and forget — AI runs in background
+    analyzeBrandFromPlace(placeData)
+      .then((res) => {
+        const data = res.data?.data || res.data;
+        formActions.applyImportData(data);
+        if (placeData.googleMapsUrl) {
+          formActions.updateForm('googleMapsUrl', placeData.googleMapsUrl);
+        }
+        setAnalyzeReady(true);
+        setAnalyzing(false);
+
+        // If user already clicked Continue while we were loading, advance now
+        if (continueRequestedRef.current) {
+          setStep(1);
+        }
+      })
+      .catch((err) => {
+        setAnalyzeError(
+          err.response?.data?.error || 'Analysis failed. Try searching again or set up manually.'
+        );
+        setAnalyzing(false);
+      });
+  };
+
+  // User clicks Continue after selecting a place
+  const handleContinue = () => {
+    if (analyzeReady) {
       setStep(1);
-    } catch (err) {
-      setAnalyzeError(
-        err.response?.data?.error || 'Analysis failed. Try searching again or set up manually.'
-      );
-    } finally {
-      setAnalyzing(false);
+    } else {
+      // AI still loading — mark that we want to continue when ready
+      continueRequestedRef.current = true;
     }
+  };
+
+  // User wants to search again / pick different place
+  const handleSearchAgain = () => {
+    setAnalyzeReady(false);
+    setAnalyzing(false);
+    setAnalyzeError('');
+    continueRequestedRef.current = false;
   };
 
   // Fallback: URL paste import
@@ -136,9 +167,13 @@ export default function Onboarding() {
         {step === 0 && useGoogleFlow && (
           <OnboardingStepSearch
             analyzing={analyzing}
+            analyzeReady={analyzeReady}
             error={analyzeError}
             onPlaceSelected={handlePlaceSelected}
+            onContinue={handleContinue}
+            onSearchAgain={handleSearchAgain}
             onManualSetup={handleManualSetup}
+            continueRequested={continueRequestedRef.current}
           />
         )}
 
@@ -159,6 +194,7 @@ export default function Onboarding() {
             saving={saving}
             saveError={saveError}
             onSubmit={handleSubmit}
+            onBack={() => setStep(0)}
           />
         )}
       </div>
