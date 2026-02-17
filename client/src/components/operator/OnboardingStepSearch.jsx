@@ -30,7 +30,7 @@ export default function OnboardingStepSearch({
           <label className="block text-sm font-medium text-dark mb-1.5 font-body">
             Business name
           </label>
-          <GooglePlacesSearch onPlaceSelected={onPlaceSelected} />
+          <GooglePlacesSearch onPlaceSelected={onPlaceSelected} onReset={onSearchAgain} />
         </div>
 
         {error && (
@@ -38,16 +38,10 @@ export default function OnboardingStepSearch({
         )}
 
         {placeSelected && (
-          <div className="space-y-3 pt-2">
+          <div className="pt-2">
             <Btn onClick={onContinue} className="w-full" size="lg">
               Continue
             </Btn>
-            <button
-              onClick={onSearchAgain}
-              className="w-full text-sm text-muted hover:text-dark font-body underline underline-offset-2 transition-colors"
-            >
-              Search for a different business
-            </button>
           </div>
         )}
 

@@ -6,7 +6,7 @@ const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
  * Google Places search using the new Places API (REST).
  * Shows autocomplete dropdown + map embed on selection.
  */
-export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }) {
+export default function GooglePlacesSearch({ onPlaceSelected, onReset, disabled = false }) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -59,7 +59,10 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
   const handleInput = (e) => {
     const val = e.target.value;
     setQuery(val);
-    setSelectedPlace(null);
+    if (selectedPlace) {
+      setSelectedPlace(null);
+      onReset?.();
+    }
     clearTimeout(debounceRef.current);
     if (val.length >= 2) {
       debounceRef.current = setTimeout(() => searchPlaces(val), 300);
