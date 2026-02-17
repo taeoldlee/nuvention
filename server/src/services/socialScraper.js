@@ -42,10 +42,51 @@ function rapidApiGet(host, path) {
 }
 
 /**
- * Fetch recent Instagram posts for a handle.
- * Returns { posts: [{imageUrl, caption}], profile: {bio} }
+ * Make an HTTPS POST request to RapidAPI (form-urlencoded).
  */
-async function fetchInstagramPosts(handle, count = 9) {
+function rapidApiPost(host, path, formData) {
+  return new Promise((resolve, reject) => {
+    const body = new URLSearchParams(formData).toString();
+    const options = {
+      hostname: host,
+      path,
+      method: "POST",
+      headers: {
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": host,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Length": Buffer.byteLength(body),
+      },
+    };
+
+    const req = https.request(options, (res) => {
+      let data = "";
+      res.on("data", (chunk) => (data += chunk));
+      res.on("end", () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch {
+          reject(new Error("Invalid JSON from RapidAPI"));
+        }
+      });
+    });
+
+    req.on("error", reject);
+    req.setTimeout(15000, () => {
+      req.destroy();
+      reject(new Error("RapidAPI request timed out"));
+    });
+    req.write(body);
+    req.end();
+  });
+}
+
+/**
+ * Fetch recent Instagram posts for a handle.
+ * Uses Instagram Scraper Stable API (RockSolid APIs).
+ * Returns { posts: [{imageUrl, caption}], profile: {bio, followerCount, fullName} }
+ */
+async function fetchInstagramPosts(handle, count = 10) {
   if (!RAPIDAPI_KEY) {
     console.warn("[SocialScraper] No RAPIDAPI_KEY — using fallback");
     return fallbackCreatorImport(handle);
@@ -53,36 +94,37 @@ async function fetchInstagramPosts(handle, count = 9) {
 
   try {
     const cleanHandle = handle.replace(/^@/, "");
-    const host = "instagram-scraper-api2.p.rapidapi.com";
+    const host = "instagram-scraper-stable-api.p.rapidapi.com";
 
-    // Fetch profile info
-    const profileData = await rapidApiGet(
-      host,
-      `/v1/info?username_or_id_or_url=${encodeURIComponent(cleanHandle)}`
-    );
+    // Fetch profile info and posts in parallel
+    const [profileData, mediaData] = await Promise.all([
+      rapidApiPost(host, "/ig_get_fb_profile_v3.php", {
+        username_or_url: cleanHandle,
+      }),
+      rapidApiPost(host, "/get_ig_user_posts.php", {
+        username_or_url: cleanHandle,
+      }),
+    ]);
 
-    const bio = profileData?.data?.biography || "";
+    const bio = profileData?.biography || "";
+    const followerCount = profileData?.follower_count || 0;
+    const fullName = profileData?.full_name || cleanHandle;
 
-    // Fetch recent media
-    const mediaData = await rapidApiGet(
-      host,
-      `/v1.2/posts?username_or_id_or_url=${encodeURIComponent(cleanHandle)}`
-    );
-
-    const items = (mediaData?.data?.items || []).slice(0, count);
+    // Parse posts — limit to requested count
+    const items = (mediaData?.posts || []).slice(0, count);
     const posts = items
-      .filter((item) => item.image_versions2 || item.carousel_media)
       .map((item) => {
+        const node = item?.node || item;
         const imageUrl =
-          item.image_versions2?.candidates?.[0]?.url ||
-          item.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
+          node.image_versions2?.candidates?.[0]?.url ||
+          node.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
           "";
-        const caption = item.caption?.text || "";
+        const caption = node.caption?.text || "";
         return { imageUrl, caption };
       })
       .filter((p) => p.imageUrl);
 
-    return { posts, profile: { bio } };
+    return { posts, profile: { bio, followerCount, fullName } };
   } catch (err) {
     console.warn("[SocialScraper] Instagram fetch failed:", err.message);
     return fallbackCreatorImport(handle);
@@ -91,7 +133,8 @@ async function fetchInstagramPosts(handle, count = 9) {
 
 /**
  * Fetch recent TikTok posts for a handle.
- * Returns { posts: [{imageUrl, caption}], profile: {bio} }
+ * Uses tiktok-scraper7 API.
+ * Returns { posts: [{imageUrl, caption}], profile: {bio, followerCount, fullName} }
  */
 async function fetchTiktokPosts(handle, count = 6) {
   if (!RAPIDAPI_KEY) {
@@ -109,6 +152,8 @@ async function fetchTiktokPosts(handle, count = 6) {
     );
 
     const bio = userData?.data?.user?.signature || "";
+    const followerCount = userData?.data?.stats?.followerCount || 0;
+    const fullName = userData?.data?.user?.nickname || cleanHandle;
 
     const postsData = await rapidApiGet(
       host,
@@ -116,12 +161,14 @@ async function fetchTiktokPosts(handle, count = 6) {
     );
 
     const items = (postsData?.data?.videos || []).slice(0, count);
-    const posts = items.map((item) => ({
-      imageUrl: item.cover || item.origin_cover || "",
-      caption: item.title || "",
-    })).filter((p) => p.imageUrl);
+    const posts = items
+      .map((item) => ({
+        imageUrl: item.cover || item.origin_cover || "",
+        caption: item.title || "",
+      }))
+      .filter((p) => p.imageUrl);
 
-    return { posts, profile: { bio } };
+    return { posts, profile: { bio, followerCount, fullName } };
   } catch (err) {
     console.warn("[SocialScraper] TikTok fetch failed:", err.message);
     return fallbackCreatorImport(handle);
