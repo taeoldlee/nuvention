@@ -4,13 +4,14 @@ const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
 
 /**
  * Google Places search using the new Places API (REST).
- * No legacy Google Maps JS SDK needed.
+ * Shows autocomplete dropdown + map embed on selection.
  */
 export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }) {
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [selectedPlace, setSelectedPlace] = useState(null);
   const debounceRef = useRef(null);
   const wrapperRef = useRef(null);
 
@@ -37,7 +38,6 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
         },
         body: JSON.stringify({
           input,
-          includedPrimaryTypes: ['restaurant', 'cafe', 'bar', 'food', 'bakery', 'meal_takeaway', 'meal_delivery'],
           locationBias: {
             circle: {
               center: { latitude: 41.8781, longitude: -87.6298 },
@@ -59,6 +59,7 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
   const handleInput = (e) => {
     const val = e.target.value;
     setQuery(val);
+    setSelectedPlace(null);
     clearTimeout(debounceRef.current);
     if (val.length >= 2) {
       debounceRef.current = setTimeout(() => searchPlaces(val), 300);
@@ -76,7 +77,7 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
 
     // Fetch full place details
     try {
-      const fields = 'id,displayName,formattedAddress,types,rating,reviews,photos,googleMapsUri';
+      const fields = 'id,displayName,formattedAddress,types,rating,reviews,photos,googleMapsUri,location';
       const res = await fetch(
         `https://places.googleapis.com/v1/places/${placeId}?languageCode=en`,
         {
@@ -108,6 +109,14 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
         googleMapsUrl: place.googleMapsUri || `https://www.google.com/maps/place/?q=place_id:${placeId}`,
       };
 
+      setSelectedPlace({
+        name: placeData.name,
+        address: placeData.address,
+        placeId,
+        lat: place.location?.latitude,
+        lng: place.location?.longitude,
+      });
+
       onPlaceSelected(placeData);
     } catch (err) {
       console.error('[GooglePlaces] place details error:', err);
@@ -115,43 +124,63 @@ export default function GooglePlacesSearch({ onPlaceSelected, disabled = false }
   };
 
   return (
-    <div ref={wrapperRef} className="relative">
-      <input
-        type="text"
-        value={query}
-        onChange={handleInput}
-        disabled={disabled}
-        placeholder="Search for your business..."
-        className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-      />
-      {loading && (
-        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-          <svg className="w-4 h-4 animate-spin text-muted" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
+    <div>
+      <div ref={wrapperRef} className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={handleInput}
+          disabled={disabled}
+          placeholder="Search for your business..."
+          className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
+        />
+        {loading && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <svg className="w-4 h-4 animate-spin text-muted" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+          </div>
+        )}
+        {showDropdown && suggestions.length > 0 && (
+          <ul className="absolute z-50 w-full mt-1 bg-white border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto">
+            {suggestions.map((s, i) => {
+              const pred = s.placePrediction;
+              const main = pred.structuredFormat?.mainText?.text || pred.text?.text || '';
+              const secondary = pred.structuredFormat?.secondaryText?.text || '';
+              return (
+                <li
+                  key={pred.placeId || i}
+                  onClick={() => handleSelect(s)}
+                  className="px-4 py-3 hover:bg-bgWarm cursor-pointer border-b border-border/50 last:border-0 transition-colors"
+                >
+                  <p className="text-sm font-medium text-dark font-body">{main}</p>
+                  {secondary && (
+                    <p className="text-xs text-muted font-body mt-0.5">{secondary}</p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {selectedPlace && selectedPlace.lat && (
+        <div className="mt-4 rounded-xl overflow-hidden border border-border">
+          <iframe
+            title="Business location"
+            width="100%"
+            height="200"
+            style={{ border: 0 }}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            src={`https://www.google.com/maps/embed/v1/place?key=${API_KEY}&q=place_id:${selectedPlace.placeId}&zoom=15`}
+          />
+          <div className="px-4 py-3 bg-bgWarm">
+            <p className="text-sm font-semibold text-dark font-body">{selectedPlace.name}</p>
+            <p className="text-xs text-muted font-body">{selectedPlace.address}</p>
+          </div>
         </div>
-      )}
-      {showDropdown && suggestions.length > 0 && (
-        <ul className="absolute z-50 w-full mt-1 bg-white border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto">
-          {suggestions.map((s, i) => {
-            const pred = s.placePrediction;
-            const main = pred.structuredFormat?.mainText?.text || pred.text?.text || '';
-            const secondary = pred.structuredFormat?.secondaryText?.text || '';
-            return (
-              <li
-                key={pred.placeId || i}
-                onClick={() => handleSelect(s)}
-                className="px-4 py-3 hover:bg-bgWarm cursor-pointer border-b border-border/50 last:border-0 transition-colors"
-              >
-                <p className="text-sm font-medium text-dark font-body">{main}</p>
-                {secondary && (
-                  <p className="text-xs text-muted font-body mt-0.5">{secondary}</p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
       )}
     </div>
   );
