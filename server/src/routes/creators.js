@@ -71,6 +71,7 @@ router.post("/profile", async (req, res, next) => {
       vibeTags,
       profilePhotoUrl,
       cuisineSpecialties,
+      brandNoGos,
     } = req.body;
 
     if (!displayName) {
@@ -91,6 +92,7 @@ router.post("/profile", async (req, res, next) => {
         vibeTags: vibeTags || null,
         profilePhotoUrl: profilePhotoUrl || null,
         cuisineSpecialties: cuisineSpecialties || null,
+        brandNoGos: brandNoGos || null,
       },
       include: {
         portfolioItems: true,
@@ -133,6 +135,7 @@ router.put("/profile", async (req, res, next) => {
       vibeTags,
       profilePhotoUrl,
       cuisineSpecialties,
+      brandNoGos,
       isAvailable,
     } = req.body;
 
@@ -150,6 +153,7 @@ router.put("/profile", async (req, res, next) => {
         ...(vibeTags !== undefined && { vibeTags }),
         ...(profilePhotoUrl !== undefined && { profilePhotoUrl }),
         ...(cuisineSpecialties !== undefined && { cuisineSpecialties }),
+        ...(brandNoGos !== undefined && { brandNoGos }),
         ...(isAvailable !== undefined && { isAvailable }),
       },
       include: {

@@ -54,7 +54,8 @@ export const sendProjectMessage = (projectId, text) =>
 export const getBriefs = () => client.get('/briefs');
 export const markBriefViewed = (matchId) => client.post(`/briefs/${matchId}/view`);
 export const acceptBrief = (matchId) => client.post(`/briefs/${matchId}/accept`);
-export const declineBrief = (matchId) => client.post(`/briefs/${matchId}/decline`);
+export const declineBrief = (matchId, reason) =>
+  client.post(`/briefs/${matchId}/decline`, reason ? { reason } : {});
 export const askBriefQuestion = (matchId, text) =>
   client.post(`/briefs/${matchId}/question`, { text });
 

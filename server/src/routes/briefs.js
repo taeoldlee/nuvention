@@ -369,9 +369,14 @@ router.post("/:matchId/decline", async (req, res, next) => {
       return res.status(400).json({ error: "Brief has already been declined" });
     }
 
+    const { reason } = req.body || {};
+
     const updatedMatch = await prisma.match.update({
       where: { id: match.id },
-      data: { status: "DECLINED" },
+      data: {
+        status: "DECLINED",
+        ...(reason ? { declineReason: reason.trim().slice(0, 200) } : {}),
+      },
     });
 
     res.json({ message: "Brief declined", match: updatedMatch });

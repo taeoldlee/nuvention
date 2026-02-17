@@ -1,11 +1,14 @@
 import {
   BadgeCheck,
+  Camera,
   ClipboardCheck,
   Eye,
   FileText,
   Fingerprint,
+  Heart,
   Lock,
   MapPin,
+  MessageCircle,
   ShieldCheck,
   Sparkles,
   Wallet,
@@ -77,6 +80,27 @@ const features = [
     title: 'Pay when you approve',
     description:
       'Your payment is held until you\'re happy with the content. No risk.',
+  },
+];
+
+const creatorFeatures = [
+  {
+    icon: Camera,
+    title: 'Get discovered by local brands',
+    description:
+      'No cold DMs or unanswered messages. Brands find you based on your work, not your follower count.',
+  },
+  {
+    icon: Heart,
+    title: 'Keep creative control',
+    description:
+      'You choose which briefs to accept. Decline anything that doesn\'t align with your style or values.',
+  },
+  {
+    icon: MessageCircle,
+    title: 'Clear terms, no surprises',
+    description:
+      'See deliverables, compensation, and timeline upfront. Every collaboration has transparent terms from day one.',
   },
 ];
 
@@ -261,6 +285,44 @@ export default function Landing() {
           </div>
         </section>
 
+        <section id="creators" className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-16">
+          <FadeIn>
+            <SectionHeader
+              eyebrow="For creators"
+              title="Stop proving yourself. Start getting booked."
+              description="You're talented — you just need access. Locale connects you with local restaurants and cafés that match your style, so you spend time creating, not pitching."
+            />
+          </FadeIn>
+          <div className="mt-10 grid gap-6 sm:grid-cols-3">
+            {creatorFeatures.map((feature, index) => (
+              <FadeIn key={feature.title} delay={index * 0.05}>
+                <div className="card card-hover rounded-2xl p-6 h-full">
+                  <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-creatorLight">
+                    <feature.icon aria-hidden="true" className="h-5 w-5 text-creatorAccent" />
+                  </div>
+                  <h3 className="font-display text-lg text-dark">{feature.title}</h3>
+                  <p className="mt-2 text-sm text-mid">{feature.description}</p>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+          <FadeIn className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            {[
+              'Matched by style, not followers',
+              'Accept or decline any brief',
+              'Transparent compensation',
+              'Build your portfolio',
+            ].map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-creator/20 bg-creatorLight px-4 py-2 text-xs text-creatorAccent"
+              >
+                {item}
+              </span>
+            ))}
+          </FadeIn>
+        </section>
+
         <section id="trust" className="mx-auto max-w-6xl px-6 pb-20 sm:px-10 lg:px-16">
           <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
             <FadeIn>
@@ -378,6 +440,7 @@ export default function Landing() {
           <div className="flex flex-wrap items-center gap-5">
             <a className="hover:text-dark transition-colors" href="#how-it-works">How it works</a>
             <a className="hover:text-dark transition-colors" href="#features">Features</a>
+            <a className="hover:text-dark transition-colors" href="#creators">For Creators</a>
             <a className="hover:text-dark transition-colors" href="#trust">Trust</a>
             <a className="hover:text-dark transition-colors" href="#pricing">Pricing</a>
           </div>

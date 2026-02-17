@@ -29,6 +29,7 @@ export default function Settings() {
   const [neighborhoods, setNeighborhoods] = useState([]);
   const [dreamBrands, setDreamBrands] = useState([]);
   const [brandInput, setBrandInput] = useState('');
+  const [brandNoGos, setBrandNoGos] = useState('');
   const [isAvailable, setIsAvailable] = useState(true);
   const [portfolio, setPortfolio] = useState([]);
   const [portfolioLoading, setPortfolioLoading] = useState(false);
@@ -53,6 +54,7 @@ export default function Settings() {
         setStrengths(p.strengths || []);
         setNeighborhoods(p.neighborhoods || []);
         setDreamBrands(p.dreamBrands || []);
+        setBrandNoGos(p.brandNoGos || '');
         setIsAvailable(p.isAvailable !== false);
         setPortfolio(p.portfolioItems || []);
       } catch (err) {
@@ -101,6 +103,7 @@ export default function Settings() {
         strengths,
         neighborhoods,
         dreamBrands: dreamBrands.length > 0 ? dreamBrands : [],
+        brandNoGos: brandNoGos.trim() || null,
         isAvailable,
       });
       await refreshProfile();
@@ -337,6 +340,20 @@ export default function Settings() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Brand No-Gos */}
+        <div>
+          <label className="label">Brands or categories you'd prefer to skip <span className="text-muted font-normal">(optional)</span></label>
+          <p className="text-xs text-muted mb-3">E.g. "fast food chains" or "corporate brands". We'll factor this into your matches.</p>
+          <textarea
+            value={brandNoGos}
+            onChange={(e) => { setBrandNoGos(e.target.value); clearSuccess(); }}
+            placeholder="e.g. no fast food, no chain restaurants"
+            rows={2}
+            maxLength={300}
+            className="input input-creator resize-none"
+          />
         </div>
 
         {/* Save */}

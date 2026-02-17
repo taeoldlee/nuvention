@@ -49,8 +49,8 @@ export default function CreatorStepStyle({ formActions }) {
       </div>
 
       <div>
-        <label className="label">Cuisine Specialties (optional)</label>
-        <p className="text-xs text-muted mb-3">What types of food do you love to shoot?</p>
+        <label className="label">Cuisines You Enjoy (optional)</label>
+        <p className="text-xs text-muted mb-3">What types of food do you like to eat? We'll use this for matching, not to pigeonhole you.</p>
         <div className="flex flex-wrap gap-2">
           {CUISINE_OPTIONS.map((c) => (
             <Chip key={c} label={c} selected={cuisineSpecialties.includes(c)} creator onClick={() => toggleItem(cuisineSpecialties, setCuisineSpecialties, c)} />

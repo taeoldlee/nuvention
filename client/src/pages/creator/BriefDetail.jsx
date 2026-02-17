@@ -22,6 +22,7 @@ export default function BriefDetail() {
   const [question, setQuestion] = useState('');
   const [askingQuestion, setAskingQuestion] = useState(false);
   const [preAcceptMessages, setPreAcceptMessages] = useState([]);
+  const [showDeclineOptions, setShowDeclineOptions] = useState(false);
 
   useEffect(() => {
     async function fetchBrief() {
@@ -84,11 +85,11 @@ export default function BriefDetail() {
     }
   };
 
-  const handleDecline = async () => {
+  const handleDecline = async (reason) => {
     setDeclining(true);
     setError(null);
     try {
-      await declineBrief(matchId);
+      await declineBrief(matchId, reason || undefined);
       navigate('/creator/dashboard');
     } catch (err) {
       setError(
@@ -98,6 +99,13 @@ export default function BriefDetail() {
       setDeclining(false);
     }
   };
+
+  const declineReasons = [
+    'Not my style',
+    "Brand doesn't align with my values",
+    'Too busy right now',
+    'Compensation too low',
+  ];
 
   if (loading) {
     return <LoadingSpinner message="Loading brief..." creator />;
@@ -417,13 +425,46 @@ export default function BriefDetail() {
         </div>
       )}
 
+      {/* Decline Reason Picker */}
+      {showDeclineOptions && (
+        <div className="card mb-6">
+          <h3 className="font-display text-base font-semibold text-dark mb-2">
+            Why are you declining?
+          </h3>
+          <p className="text-xs text-muted font-body mb-3">
+            Optional — this helps us improve future matches for you.
+          </p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {declineReasons.map((reason) => (
+              <button
+                key={reason}
+                type="button"
+                disabled={declining}
+                onClick={() => handleDecline(reason)}
+                className="px-3 py-1.5 rounded-full text-sm font-medium border border-border bg-bgWarm text-mid hover:border-accent hover:text-dark transition-colors disabled:opacity-50"
+              >
+                {reason}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            disabled={declining}
+            onClick={() => handleDecline()}
+            className="text-sm text-muted hover:text-dark font-body transition-colors disabled:opacity-50"
+          >
+            Skip — just decline
+          </button>
+        </div>
+      )}
+
       {/* CTAs */}
       <div className="flex items-center justify-between gap-4">
         <Btn
           variant="ghost"
-          onClick={handleDecline}
+          onClick={() => setShowDeclineOptions(true)}
           loading={declining}
-          disabled={accepting}
+          disabled={accepting || showDeclineOptions}
         >
           Decline
         </Btn>

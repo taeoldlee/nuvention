@@ -4,6 +4,7 @@ import Button from './Button';
 const links = [
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Features', href: '#features' },
+  { label: 'For Creators', href: '#creators' },
   { label: 'Trust', href: '#trust' },
   { label: 'Pricing', href: '#pricing' },
   { label: 'FAQ', href: '#faq' },

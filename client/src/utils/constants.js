@@ -23,11 +23,18 @@ export const CONTENT_COMFORT_ZONES = [
 ];
 
 export const CONTENT_STYLES = [
-  'Warm & Editorial',
-  'Documentary & Candid',
-  'Clean & Minimal',
-  'Bold & Energetic',
-  'Moody & Cinematic',
+  'Warm',
+  'Editorial',
+  'Documentary',
+  'Candid',
+  'Clean',
+  'Minimal',
+  'Bold',
+  'Energetic',
+  'Moody',
+  'Cinematic',
+  'Bright',
+  'Lifestyle',
 ];
 
 export const CREATOR_STRENGTHS = [

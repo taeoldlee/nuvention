@@ -86,6 +86,7 @@ model CreatorProfile {
   dreamBrands   Json? // ["Colectivo", "Metric Coffee"]
 
   cuisineSpecialties Json? // ["Italian", "Bakery & Pastry", "Coffee & Beverage"]
+  brandNoGos         String? // free-text: "no fast food chains, no corporate brands"
 
   vibeTags Json? // ["warm-light", "minimalist", "community-feel"]
   tier CreatorTier? @default(NEW)
@@ -194,6 +195,7 @@ model Match {
   status MatchStatus @default(PRESENTED)
   viewedAt DateTime?
   preAcceptMessages Json?
+  declineReason     String?
 
   createdAt DateTime @default(now())
 

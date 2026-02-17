@@ -109,7 +109,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Cuisine Specialties" aiSuggested>
+        <Section label="Cuisines You Enjoy" aiSuggested>
           <div className="flex flex-wrap gap-2">
             {CUISINE_OPTIONS.map((c) => (
               <Chip key={c} label={c} selected={cuisineSpecialties.includes(c)} creator onClick={() => toggleItem(cuisineSpecialties, setCuisineSpecialties, c)} />

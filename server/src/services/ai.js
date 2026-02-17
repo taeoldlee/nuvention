@@ -111,7 +111,7 @@ async function analyzeCreatorPortfolio(imageUrls) {
               type: "text",
               text: `Analyze these portfolio images from a UGC content creator. Return a JSON object:
 {
-  "contentStyles": ["2-3 style descriptors from: Warm & Editorial, Bold & Vibrant, Documentary & Raw, Minimalist & Clean, Dark & Moody, Bright & Airy, Cinematic, Lifestyle & Candid"],
+  "contentStyles": ["3-4 from: Warm, Editorial, Documentary, Candid, Clean, Minimal, Bold, Energetic, Moody, Cinematic, Bright, Lifestyle"],
   "strengths": ["3-4 strengths from: Food photography, Interior / ambiance, Reels / short-form video, Story content, Community moments, Behind-the-scenes, Product close-ups, Lifestyle & people"],
   "vibeTags": ["5-6 lowercase hyphenated aesthetic tags"],
   "qualityScore": 1-10,
@@ -138,7 +138,7 @@ Only return the JSON.`,
 
 function fallbackPortfolioAnalysis() {
   return {
-    contentStyles: ["Warm & Editorial", "Lifestyle & Candid"],
+    contentStyles: ["Warm", "Editorial", "Lifestyle", "Candid"],
     strengths: ["Food photography", "Interior / ambiance", "Community moments"],
     vibeTags: ["warm-light", "natural-tones", "authentic-moments", "local-vibes", "cozy-aesthetic"],
     qualityScore: 7,
@@ -488,7 +488,7 @@ ${captions.map((c, i) => `${i + 1}. "${c}"`).join("\n")}
 Return a JSON object:
 {
   "bio": "string - a polished 1-2 sentence bio suggestion based on their content",
-  "contentStyles": ["2-3 from: Warm & Editorial, Documentary & Candid, Clean & Minimal, Bold & Energetic, Moody & Cinematic"],
+  "contentStyles": ["3-4 from: Warm, Editorial, Documentary, Candid, Clean, Minimal, Bold, Energetic, Moody, Cinematic, Bright, Lifestyle"],
   "strengths": ["3-4 from: Food Photography, Reels/Short Video, Ambiance Shots, Lifestyle, Portraits, Behind the Scenes"],
   "neighborhoods": ["1-3 from: Evanston, Rogers Park, Wicker Park, Logan Square, West Loop, Hyde Park, Lincoln Park, Uptown"],
   "cuisineSpecialties": ["1-3 from: Italian, Mexican, Japanese, Thai, French, American, Mediterranean, Indian, Korean, Chinese, Vietnamese, Ethiopian, Middle Eastern, Bakery & Pastry, Coffee & Beverage, Farm-to-Table, Fusion"],
@@ -542,13 +542,13 @@ function fallbackCreatorSocialAnalysis(posts, profile) {
   const captions = (posts || []).map((p) => (p.caption || "").toLowerCase()).join(" ");
 
   // Infer styles from caption keywords
-  let contentStyles = ["Warm & Editorial", "Documentary & Candid"];
+  let contentStyles = ["Warm", "Editorial", "Candid"];
   if (captions.includes("minimal") || captions.includes("clean")) {
-    contentStyles = ["Clean & Minimal", "Warm & Editorial"];
+    contentStyles = ["Clean", "Minimal", "Warm"];
   } else if (captions.includes("bold") || captions.includes("energy")) {
-    contentStyles = ["Bold & Energetic", "Documentary & Candid"];
+    contentStyles = ["Bold", "Energetic", "Candid"];
   } else if (captions.includes("moody") || captions.includes("dark") || captions.includes("cinematic")) {
-    contentStyles = ["Moody & Cinematic", "Documentary & Candid"];
+    contentStyles = ["Moody", "Cinematic", "Documentary"];
   }
 
   return {

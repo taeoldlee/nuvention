@@ -33,14 +33,18 @@ const CONTENT_COMFORT_ZONES = [
 ];
 
 const CONTENT_STYLES = [
-  "Warm & Editorial",
-  "Bold & Vibrant",
-  "Documentary & Raw",
-  "Minimalist & Clean",
-  "Dark & Moody",
-  "Bright & Airy",
+  "Warm",
+  "Editorial",
+  "Documentary",
+  "Candid",
+  "Clean",
+  "Minimal",
+  "Bold",
+  "Energetic",
+  "Moody",
   "Cinematic",
-  "Lifestyle & Candid",
+  "Bright",
+  "Lifestyle",
 ];
 
 const CREATOR_STRENGTHS = [
