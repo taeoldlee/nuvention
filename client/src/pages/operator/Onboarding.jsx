@@ -17,10 +17,6 @@ export default function Onboarding() {
   const formActions = useOnboardingForm();
   const { isLoaded: placesLoaded, isAvailable: placesAvailable } = useGooglePlaces();
 
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
   const { form } = formActions;
 
   // Determine flow: Google Places (2-step) or URL paste fallback (2-step)
@@ -37,6 +33,10 @@ export default function Onboarding() {
   const [importUrl, setImportUrl] = useState('');
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
   // Google Places: user selected a place from autocomplete
   const handlePlaceSelected = async (placeData) => {

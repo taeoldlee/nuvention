@@ -20,11 +20,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  // Redirect to onboarding if no brand profile
-  if (user && !profile) {
-    return <Navigate to="/operator/onboarding" replace />;
-  }
-
   const [stats, setStats] = useState(null);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +28,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
+    if (!profile) return;
     async function load() {
       setLoading(true);
       setError('');
@@ -50,30 +46,7 @@ export default function Dashboard() {
       }
     }
     load();
-  }, [user?.id]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-bgWarm">
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <DashboardSkeleton />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-bgWarm">
-        <div className="max-w-5xl mx-auto px-4 py-8">
-          <div className="card text-center py-12">
-            <p className="text-red-600 font-body mb-4">{error}</p>
-            <Btn onClick={() => window.location.reload()}>Retry</Btn>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [user?.id, profile]);
 
   const activeProjects = projects.filter(
     (p) => !['DELIVERED', 'CANCELLED'].includes(p.status)
@@ -111,6 +84,35 @@ export default function Dashboard() {
     }
     return result;
   }, [activeProjects, search, statusFilter]);
+
+  // --- All hooks above, early returns below ---
+
+  if (user && !profile) {
+    return <Navigate to="/operator/onboarding" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-bgWarm">
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <DashboardSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-bgWarm">
+        <div className="max-w-5xl mx-auto px-4 py-8">
+          <div className="card text-center py-12">
+            <p className="text-red-600 font-body mb-4">{error}</p>
+            <Btn onClick={() => window.location.reload()}>Retry</Btn>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bgWarm">

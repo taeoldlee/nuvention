@@ -7,6 +7,7 @@ export default function MessageThread({ projectId }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState('');
   const bottomRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -14,8 +15,10 @@ export default function MessageThread({ projectId }) {
     try {
       const res = await getProjectMessages(projectId);
       setMessages(res.data.messages || []);
-    } catch {
-      // silently fail on poll
+      setError('');
+    } catch (err) {
+      console.error('[MessageThread] fetch error:', err.response?.status, err.response?.data || err.message);
+      setError('Could not load messages.');
     }
   };
 
@@ -37,8 +40,9 @@ export default function MessageThread({ projectId }) {
       await sendProjectMessage(projectId, text.trim());
       setText('');
       await fetchMessages();
-    } catch {
-      // error
+    } catch (err) {
+      console.error('[MessageThread] send error:', err.response?.status, err.response?.data || err.message);
+      setError('Failed to send message.');
     } finally {
       setSending(false);
     }
@@ -58,8 +62,12 @@ export default function MessageThread({ projectId }) {
     <div className="card">
       <h3 className="font-display text-lg font-semibold text-dark mb-4">Messages</h3>
 
+      {error && (
+        <p className="text-sm text-red-500 font-body mb-2">{error}</p>
+      )}
+
       <div className="max-h-80 overflow-y-auto space-y-3 mb-4 pr-1">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !error ? (
           <p className="text-sm text-muted font-body text-center py-6">
             No messages yet. Start the conversation!
           </p>

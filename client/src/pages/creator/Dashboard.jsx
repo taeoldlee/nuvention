@@ -15,11 +15,6 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  // Redirect to onboarding if no creator profile
-  if (user && !profile) {
-    return <Navigate to="/creator/onboarding" replace />;
-  }
-
   const [stats, setStats] = useState(null);
   const [briefs, setBriefs] = useState([]);
   const [projects, setProjects] = useState([]);
@@ -29,6 +24,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState('');
 
   useEffect(() => {
+    if (!profile) return;
     async function fetchData() {
       setLoading(true);
       setError(null);
@@ -50,14 +46,6 @@ export default function Dashboard() {
     }
     fetchData();
   }, [profile?.id]);
-
-  if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <DashboardSkeleton />
-      </div>
-    );
-  }
 
   const displayName = profile?.displayName || 'Creator';
   const neighborhood = profile?.neighborhoods?.[0] || '';
@@ -84,6 +72,20 @@ export default function Dashboard() {
     }
     return result;
   }, [projects, search, statusFilter]);
+
+  // --- All hooks above, early returns below ---
+
+  if (user && !profile) {
+    return <Navigate to="/creator/onboarding" replace />;
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto px-4 py-8">
+        <DashboardSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">

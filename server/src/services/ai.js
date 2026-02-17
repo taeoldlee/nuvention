@@ -164,11 +164,11 @@ async function generateMatchRationale(brand, creator, contentType, matchScore) {
           content: `Write a 2-sentence match rationale for pairing a UGC creator with a brand.
 
 Brand: ${brand.businessName} (Vibes: ${JSON.stringify(brand.vibe)})
-Creator: ${creator.displayName} (Styles: ${JSON.stringify(creator.contentStyles)}, Strengths: ${JSON.stringify(creator.strengths)})
+Creator styles: ${JSON.stringify(creator.contentStyles)}, Strengths: ${JSON.stringify(creator.strengths)}
 Content type: ${contentType}
 Match score: ${matchScore}/100
 
-Be specific about why this creator is a great fit. Keep it conversational and confident. Return only the rationale text, no JSON.`,
+IMPORTANT: Do NOT use the creator's name. Refer to them as "this creator" or "the creator". Be specific about why they are a great fit. Keep it conversational and confident. Return only the rationale text, no JSON.`,
         },
       ],
       temperature: 0.8,
@@ -188,7 +188,7 @@ function fallbackMatchRationale(brand, creator, contentType, matchScore) {
   const brandVibes = Array.isArray(brand.vibe) ? brand.vibe : [];
   const vibe = brandVibes[0] || "unique";
 
-  return `${creator.displayName}'s ${style.toLowerCase()} style is a natural fit for ${brand.businessName}'s ${vibe.toLowerCase()} aesthetic. Their expertise in ${contentType.toLowerCase()} content will authentically capture what makes your space special.`;
+  return `This creator's ${style.toLowerCase()} style is a natural fit for ${brand.businessName}'s ${vibe.toLowerCase()} aesthetic. Their expertise in ${contentType.toLowerCase()} content will authentically capture what makes your space special.`;
 }
 
 /**
@@ -206,13 +206,13 @@ async function generateContentPreview(brand, creator, contentType) {
       messages: [
         {
           role: "user",
-          content: `Write a brief content preview (2-3 sentences) describing what UGC content this creator would produce.
+          content: `Write a brief content preview (2-3 sentences) describing what UGC content a creator would produce.
 
 Brand: ${brand.businessName} (Vibes: ${JSON.stringify(brand.vibe)})
-Creator: ${creator.displayName} (Styles: ${JSON.stringify(creator.contentStyles)})
+Creator styles: ${JSON.stringify(creator.contentStyles)}
 Content type: ${contentType}
 
-Describe the specific photos and Reel they would create. Be vivid and specific to this brand. Return only the preview text.`,
+IMPORTANT: Do NOT use the creator's name. Refer to them as "this creator" or "the creator". Describe the specific photos and Reel they would create. Be vivid and specific to this brand. Return only the preview text.`,
         },
       ],
       temperature: 0.8,

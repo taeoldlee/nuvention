@@ -96,6 +96,8 @@ async function createRequestWithMatches(brandProfile, body) {
         include: {
           creatorProfile: {
             select: {
+              displayName: true,
+              user: { select: { name: true } },
               portfolioItems: {
                 select: { id: true, imageUrl: true, verified: true },
                 take: 3,

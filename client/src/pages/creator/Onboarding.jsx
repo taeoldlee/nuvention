@@ -14,10 +14,6 @@ export default function Onboarding() {
   const { user, refreshProfile } = useAuth();
   const formActions = useCreatorOnboardingForm();
 
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
-
   const [step, setStep] = useState(0);
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
@@ -26,6 +22,10 @@ export default function Onboarding() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
 
   // Import & Analyze: call backend to scrape social media and fill profile
   const handleImportAnalyze = async () => {
