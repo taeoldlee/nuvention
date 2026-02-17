@@ -8,24 +8,18 @@ import {
 } from '../../utils/constants';
 import Btn from '../common/Btn';
 import Chip from '../common/Chip';
+import LoadingSpinner from '../common/LoadingSpinner';
 
-function Section({ label, aiSuggested, children }) {
+function Section({ label, children }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2">
-        <label className="block text-sm font-medium text-dark font-body">{label}</label>
-        {aiSuggested && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-violet-50 text-violet-600 border border-violet-200">
-            AI-suggested
-          </span>
-        )}
-      </div>
+      <label className="block text-sm font-medium text-dark font-body mb-2">{label}</label>
       {children}
     </div>
   );
 }
 
-export default function OnboardingStepReview({ formActions, saving, saveError, onSubmit, onBack }) {
+export default function OnboardingStepReview({ formActions, saving, saveError, onSubmit, onBack, analyzing }) {
   const {
     form,
     updateForm,
@@ -41,6 +35,15 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
     handleVisualRefsSelected: onVisualRefsSelected,
     canSubmitReview,
   } = formActions;
+
+  // Show loading screen while AI is still generating
+  if (analyzing) {
+    return (
+      <div className="card">
+        <LoadingSpinner message="Generating your profile..." />
+      </div>
+    );
+  }
 
   return (
     <div className="card space-y-6">
@@ -90,7 +93,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Vibe & Style</p>
 
-        <Section label="Vibe" aiSuggested>
+        <Section label="Vibe">
           <div className="flex flex-wrap gap-2">
             {VIBE_OPTIONS.map((v) => (
               <Chip key={v} label={v} selected={form.vibes.includes(v)} onClick={() => toggleArrayItem('vibes', v)} />
@@ -98,7 +101,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
           </div>
         </Section>
 
-        <Section label="Vibe Scales" aiSuggested>
+        <Section label="Vibe Scales">
           <div className="space-y-3">
             {VIBE_SCALES.map((scale) => (
               <div key={scale.key}>
@@ -119,7 +122,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
           </div>
         </Section>
 
-        <Section label="Values" aiSuggested>
+        <Section label="Values">
           <div className="flex flex-wrap gap-2">
             {VALUE_OPTIONS.map((v) => (
               <Chip key={v} label={v} selected={form.values.includes(v)} onClick={() => toggleArrayItem('values', v)} />
@@ -127,7 +130,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
           </div>
         </Section>
 
-        <Section label="Guest Experience Keywords" aiSuggested>
+        <Section label="Guest Experience Keywords">
           <div className="flex gap-2 mb-2">
             <input
               type="text"
@@ -137,7 +140,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
               placeholder="e.g. warm, neighborhood, slow"
               className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
             />
-            <Btn size="sm" onClick={addKeyword} disabled={form.guestExperienceKeywords.length >= 3}>
+            <Btn size="sm" onClick={addKeyword} disabled={form.guestExperienceKeywords.length >= 5}>
               Add
             </Btn>
           </div>
@@ -156,7 +159,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Content Preferences</p>
 
-        <Section label="Content Comfort Zones" aiSuggested>
+        <Section label="Content Comfort Zones">
           <div className="flex flex-wrap gap-2">
             {CONTENT_COMFORT_ZONES.map((c) => (
               <Chip key={c} label={c} selected={form.contentComfortZones.includes(c)} onClick={() => toggleArrayItem('contentComfortZones', c)} />
@@ -179,7 +182,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Cuisine</p>
 
-        <Section label="Cuisine Types" aiSuggested>
+        <Section label="Cuisine Types">
           <div className="flex flex-wrap gap-2">
             {CUISINE_OPTIONS.map((c) => (
               <Chip key={c} label={c} selected={form.cuisineTypes.includes(c)} onClick={() => toggleArrayItem('cuisineTypes', c)} />
@@ -192,7 +195,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Budget</p>
 
-        <Section label="Budget per piece of content" aiSuggested>
+        <Section label="Budget per piece of content">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <label className="block text-xs text-muted mb-1 font-body">Min</label>
@@ -234,7 +237,7 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Visual References</p>
 
-        <Section label="Upload reference images" aiSuggested={form.visualRefUrls.length > 0}>
+        <Section label="Upload reference images">
           <div className="border border-dashed border-border rounded-xl p-4 bg-white text-center">
             <input
               type="file"

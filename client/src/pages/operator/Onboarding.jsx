@@ -19,76 +19,65 @@ export default function Onboarding() {
 
   const { form } = formActions;
 
-  // Determine flow: Google Places (2-step) or URL paste fallback (2-step)
   const useGoogleFlow = placesAvailable && placesLoaded;
   const STEPS = ['Search', 'Review'];
 
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
-  const [analyzeReady, setAnalyzeReady] = useState(false);
   const [analyzeError, setAnalyzeError] = useState('');
+  const [placeSelected, setPlaceSelected] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
-  // Fallback URL import state (when no Google Places key)
+  // Fallback URL import state
   const [importUrl, setImportUrl] = useState('');
   const [importing, setImporting] = useState(false);
   const [importError, setImportError] = useState('');
 
-  // Track if user wants to continue while AI is still loading
-  const continueRequestedRef = useRef(false);
+  // Track the AI promise so Continue can wait on it
+  const aiPromiseRef = useRef(null);
 
   if (!user) {
     return <Navigate to="/" replace />;
   }
 
-  // Google Places: user selected a place — start AI in background
+  // Google Places: user selected a place — start AI silently in background
   const handlePlaceSelected = (placeData) => {
+    setPlaceSelected(true);
     setAnalyzing(true);
-    setAnalyzeReady(false);
     setAnalyzeError('');
-    continueRequestedRef.current = false;
 
-    // Fire and forget — AI runs in background
-    analyzeBrandFromPlace(placeData)
+    // Start AI in background — no visible indicator on search page
+    aiPromiseRef.current = analyzeBrandFromPlace(placeData)
       .then((res) => {
         const data = res.data?.data || res.data;
+        // Don't pre-fill contentNoGos — let user fill it manually
+        if (data.contentNoGos) delete data.contentNoGos;
         formActions.applyImportData(data);
         if (placeData.googleMapsUrl) {
           formActions.updateForm('googleMapsUrl', placeData.googleMapsUrl);
         }
-        setAnalyzeReady(true);
         setAnalyzing(false);
-
-        // If user already clicked Continue while we were loading, advance now
-        if (continueRequestedRef.current) {
-          setStep(1);
-        }
       })
       .catch((err) => {
         setAnalyzeError(
-          err.response?.data?.error || 'Analysis failed. Try searching again or set up manually.'
+          err.response?.data?.error || 'Analysis failed. You can still fill in your profile manually.'
         );
         setAnalyzing(false);
       });
   };
 
-  // User clicks Continue after selecting a place
+  // Continue always advances immediately — if AI isn't done, review page shows loading
   const handleContinue = () => {
-    if (analyzeReady) {
-      setStep(1);
-    } else {
-      // AI still loading — mark that we want to continue when ready
-      continueRequestedRef.current = true;
-    }
+    setStep(1);
   };
 
-  // User wants to search again / pick different place
+  // User wants to search again
   const handleSearchAgain = () => {
-    setAnalyzeReady(false);
+    setPlaceSelected(false);
     setAnalyzing(false);
     setAnalyzeError('');
-    continueRequestedRef.current = false;
+    aiPromiseRef.current = null;
   };
 
   // Fallback: URL paste import
@@ -113,7 +102,6 @@ export default function Onboarding() {
     }
   };
 
-  // Manual setup: skip to review with empty form
   const handleManualSetup = () => {
     setStep(1);
   };
@@ -158,7 +146,9 @@ export default function Onboarding() {
           <p className="font-body text-muted">
             {step === 0
               ? 'Find your business and we\'ll handle the rest.'
-              : 'Review and tweak your AI-generated profile.'}
+              : analyzing
+                ? 'One moment...'
+                : 'Review and tweak your profile.'}
           </p>
         </div>
 
@@ -166,14 +156,12 @@ export default function Onboarding() {
 
         {step === 0 && useGoogleFlow && (
           <OnboardingStepSearch
-            analyzing={analyzing}
-            analyzeReady={analyzeReady}
+            placeSelected={placeSelected}
             error={analyzeError}
             onPlaceSelected={handlePlaceSelected}
             onContinue={handleContinue}
             onSearchAgain={handleSearchAgain}
             onManualSetup={handleManualSetup}
-            continueRequested={continueRequestedRef.current}
           />
         )}
 
@@ -194,7 +182,8 @@ export default function Onboarding() {
             saving={saving}
             saveError={saveError}
             onSubmit={handleSubmit}
-            onBack={() => setStep(0)}
+            onBack={() => { setStep(0); setPlaceSelected(false); }}
+            analyzing={analyzing}
           />
         )}
       </div>
