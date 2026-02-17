@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import NotificationBell from './NotificationBell';
+import Avatar from '../common/Avatar';
 
 export default function Navbar() {
   const { user, profile, isOperator, logout } = useAuth();
@@ -57,20 +58,7 @@ export default function Navbar() {
                 : profile?.displayName || 'New Creator'}
             </p>
           </div>
-          <div className={`w-9 h-9 rounded-full overflow-hidden border-2 ${accentBorder}`}>
-            {user.avatarUrl ? (
-              <img
-                src={user.avatarUrl}
-                alt={user.name}
-                className="w-full h-full object-cover"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            ) : (
-              <div className="w-full h-full bg-bgWarm flex items-center justify-center text-sm font-bold text-muted">
-                {user.name?.charAt(0)}
-              </div>
-            )}
-          </div>
+          <Avatar src={user.avatarUrl} name={user.name} borderClass={accentBorder} />
         </div>
       </div>
     </nav>

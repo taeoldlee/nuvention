@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { reseedDatabase } from '../../api';
+import Avatar from '../common/Avatar';
 
 export default function DemoSwitcher() {
   const [open, setOpen] = useState(false);
@@ -121,20 +122,7 @@ export default function DemoSwitcher() {
                         : 'hover:bg-bgWarm'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-accent/30 flex-shrink-0">
-                      {op.avatarUrl ? (
-                        <img
-                          src={op.avatarUrl}
-                          alt={op.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-accentLight flex items-center justify-center text-accent font-bold">
-                          {op.name?.charAt(0)}
-                        </div>
-                      )}
-                    </div>
+                    <Avatar src={op.avatarUrl} name={op.name} size="lg" borderClass="border-accent/30" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-dark truncate">
                         {op.brandProfile?.businessName || op.name}
@@ -163,20 +151,7 @@ export default function DemoSwitcher() {
                         : 'hover:bg-bgWarm'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-creator/30 flex-shrink-0">
-                      {cr.avatarUrl ? (
-                        <img
-                          src={cr.avatarUrl}
-                          alt={cr.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => { e.target.style.display = 'none'; }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-creatorLight flex items-center justify-center text-creator font-bold">
-                          {cr.name?.charAt(0)}
-                        </div>
-                      )}
-                    </div>
+                    <Avatar src={cr.avatarUrl} name={cr.name} size="lg" borderClass="border-creator/30" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-dark truncate">
                         {cr.creatorProfile?.displayName || cr.name}
