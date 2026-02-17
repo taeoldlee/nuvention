@@ -122,10 +122,10 @@ export default function DemoSwitcher() {
                         : 'hover:bg-bgWarm'
                     }`}
                   >
-                    <Avatar src={op.avatarUrl} name={op.name} size="lg" borderClass="border-accent/30" />
+                    <Avatar src={op.avatarUrl} name={op.name || 'New User'} size="lg" borderClass="border-accent/30" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-dark truncate">
-                        {op.brandProfile?.businessName || op.name}
+                        {op.brandProfile?.businessName || op.name || 'New User'}
                       </p>
                       <p className="text-xs text-muted">{getStatusText(op)}</p>
                     </div>
@@ -151,10 +151,10 @@ export default function DemoSwitcher() {
                         : 'hover:bg-bgWarm'
                     }`}
                   >
-                    <Avatar src={cr.avatarUrl} name={cr.name} size="lg" borderClass="border-creator/30" />
+                    <Avatar src={cr.avatarUrl} name={cr.name || 'New User'} size="lg" borderClass="border-creator/30" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-dark truncate">
-                        {cr.creatorProfile?.displayName || cr.name}
+                        {cr.creatorProfile?.displayName || cr.name || 'New User'}
                       </p>
                       <p className="text-xs text-muted">{getStatusText(cr)}</p>
                     </div>

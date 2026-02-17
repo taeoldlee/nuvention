@@ -64,14 +64,13 @@ async function main() {
   const josie = await prisma.user.create({
     data: {
       id: 'demo-operator-josie',
-      email: 'josie@coffeelab.com',
-      name: 'Josie Chen',
+      email: 'newoperator@locale.app',
+      name: '',
       role: 'OPERATOR',
       isDemo: true,
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     },
   });
-  console.log('  Created operator: Josie Chen (New Coffee Lab - no profile)');
+  console.log('  Created operator: New Operator (no name, no profile)');
 
   const shaurya = await prisma.user.create({
     data: {
@@ -101,13 +100,12 @@ async function main() {
     data: {
       id: 'demo-creator-alex',
       email: 'newcreator@locale.app',
-      name: 'Alex Torres',
+      name: '',
       role: 'CREATOR',
       isDemo: true,
-      avatarUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150',
     },
   });
-  console.log('  Created creator: Alex Torres (New Creator - no profile)');
+  console.log('  Created creator: New Creator (no name, no profile)');
   console.log(`  Total users: 7\n`);
 
   // ─── BRAND PROFILES ────────────────────────────────────────────
