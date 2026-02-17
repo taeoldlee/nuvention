@@ -494,7 +494,7 @@ function fallbackPlaceAnalysis(placeData) {
 
 /**
  * Analyze a creator from scraped social media posts + profile.
- * Merges caption analysis with optional vision analysis.
+ * Two-step prompt: signal extraction → profile generation with confidence levels.
  * Falls back to template-based analysis.
  */
 async function analyzeCreatorFromSocial(posts, profile) {
@@ -503,64 +503,109 @@ async function analyzeCreatorFromSocial(posts, profile) {
   }
 
   try {
+    // Filter captions: keep 10+ word captions (skip "🔥" or "link in bio" noise)
     const captions = (posts || [])
       .map((p) => p.caption)
-      .filter(Boolean)
-      .slice(0, 12);
+      .filter((c) => c && c.split(/\s+/).length >= 3)
+      .slice(0, 15);
     const bio = profile?.bio || "";
+    const followerCount = profile?.followerCount || 0;
+    const platform = profile?.platform || "instagram";
 
-    const prompt = `Analyze this content creator's social media presence for a hyperlocal UGC platform focused on food & beverage businesses.
+    const prompt = `You are a creative director at a hyperlocal UGC marketplace for food & beverage businesses. You're reviewing a new creator's social media to pre-fill their profile. Your job is to suggest ONLY what you can confidently infer. Leave everything else empty.
 
-Bio: "${bio}"
-Recent post captions:
+## INPUT DATA
+- Platform: ${platform}
+- Bio: "${bio}"
+- Follower count: ${followerCount}
+- Recent post captions (${captions.length} available):
 ${captions.map((c, i) => `${i + 1}. "${c}"`).join("\n")}
 
-Return a JSON object:
+## STEP 1: SIGNAL EXTRACTION
+Analyze the captions and bio for:
+- Recurring themes or topics (food, travel, fitness, lifestyle, etc.)
+- Tone of voice (casual, polished, funny, informative, poetic)
+- Any location mentions (cities, neighborhoods, specific restaurants)
+- Any cuisine/food mentions
+- Visual style indicators from language (e.g., "golden hour", "aesthetic", "moody")
+
+List your observations. Be honest about signal strength — if captions are generic or sparse, say so.
+
+## STEP 2: GENERATE PROFILE SUGGESTIONS
+Return this JSON. CRITICAL RULES:
+- If you cannot confidently infer a field, return an empty array [] or null.
+- Do NOT guess neighborhoods or cuisines unless explicitly mentioned in bio/captions.
+- "confidence" must reflect how much actual evidence you had.
+
 {
-  "bio": "string - a polished 1-2 sentence bio suggestion based on their content",
-  "contentStyles": ["3-4 from: Warm, Editorial, Documentary, Candid, Clean, Minimal, Bold, Energetic, Moody, Cinematic, Bright, Lifestyle"],
-  "strengths": ["3-4 from: Food Photography, Reels/Short Video, Ambiance Shots, Lifestyle, Portraits, Behind the Scenes"],
-  "vibeTags": ["5-6 lowercase hyphenated aesthetic tags"],
-  "qualityScore": 1-10
+  "bio": {
+    "suggested": "string — polished 1-2 sentence bio for a food/bev UGC creator. Preserve their voice. If their existing bio is already good, return it with minor tweaks.",
+    "original": "${bio}",
+    "reasoning": "string — what you changed and why"
+  },
+  "contentStyles": {
+    "selected": ["3-4 from: Warm, Editorial, Documentary, Candid, Clean, Minimal, Bold, Energetic, Moody, Cinematic, Bright, Lifestyle"],
+    "confidence": "high | medium | low",
+    "reasoning": "string — what evidence from captions led to these picks"
+  },
+  "strengths": {
+    "selected": ["2-4 from: Food Photography, Reels/Short Video, Ambiance Shots, Lifestyle, Portraits, Behind the Scenes"],
+    "confidence": "high | medium | low",
+    "reasoning": "string — e.g., 'most posts are reels → Reels/Short Video'"
+  },
+  "neighborhoods": {
+    "selected": [],
+    "confidence": "none | low | medium",
+    "reasoning": "string — ONLY populate if bio/captions explicitly mention locations. Otherwise return empty array and reasoning: 'No location data found in captions or bio.'"
+  },
+  "cuisineSpecialties": {
+    "selected": [],
+    "confidence": "none | low | medium",
+    "reasoning": "string — ONLY populate if captions/bio mention specific cuisines or restaurants you can identify. Otherwise return empty array."
+  },
+  "vibeTags": {
+    "selected": ["3-6 lowercase hyphenated aesthetic tags derived from actual content signals"],
+    "confidence": "high | medium | low"
+  }
 }
 
-Do NOT include neighborhoods or cuisine specialties — those cannot be determined from content alone and the creator will set them manually.
-
-Only return the JSON.`;
+## RULES
+- You are PRE-FILLING a form the creator will review and edit. Wrong guesses are worse than blank fields because creators will blindly accept AI suggestions.
+- For contentStyles: infer from caption tone + content themes.
+- For strengths: infer from caption content and themes.
+- For neighborhoods: ONLY if they say "based in Wicker Park" or mention specific locations. Do NOT guess from vibes.
+- For cuisineSpecialties: ONLY if they mention specific foods/restaurants. "foodie" in bio does NOT mean they specialize in anything.
+- vibeTags should be visually descriptive and specific, not generic. "warm-tones" over "nice-aesthetic".
+- Return ONLY the JSON. No markdown, no code fences.`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.7,
-      max_tokens: 600,
+      temperature: 0.3,
+      max_tokens: 800,
       response_format: { type: "json_object" },
     });
 
-    const textResult = JSON.parse(completion.choices[0].message.content);
+    const result = JSON.parse(completion.choices[0].message.content);
 
-    // Optionally merge with vision analysis if images available
-    const imageUrls = (posts || [])
-      .map((p) => p.imageUrl)
-      .filter((url) => url && url.startsWith("http"))
-      .slice(0, 4);
-
-    if (imageUrls.length > 0) {
-      try {
-        const visionResult = await analyzeCreatorPortfolio(imageUrls);
-        // Merge: prefer vision for styles/strengths if available
-        return {
-          ...textResult,
-          contentStyles: visionResult.contentStyles || textResult.contentStyles,
-          strengths: visionResult.strengths || textResult.strengths,
-          vibeTags: visionResult.vibeTags || textResult.vibeTags,
-          qualityScore: visionResult.qualityScore || textResult.qualityScore,
-        };
-      } catch {
-        // Vision failed, use text analysis only
-      }
-    }
-
-    return textResult;
+    // Normalize the response into the flat format the rest of the app expects,
+    // but also include confidence metadata
+    return {
+      bio: result.bio?.suggested || bio,
+      originalBio: bio,
+      contentStyles: result.contentStyles?.selected || [],
+      strengths: result.strengths?.selected || [],
+      neighborhoods: result.neighborhoods?.selected || [],
+      cuisineSpecialties: result.cuisineSpecialties?.selected || [],
+      vibeTags: result.vibeTags?.selected || [],
+      confidence: {
+        contentStyles: result.contentStyles?.confidence || "low",
+        strengths: result.strengths?.confidence || "low",
+        neighborhoods: result.neighborhoods?.confidence || "none",
+        cuisineSpecialties: result.cuisineSpecialties?.confidence || "none",
+        vibeTags: result.vibeTags?.confidence || "low",
+      },
+    };
   } catch (err) {
     console.warn("[AI] analyzeCreatorFromSocial failed:", err.message);
     return fallbackCreatorSocialAnalysis(posts, profile);
@@ -568,27 +613,23 @@ Only return the JSON.`;
 }
 
 function fallbackCreatorSocialAnalysis(posts, profile) {
-  const bio = profile?.bio || "Creative content creator passionate about food and local businesses.";
-  const captions = (posts || []).map((p) => (p.caption || "").toLowerCase()).join(" ");
-
-  // Infer styles from caption keywords
-  let contentStyles = ["Warm", "Editorial", "Candid"];
-  if (captions.includes("minimal") || captions.includes("clean")) {
-    contentStyles = ["Clean", "Minimal", "Warm"];
-  } else if (captions.includes("bold") || captions.includes("energy")) {
-    contentStyles = ["Bold", "Energetic", "Candid"];
-  } else if (captions.includes("moody") || captions.includes("dark") || captions.includes("cinematic")) {
-    contentStyles = ["Moody", "Cinematic", "Documentary"];
-  }
+  const bio = profile?.bio || "";
 
   return {
     bio,
-    contentStyles,
-    strengths: ["Food Photography", "Ambiance Shots", "Lifestyle"],
+    originalBio: bio,
+    contentStyles: [],
+    strengths: [],
     neighborhoods: [],
     cuisineSpecialties: [],
-    vibeTags: ["warm-tones", "authentic-moments", "local-vibes", "natural-light", "cozy-aesthetic"],
-    qualityScore: 7,
+    vibeTags: [],
+    confidence: {
+      contentStyles: "none",
+      strengths: "none",
+      neighborhoods: "none",
+      cuisineSpecialties: "none",
+      vibeTags: "none",
+    },
   };
 }
 

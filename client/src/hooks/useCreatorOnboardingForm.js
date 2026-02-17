@@ -25,6 +25,8 @@ export default function useCreatorOnboardingForm() {
   // Imported portfolio from social media scraping
   const [importedPortfolio, setImportedPortfolio] = useState([]);
   const [vibeTags, setVibeTags] = useState([]);
+  const [originalBio, setOriginalBio] = useState('');
+  const [confidence, setConfidence] = useState({});
 
   // Keep ref in sync and revoke all URLs on unmount
   useEffect(() => {
@@ -75,12 +77,14 @@ export default function useCreatorOnboardingForm() {
 
   const applyImportData = (data) => {
     if (data.bio) setBio(data.bio);
+    if (data.originalBio) setOriginalBio(data.originalBio);
     if (data.contentStyles?.length) setContentStyles(data.contentStyles);
     if (data.strengths?.length) setStrengths(data.strengths);
     if (data.neighborhoods?.length) setNeighborhoods(data.neighborhoods);
     if (data.cuisineSpecialties?.length) setCuisineSpecialties(data.cuisineSpecialties);
     if (data.vibeTags?.length) setVibeTags(data.vibeTags);
     if (data.importedPortfolio?.length) setImportedPortfolio(data.importedPortfolio);
+    if (data.confidence) setConfidence(data.confidence);
   };
 
   const canProceedFromStep = (step) => {
@@ -122,7 +126,7 @@ export default function useCreatorOnboardingForm() {
     neighborhoods, setNeighborhoods,
     dreamBrands, brandInput, setBrandInput,
     portfolioFiles, previews,
-    importedPortfolio, vibeTags,
+    importedPortfolio, vibeTags, originalBio, confidence,
     toggleItem, addDreamBrand, removeDreamBrand,
     handleFilesSelected, removeFile,
     removeImportedPortfolioItem, applyImportData,

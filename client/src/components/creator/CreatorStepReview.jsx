@@ -2,12 +2,36 @@ import { CONTENT_STYLES, CREATOR_STRENGTHS, NEIGHBORHOODS, CUISINE_OPTIONS } fro
 import Chip from '../common/Chip';
 import Btn from '../common/Btn';
 
-function Section({ label, children }) {
+function Section({ label, hint, children }) {
   return (
     <div>
-      <label className="label mb-2">{label}</label>
+      <div className="flex items-center gap-2 mb-2">
+        <label className="label mb-0">{label}</label>
+        {hint && (
+          <span className="text-[10px] text-muted font-body">{hint}</span>
+        )}
+      </div>
       {children}
     </div>
+  );
+}
+
+function ConfidenceBadge({ level }) {
+  if (!level || level === 'none') return null;
+  const styles = {
+    high: 'bg-green-50 text-green-700 border-green-200',
+    medium: 'bg-amber-50 text-amber-700 border-amber-200',
+    low: 'bg-gray-50 text-gray-500 border-gray-200',
+  };
+  const labels = {
+    high: 'AI-suggested',
+    medium: 'AI-suggested · verify',
+    low: 'AI-suggested · low confidence',
+  };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${styles[level] || styles.low}`}>
+      {labels[level] || labels.low}
+    </span>
   );
 }
 
@@ -22,6 +46,7 @@ export default function CreatorStepReview({
   const {
     displayName, setDisplayName,
     bio, setBio,
+    originalBio,
     instagram, setInstagram,
     tiktok, setTiktok,
     contentStyles, setContentStyles,
@@ -30,6 +55,7 @@ export default function CreatorStepReview({
     neighborhoods, setNeighborhoods,
     dreamBrands, brandInput, setBrandInput,
     toggleItem, addDreamBrand, removeDreamBrand,
+    confidence,
   } = formActions;
 
   const canSubmit = displayName.trim() && bio.trim() && contentStyles.length > 0 && strengths.length > 0 && neighborhoods.length > 0;
@@ -39,7 +65,7 @@ export default function CreatorStepReview({
       <div>
         <h2 className="font-display text-2xl font-bold text-dark mb-1">Review your profile</h2>
         <p className="font-body text-muted text-sm">
-          We've pulled in info from your social media. Tweak anything that doesn't look right.
+          We've pulled in what we could from your social media. Fill in the rest and tweak anything that doesn't look right.
         </p>
       </div>
 
@@ -53,7 +79,20 @@ export default function CreatorStepReview({
 
         <Section label="Bio">
           <textarea value={bio} onChange={(e) => setBio(e.target.value)} placeholder="A few words about what you love to shoot..." rows={3} maxLength={280} className="input input-creator resize-none" />
-          <p className="text-xs text-muted mt-1 text-right">{bio.length}/280</p>
+          <div className="flex items-center justify-between mt-1">
+            {originalBio && originalBio !== bio ? (
+              <button
+                type="button"
+                onClick={() => setBio(originalBio)}
+                className="text-[11px] text-creator font-body hover:underline"
+              >
+                Use original: "{originalBio.length > 50 ? originalBio.slice(0, 50) + '...' : originalBio}"
+              </button>
+            ) : (
+              <span />
+            )}
+            <p className="text-xs text-muted">{bio.length}/280</p>
+          </div>
         </Section>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -78,7 +117,7 @@ export default function CreatorStepReview({
       <div className="bg-creatorLight/30 rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Style & Strengths</p>
 
-        <Section label="Content Styles *">
+        <Section label="Content Styles *" hint={<ConfidenceBadge level={confidence?.contentStyles} />}>
           <div className="flex flex-wrap gap-2">
             {CONTENT_STYLES.map((style) => (
               <Chip key={style} label={style} selected={contentStyles.includes(style)} creator onClick={() => toggleItem(contentStyles, setContentStyles, style)} />
@@ -86,7 +125,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Strengths *">
+        <Section label="Strengths *" hint={<ConfidenceBadge level={confidence?.strengths} />}>
           <div className="flex flex-wrap gap-2">
             {CREATOR_STRENGTHS.map((s) => (
               <Chip key={s} label={s} selected={strengths.includes(s)} creator onClick={() => toggleItem(strengths, setStrengths, s)} />
@@ -94,7 +133,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Neighborhoods *">
+        <Section label="Neighborhoods *" hint={neighborhoods.length === 0 ? '— select where you work' : <ConfidenceBadge level={confidence?.neighborhoods} />}>
           <div className="flex flex-wrap gap-2">
             {NEIGHBORHOODS.map((n) => (
               <Chip key={n} label={n} selected={neighborhoods.includes(n)} creator onClick={() => toggleItem(neighborhoods, setNeighborhoods, n)} />
@@ -102,7 +141,7 @@ export default function CreatorStepReview({
           </div>
         </Section>
 
-        <Section label="Cuisines You Enjoy">
+        <Section label="Cuisines You Enjoy" hint={cuisineSpecialties.length === 0 ? '— optional' : <ConfidenceBadge level={confidence?.cuisineSpecialties} />}>
           <div className="flex flex-wrap gap-2">
             {CUISINE_OPTIONS.map((c) => (
               <Chip key={c} label={c} selected={cuisineSpecialties.includes(c)} creator onClick={() => toggleItem(cuisineSpecialties, setCuisineSpecialties, c)} />

@@ -313,15 +313,24 @@ router.post("/import-social", async (req, res, next) => {
     }
 
     let source = "manual";
-    let scraped = { posts: [], profile: { bio: "" } };
+    let scraped;
 
     // Try Instagram first, then TikTok
-    if (instagramHandle) {
-      source = "instagram";
-      scraped = await fetchInstagramPosts(instagramHandle);
-    } else if (tiktokHandle) {
-      source = "tiktok";
-      scraped = await fetchTiktokPosts(tiktokHandle);
+    try {
+      if (instagramHandle) {
+        source = "instagram";
+        scraped = await fetchInstagramPosts(instagramHandle);
+      } else if (tiktokHandle) {
+        source = "tiktok";
+        scraped = await fetchTiktokPosts(tiktokHandle);
+      }
+    } catch (scrapeErr) {
+      // Return user-friendly error for private/nonexistent/empty accounts
+      return res.status(400).json({ error: scrapeErr.message });
+    }
+
+    if (!scraped || !scraped.posts?.length) {
+      return res.status(400).json({ error: "No posts found for this account." });
     }
 
     // Run AI analysis on the scraped data
@@ -339,6 +348,7 @@ router.post("/import-social", async (req, res, next) => {
     return res.json({
       source,
       profilePicUrl,
+      originalBio: scraped.profile?.bio || "",
       profile: {
         bio: analysis.bio || scraped.profile.bio || "",
         contentStyles: analysis.contentStyles || [],
@@ -347,6 +357,7 @@ router.post("/import-social", async (req, res, next) => {
         cuisineSpecialties: analysis.cuisineSpecialties || [],
         vibeTags: analysis.vibeTags || [],
       },
+      confidence: analysis.confidence || {},
       importedPortfolio: (scraped.posts || []).map((p) => ({
         url: p.imageUrl,
         caption: p.caption,

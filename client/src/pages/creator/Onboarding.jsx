@@ -41,12 +41,14 @@ export default function Onboarding() {
       // Apply AI analysis to form
       formActions.applyImportData({
         bio: data.profile?.bio,
+        originalBio: data.originalBio,
         contentStyles: data.profile?.contentStyles,
         strengths: data.profile?.strengths,
         neighborhoods: data.profile?.neighborhoods,
         cuisineSpecialties: data.profile?.cuisineSpecialties,
         vibeTags: data.profile?.vibeTags,
         importedPortfolio: data.importedPortfolio,
+        confidence: data.confidence,
       });
 
       // Refresh user profile to pick up saved avatar from social import

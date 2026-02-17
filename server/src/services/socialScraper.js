@@ -1,5 +1,6 @@
 // ─── Social Media Scraper Service ───
-// Fetches posts from Instagram/TikTok via RapidAPI with demo fallbacks.
+// Fetches posts from Instagram/TikTok via RapidAPI.
+// Returns clear errors for private/nonexistent accounts.
 
 const https = require("https");
 
@@ -33,7 +34,7 @@ function rapidApiGet(host, path) {
     });
 
     req.on("error", reject);
-    req.setTimeout(10000, () => {
+    req.setTimeout(15000, () => {
       req.destroy();
       reject(new Error("RapidAPI request timed out"));
     });
@@ -84,104 +85,143 @@ function rapidApiPost(host, path, formData) {
 /**
  * Fetch recent Instagram posts for a handle.
  * Uses Instagram Scraper Stable API (RockSolid APIs).
- * Returns { posts: [{imageUrl, caption}], profile: {bio, followerCount, fullName} }
+ * Returns { posts, profile } or throws with a user-friendly message.
  */
 async function fetchInstagramPosts(handle, count = 10) {
   if (!RAPIDAPI_KEY) {
-    console.warn("[SocialScraper] No RAPIDAPI_KEY — using fallback");
+    console.warn("[SocialScraper] No RAPIDAPI_KEY — using demo fallback");
     return fallbackCreatorImport(handle);
   }
 
-  try {
-    const cleanHandle = handle.replace(/^@/, "");
-    const host = "instagram-scraper-stable-api.p.rapidapi.com";
+  const cleanHandle = handle.replace(/^@/, "");
+  const host = "instagram-scraper-stable-api.p.rapidapi.com";
 
-    // Fetch profile info and posts in parallel
-    const [profileData, mediaData] = await Promise.all([
-      rapidApiPost(host, "/ig_get_fb_profile_v3.php", {
-        username_or_url: cleanHandle,
-      }),
-      rapidApiPost(host, "/get_ig_user_posts.php", {
-        username_or_url: cleanHandle,
-      }),
-    ]);
+  // Fetch profile info and posts in parallel
+  const [profileData, mediaData] = await Promise.all([
+    rapidApiPost(host, "/ig_get_fb_profile_v3.php", {
+      username_or_url: cleanHandle,
+    }),
+    rapidApiPost(host, "/get_ig_user_posts.php", {
+      username_or_url: cleanHandle,
+    }),
+  ]);
 
-    const bio = profileData?.biography || "";
-    const followerCount = profileData?.follower_count || 0;
-    const fullName = profileData?.full_name || cleanHandle;
-    const profilePicUrl =
-      profileData?.hd_profile_pic_url_info?.url ||
-      profileData?.profile_pic_url ||
-      "";
-
-    // Parse posts — limit to requested count
-    const items = (mediaData?.posts || []).slice(0, count);
-    const posts = items
-      .map((item) => {
-        const node = item?.node || item;
-        const imageUrl =
-          node.image_versions2?.candidates?.[0]?.url ||
-          node.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
-          "";
-        const caption = node.caption?.text || "";
-        return { imageUrl, caption };
-      })
-      .filter((p) => p.imageUrl);
-
-    return { posts, profile: { bio, followerCount, fullName, profilePicUrl } };
-  } catch (err) {
-    console.warn("[SocialScraper] Instagram fetch failed:", err.message);
-    return fallbackCreatorImport(handle);
+  // Check for nonexistent account
+  if (profileData?.error || (!profileData?.username && !profileData?.pk)) {
+    throw new Error(
+      `Instagram account "@${cleanHandle}" was not found. Check the spelling and try again.`
+    );
   }
+
+  // Check for private account
+  if (profileData?.is_private) {
+    throw new Error(
+      `Instagram account "@${cleanHandle}" is private. We can only import from public accounts.`
+    );
+  }
+
+  const bio = profileData?.biography || "";
+  const followerCount = profileData?.follower_count || 0;
+  const fullName = profileData?.full_name || cleanHandle;
+  const profilePicUrl =
+    profileData?.hd_profile_pic_url_info?.url ||
+    profileData?.profile_pic_url ||
+    "";
+
+  // Parse posts — limit to requested count
+  const items = (mediaData?.posts || []).slice(0, count);
+  const posts = items
+    .map((item) => {
+      const node = item?.node || item;
+      const imageUrl =
+        node.image_versions2?.candidates?.[0]?.url ||
+        node.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ||
+        "";
+      const caption = node.caption?.text || "";
+      return { imageUrl, caption };
+    })
+    .filter((p) => p.imageUrl);
+
+  if (posts.length === 0) {
+    throw new Error(
+      `Instagram account "@${cleanHandle}" has no public posts to import.`
+    );
+  }
+
+  return {
+    posts,
+    profile: { bio, followerCount, fullName, profilePicUrl, platform: "instagram" },
+  };
 }
 
 /**
  * Fetch recent TikTok posts for a handle.
  * Uses tiktok-scraper7 API.
- * Returns { posts: [{imageUrl, caption}], profile: {bio, followerCount, fullName} }
+ * Returns { posts, profile } or throws with a user-friendly message.
  */
-async function fetchTiktokPosts(handle, count = 6) {
+async function fetchTiktokPosts(handle, count = 10) {
   if (!RAPIDAPI_KEY) {
-    console.warn("[SocialScraper] No RAPIDAPI_KEY — using fallback");
+    console.warn("[SocialScraper] No RAPIDAPI_KEY — using demo fallback");
     return fallbackCreatorImport(handle);
   }
 
-  try {
-    const cleanHandle = handle.replace(/^@/, "");
-    const host = "tiktok-scraper7.p.rapidapi.com";
+  const cleanHandle = handle.replace(/^@/, "");
+  const host = "tiktok-scraper7.p.rapidapi.com";
 
-    const userData = await rapidApiGet(
-      host,
-      `/user/info?unique_id=${encodeURIComponent(cleanHandle)}`
+  const userData = await rapidApiGet(
+    host,
+    `/user/info?unique_id=${encodeURIComponent(cleanHandle)}`
+  );
+
+  // Check for nonexistent account
+  if (
+    userData?.code !== 0 ||
+    !userData?.data?.user?.id
+  ) {
+    throw new Error(
+      `TikTok account "@${cleanHandle}" was not found. Check the spelling and try again.`
     );
-
-    const bio = userData?.data?.user?.signature || "";
-    const followerCount = userData?.data?.stats?.followerCount || 0;
-    const fullName = userData?.data?.user?.nickname || cleanHandle;
-    const profilePicUrl =
-      userData?.data?.user?.avatarLarger ||
-      userData?.data?.user?.avatarMedium ||
-      userData?.data?.user?.avatarThumb ||
-      "";
-
-    const postsData = await rapidApiGet(
-      host,
-      `/user/posts?unique_id=${encodeURIComponent(cleanHandle)}&count=${count}`
-    );
-
-    const items = (postsData?.data?.videos || []).slice(0, count);
-    const posts = items
-      .map((item) => ({
-        imageUrl: item.cover || item.origin_cover || "",
-        caption: item.title || "",
-      }))
-      .filter((p) => p.imageUrl);
-
-    return { posts, profile: { bio, followerCount, fullName, profilePicUrl } };
-  } catch (err) {
-    console.warn("[SocialScraper] TikTok fetch failed:", err.message);
-    return fallbackCreatorImport(handle);
   }
+
+  // Check for private account
+  if (userData?.data?.user?.privateAccount) {
+    throw new Error(
+      `TikTok account "@${cleanHandle}" is private. We can only import from public accounts.`
+    );
+  }
+
+  const bio = userData?.data?.user?.signature || "";
+  const followerCount = userData?.data?.stats?.followerCount || 0;
+  const fullName = userData?.data?.user?.nickname || cleanHandle;
+  const profilePicUrl =
+    userData?.data?.user?.avatarLarger ||
+    userData?.data?.user?.avatarMedium ||
+    userData?.data?.user?.avatarThumb ||
+    "";
+
+  const postsData = await rapidApiGet(
+    host,
+    `/user/posts?unique_id=${encodeURIComponent(cleanHandle)}&count=${count}`
+  );
+
+  const items = (postsData?.data?.videos || []).slice(0, count);
+  const posts = items
+    .map((item) => ({
+      imageUrl: item.cover || item.origin_cover || "",
+      caption: item.title || "",
+    }))
+    .filter((p) => p.imageUrl);
+
+  if (posts.length === 0) {
+    throw new Error(
+      `TikTok account "@${cleanHandle}" has no public posts to import.`
+    );
+  }
+
+  return {
+    posts,
+    profile: { bio, followerCount, fullName, profilePicUrl, platform: "tiktok" },
+  };
 }
 
 /**
