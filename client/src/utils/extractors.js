@@ -1,6 +1,7 @@
 export const brandDisplayName = (project) =>
-  project.brandProfile?.user?.name ||
   project.brandProfile?.businessName ||
+  project.brandProfile?.user?.name ||
+  project.brand?.businessName ||
   project.brand?.name ||
   project.brandName ||
   'Brand';
