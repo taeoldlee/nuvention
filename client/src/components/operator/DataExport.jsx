@@ -27,10 +27,10 @@ export default function DataExport() {
       const briefs = briefsRes.data.briefs || [];
       const projects = projectsRes.data.projects || [];
 
-      const projectByBriefTitle = {};
+      const projectByBriefId = {};
       for (const p of projects) {
-        const title = p.application?.brief?.title;
-        if (title) projectByBriefTitle[title] = p;
+        const briefId = p.application?.brief?.id;
+        if (briefId) projectByBriefId[briefId] = p;
       }
 
       const headers = [
@@ -46,7 +46,7 @@ export default function DataExport() {
       ];
 
       const rows = briefs.map((b) => {
-        const proj = projectByBriefTitle[b.title];
+        const proj = projectByBriefId[b.id];
         return {
           'Brief Title': b.title || '',
           'Status': b.status || '',
