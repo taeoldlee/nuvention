@@ -6,7 +6,6 @@ import Btn from '../../components/common/Btn';
 import StatusBadge from '../../components/common/StatusBadge';
 import FadeIn from '../../components/marketing/FadeIn';
 import ApplicationFilters, { getCreatorTier } from '../../components/operator/ApplicationFilters';
-import ApplicationScoreBadge from '../../components/operator/ApplicationScoreBadge';
 
 const CAMPAIGN_GOAL_LABELS = {
   EVENT_PROMO: 'Event Promo',
