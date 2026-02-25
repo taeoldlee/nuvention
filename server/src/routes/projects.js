@@ -1,60 +1,26 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
-const { requireAuth, requireOperatorWithBrand, requireCreatorWithProfile } = require("../middleware/auth");
+const { requireAuth, requireOperatorWithBrand, requireCreatorToken } = require("../middleware/auth");
 const { createPayout } = require("../services/payments");
 const { generateUsageRightsPDF } = require("../services/documents");
 const { createNotification } = require("../services/notifications");
+const { createCharge } = require("../services/payments");
 
-// All routes require authentication
-router.use(requireAuth);
+// ─── Brand routes (x-user-id auth) ─────────────────────────────────────────
 
 /**
  * GET /api/projects
- * List user's projects (operator or creator based on role).
+ * List brand's projects (operator only).
  */
-router.get("/", async (req, res, next) => {
+router.get("/", requireAuth, requireOperatorWithBrand, async (req, res, next) => {
   try {
-    let whereClause = {};
-
-    if (req.user.role === "OPERATOR") {
-      const brandProfile = await prisma.brandProfile.findUnique({
-        where: { userId: req.user.id },
-      });
-      if (!brandProfile) {
-        return res.json({ projects: [] });
-      }
-      whereClause = { brandProfileId: brandProfile.id };
-    } else if (req.user.role === "CREATOR") {
-      const creatorProfile = await prisma.creatorProfile.findUnique({
-        where: { userId: req.user.id },
-      });
-      if (!creatorProfile) {
-        return res.json({ projects: [] });
-      }
-      whereClause = { creatorProfileId: creatorProfile.id };
-    }
-
     const projects = await prisma.project.findMany({
-      where: whereClause,
+      where: { brandProfileId: req.brandProfile.id },
       include: {
-        match: {
+        application: {
           include: {
-            contentRequest: true,
-          },
-        },
-        brandProfile: {
-          include: {
-            user: {
-              select: { id: true, name: true, avatarUrl: true },
-            },
-          },
-        },
-        creatorProfile: {
-          include: {
-            user: {
-              select: { id: true, name: true, avatarUrl: true },
-            },
+            brief: { select: { id: true, title: true } },
           },
         },
         drafts: {
@@ -74,47 +40,30 @@ router.get("/", async (req, res, next) => {
 
 /**
  * GET /api/projects/:id
- * Get project detail with all drafts.
+ * Get project detail (brand access verified via brandProfileId).
  */
-router.get("/:id", async (req, res, next) => {
+router.get("/:id", requireAuth, async (req, res, next) => {
   try {
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
       include: {
-        match: {
+        application: {
           include: {
-            contentRequest: true,
-            creatorProfile: {
-              include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
-                },
-                portfolioItems: {
-                  take: 4,
-                  orderBy: { createdAt: "desc" },
-                },
-              },
-            },
+            brief: true,
           },
         },
         brandProfile: {
           include: {
-            user: {
-              select: { id: true, name: true, avatarUrl: true },
-            },
-          },
-        },
-        creatorProfile: {
-          include: {
-            user: {
-              select: { id: true, name: true, avatarUrl: true },
-            },
+            user: { select: { id: true, name: true, avatarUrl: true } },
           },
         },
         drafts: {
           orderBy: { version: "desc" },
         },
         transaction: true,
+        messages: {
+          orderBy: { createdAt: "asc" },
+        },
       },
     });
 
@@ -122,13 +71,8 @@ router.get("/:id", async (req, res, next) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Verify access: user must be the operator or creator on this project
-    const isOperator =
-      req.user.brandProfile && project.brandProfileId === req.user.brandProfile.id;
-    const isCreator =
-      req.user.creatorProfile && project.creatorProfileId === req.user.creatorProfile.id;
-
-    if (!isOperator && !isCreator) {
+    // Verify the authenticated user's brand owns this project
+    if (!req.user.brandProfile || project.brandProfileId !== req.user.brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
@@ -140,9 +84,9 @@ router.get("/:id", async (req, res, next) => {
 
 /**
  * GET /api/projects/:id/usage-rights-pdf
- * Generate and download a PDF usage rights document for a project.
+ * Generate and download a PDF usage rights document.
  */
-router.get("/:id/usage-rights-pdf", async (req, res, next) => {
+router.get("/:id/usage-rights-pdf", requireAuth, async (req, res, next) => {
   try {
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
@@ -150,11 +94,8 @@ router.get("/:id/usage-rights-pdf", async (req, res, next) => {
         brandProfile: {
           include: { user: { select: { name: true } } },
         },
-        creatorProfile: {
-          include: { user: { select: { name: true } } },
-        },
-        match: {
-          include: { contentRequest: true },
+        application: {
+          include: { brief: true },
         },
       },
     });
@@ -163,22 +104,19 @@ router.get("/:id/usage-rights-pdf", async (req, res, next) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Verify access
-    const isOperator =
-      req.user.brandProfile && project.brandProfileId === req.user.brandProfile.id;
-    const isCreator =
-      req.user.creatorProfile && project.creatorProfileId === req.user.creatorProfile.id;
-
-    if (!isOperator && !isCreator) {
+    // Verify ownership
+    if (!req.user.brandProfile || project.brandProfileId !== req.user.brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
     const pdfBuffer = await generateUsageRightsPDF({
       businessName: project.brandProfile?.businessName,
-      contentType: project.match?.contentRequest?.contentType,
+      contentType: project.application?.brief?.contentTypes?.[0],
       usageRights: project.usageRights,
-      timeline: project.timeline,
-      creatorName: project.creatorProfile?.user?.name || project.creatorProfile?.displayName,
+      timeline: project.contentDueAt
+        ? `Due by ${new Date(project.contentDueAt).toLocaleDateString()}`
+        : "Standard timeline",
+      creatorName: project.creatorName,
       deliverables: project.deliverables,
       compensationType: project.compensationType,
       compensationDetails: project.compensationDetails,
@@ -194,143 +132,39 @@ router.get("/:id/usage-rights-pdf", async (req, res, next) => {
 });
 
 /**
- * POST /api/projects/:id/drafts
- * Creator submits a draft.
- * Body: { fileUrls: [...], notes?: "string" }
+ * POST /api/projects/:id/drafts/:draftId/approve
+ * Brand approves a submitted draft.
  */
-router.post("/:id/drafts", requireCreatorWithProfile, async (req, res, next) => {
+router.post("/:id/drafts/:draftId/approve", requireAuth, requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const { creatorProfile } = req;
-
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
-      include: { drafts: { orderBy: { version: "desc" }, take: 1 } },
     });
 
     if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    if (project.creatorProfileId !== creatorProfile.id) {
+    if (project.brandProfileId !== req.brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    if (!["BRIEF_SENT", "REVISION_REQUESTED"].includes(project.status)) {
-      return res
-        .status(400)
-        .json({ error: "Cannot submit draft in current project status: " + project.status });
-    }
-
-    const { fileUrls, notes } = req.body;
-
-    if (!fileUrls || !Array.isArray(fileUrls) || fileUrls.length === 0) {
-      return res.status(400).json({ error: "fileUrls array is required" });
-    }
-
-    if (!fileUrls.every((url) => typeof url === "string" && url.length > 0)) {
-      return res.status(400).json({ error: "All fileUrls must be non-empty strings" });
-    }
-
-    // Create draft and update project atomically
-    const draft = await prisma.$transaction(async (tx) => {
-      const latestDraft = await tx.projectDraft.findFirst({
-        where: { projectId: project.id },
-        orderBy: { version: "desc" },
-      });
-      const version = latestDraft ? latestDraft.version + 1 : 1;
-
-      const newDraft = await tx.projectDraft.create({
-        data: {
-          projectId: project.id,
-          version,
-          fileUrls,
-          notes: notes || null,
-          status: "SUBMITTED",
-        },
-      });
-
-      await tx.project.update({
-        where: { id: project.id },
-        data: { status: "DRAFT_SUBMITTED" },
-      });
-
-      return newDraft;
+    const draft = await prisma.projectDraft.findUnique({
+      where: { id: req.params.draftId },
     });
 
-    // Notify operator about new draft
-    const projectWithBrand = await prisma.project.findUnique({
-      where: { id: project.id },
-      include: { brandProfile: { select: { userId: true } } },
-    });
-    if (projectWithBrand?.brandProfile?.userId) {
-      createNotification(projectWithBrand.brandProfile.userId, {
-        type: "DRAFT_SUBMITTED",
-        title: "New draft submitted",
-        body: `A creator submitted a new draft for review.`,
-        linkUrl: `/operator/project/${project.id}`,
-      }).catch(() => {});
+    if (!draft || draft.projectId !== project.id) {
+      return res.status(404).json({ error: "Draft not found" });
     }
 
-    res.status(201).json({ draft });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * Shared guard: load project + draft, verify ownership + submitted status.
- */
-async function findDraftForAction(req, res) {
-  const { brandProfile } = req;
-
-  const project = await prisma.project.findUnique({
-    where: { id: req.params.id },
-  });
-
-  if (!project) {
-    res.status(404).json({ error: "Project not found" });
-    return null;
-  }
-
-  if (project.brandProfileId !== brandProfile.id) {
-    res.status(403).json({ error: "Access denied" });
-    return null;
-  }
-
-  const draft = await prisma.projectDraft.findUnique({
-    where: { id: req.params.draftId },
-  });
-
-  if (!draft || draft.projectId !== project.id) {
-    res.status(404).json({ error: "Draft not found" });
-    return null;
-  }
-
-  if (draft.status !== "SUBMITTED") {
-    res.status(400).json({ error: "Draft has already been reviewed" });
-    return null;
-  }
-
-  return { project, draft };
-}
-
-/**
- * POST /api/projects/:id/drafts/:draftId/approve
- * Operator approves a draft.
- */
-router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req, res, next) => {
-  try {
-    const result = await findDraftForAction(req, res);
-    if (!result) return;
-    const { project, draft } = result;
+    if (draft.status !== "SUBMITTED") {
+      return res.status(400).json({ error: "Draft has already been reviewed" });
+    }
 
     const updatedDraft = await prisma.$transaction(async (tx) => {
       const d = await tx.projectDraft.update({
         where: { id: draft.id },
-        data: {
-          status: "APPROVED",
-          feedback: req.body.feedback || null,
-        },
+        data: { status: "APPROVED" },
       });
 
       await tx.project.update({
@@ -341,19 +175,8 @@ router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req
       return d;
     });
 
-    // Notify creator
-    const projWithCreator = await prisma.project.findUnique({
-      where: { id: project.id },
-      include: { creatorProfile: { select: { userId: true } } },
-    });
-    if (projWithCreator?.creatorProfile?.userId) {
-      createNotification(projWithCreator.creatorProfile.userId, {
-        type: "APPROVED",
-        title: "Your draft was approved!",
-        body: "Great work! The brand approved your submission.",
-        linkUrl: `/creator/project/${project.id}`,
-      }).catch(() => {});
-    }
+    // Notify creator (no userId for creator-token users, just log)
+    console.log(`[notification] Draft ${draft.id} approved for project ${project.id}`);
 
     res.json({ draft: updatedDraft });
   } catch (err) {
@@ -363,25 +186,33 @@ router.post("/:id/drafts/:draftId/approve", requireOperatorWithBrand, async (req
 
 /**
  * POST /api/projects/:id/drafts/:draftId/revision
- * Operator requests a revision on a draft.
- * Body: { feedback: "string" }
+ * Brand requests a revision on a submitted draft.
+ * Body: { feedback }
  */
-router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (req, res, next) => {
+router.post("/:id/drafts/:draftId/revision", requireAuth, requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const result = await findDraftForAction(req, res);
-    if (!result) return;
-    const { project, draft } = result;
-
-    const priorRevision = await prisma.projectDraft.findFirst({
-      where: {
-        projectId: project.id,
-        feedback: { not: null },
-      },
+    const project = await prisma.project.findUnique({
+      where: { id: req.params.id },
     });
-    if (priorRevision) {
-      return res.status(400).json({
-        error: "Only one revision round is included for this project",
-      });
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (project.brandProfileId !== req.brandProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const draft = await prisma.projectDraft.findUnique({
+      where: { id: req.params.draftId },
+    });
+
+    if (!draft || draft.projectId !== project.id) {
+      return res.status(404).json({ error: "Draft not found" });
+    }
+
+    if (draft.status !== "SUBMITTED") {
+      return res.status(400).json({ error: "Draft has already been reviewed" });
     }
 
     const { feedback } = req.body;
@@ -401,25 +232,14 @@ router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (re
 
       await tx.project.update({
         where: { id: project.id },
-        data: { status: "REVISION_REQUESTED" },
+        data: {
+          status: "REVISION_REQUESTED",
+          revisionsUsed: { increment: 1 },
+        },
       });
 
       return d;
     });
-
-    // Notify creator
-    const projForRevision = await prisma.project.findUnique({
-      where: { id: project.id },
-      include: { creatorProfile: { select: { userId: true } } },
-    });
-    if (projForRevision?.creatorProfile?.userId) {
-      createNotification(projForRevision.creatorProfile.userId, {
-        type: "REVISION_REQUESTED",
-        title: "Revision requested",
-        body: feedback.slice(0, 100),
-        linkUrl: `/creator/project/${project.id}`,
-      }).catch(() => {});
-    }
 
     res.json({ draft: updatedDraft });
   } catch (err) {
@@ -428,13 +248,12 @@ router.post("/:id/drafts/:draftId/revision", requireOperatorWithBrand, async (re
 });
 
 /**
- * POST /api/projects/:id/deliver
- * Mark project as delivered. Triggers creator payout.
+ * POST /api/projects/:id/complete
+ * Mark project as complete and release escrow.
+ * Project must be in APPROVED status.
  */
-router.post("/:id/deliver", requireOperatorWithBrand, async (req, res, next) => {
+router.post("/:id/complete", requireAuth, requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const { brandProfile } = req;
-
     const project = await prisma.project.findUnique({
       where: { id: req.params.id },
       include: { transaction: true },
@@ -444,56 +263,198 @@ router.post("/:id/deliver", requireOperatorWithBrand, async (req, res, next) => 
       return res.status(404).json({ error: "Project not found" });
     }
 
-    if (project.brandProfileId !== brandProfile.id) {
+    if (project.brandProfileId !== req.brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
     if (project.status !== "APPROVED") {
-      return res
-        .status(400)
-        .json({ error: "Project must be approved before it can be delivered" });
+      return res.status(400).json({ error: "Project must be approved before it can be completed" });
     }
 
     // Update project status
     const updatedProject = await prisma.project.update({
       where: { id: project.id },
-      data: { status: "DELIVERED" },
+      data: {
+        status: "COMPLETED",
+        completedAt: new Date(),
+      },
       include: {
-        match: { include: { contentRequest: true } },
+        application: { include: { brief: true } },
         brandProfile: true,
-        creatorProfile: {
-          include: {
-            user: { select: { id: true, name: true } },
-          },
-        },
         transaction: true,
       },
     });
 
-    // Trigger payout
+    // Release escrow via payout
     if (project.transaction) {
       await createPayout(project.id, project.transaction.creatorPayout);
     }
 
-    // Update the content request status
-    if (updatedProject.match?.contentRequestId) {
-      await prisma.contentRequest.update({
-        where: { id: updatedProject.match.contentRequestId },
-        data: { status: "COMPLETED" },
-      });
+    res.json({ project: updatedProject });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Creator routes (x-creator-token auth) ──────────────────────────────────
+
+/**
+ * POST /api/projects/:id/accept
+ * Creator accepts the project invitation.
+ * Project must be AWAITING_CREATOR_ACCEPTANCE.
+ */
+router.post("/:id/accept", requireCreatorToken, async (req, res, next) => {
+  try {
+    const { creatorProject } = req;
+
+    if (creatorProject.id !== req.params.id) {
+      return res.status(403).json({ error: "Token does not match this project" });
     }
 
-    // Notify creator
-    if (updatedProject.creatorProfile?.user?.id) {
-      createNotification(updatedProject.creatorProfile.user.id, {
-        type: "DELIVERED",
-        title: "Project delivered!",
-        body: "Your project has been marked as delivered. Payment released.",
-        linkUrl: `/creator/project/${project.id}`,
+    if (creatorProject.status !== "AWAITING_CREATOR_ACCEPTANCE") {
+      return res.status(400).json({ error: "Project is not awaiting creator acceptance" });
+    }
+
+    // Update project status
+    const updatedProject = await prisma.project.update({
+      where: { id: creatorProject.id },
+      data: {
+        status: "IN_PROGRESS",
+        creatorAcceptedAt: new Date(),
+      },
+      include: {
+        application: { include: { brief: true } },
+        brandProfile: true,
+        transaction: true,
+      },
+    });
+
+    // Create charge (escrow hold)
+    await createCharge(creatorProject.id, creatorProject.price);
+
+    // Notify brand
+    if (creatorProject.brandProfile?.user?.id) {
+      createNotification(creatorProject.brandProfile.user.id, {
+        type: "PROJECT_ACCEPTED",
+        title: "Creator accepted your project!",
+        body: `${creatorProject.creatorName} accepted the project.`,
+        linkUrl: `/operator/project/${creatorProject.id}`,
       }).catch(() => {});
     }
 
     res.json({ project: updatedProject });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/projects/:id/decline
+ * Creator declines the project invitation.
+ */
+router.post("/:id/decline", requireCreatorToken, async (req, res, next) => {
+  try {
+    const { creatorProject } = req;
+
+    if (creatorProject.id !== req.params.id) {
+      return res.status(403).json({ error: "Token does not match this project" });
+    }
+
+    // Set project status back and decline the application
+    await prisma.$transaction(async (tx) => {
+      await tx.project.update({
+        where: { id: creatorProject.id },
+        data: { status: "AWAITING_CREATOR_ACCEPTANCE" },
+      });
+
+      await tx.application.update({
+        where: { id: creatorProject.applicationId },
+        data: { status: "DECLINED" },
+      });
+    });
+
+    // Notify brand
+    if (creatorProject.brandProfile?.user?.id) {
+      createNotification(creatorProject.brandProfile.user.id, {
+        type: "PROJECT_DECLINED",
+        title: "Creator declined your project",
+        body: `${creatorProject.creatorName} declined the project invitation.`,
+        linkUrl: `/operator/project/${creatorProject.id}`,
+      }).catch(() => {});
+    }
+
+    res.json({ message: "Project declined" });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/projects/:id/drafts
+ * Creator submits a draft.
+ * Body: { fileUrls: [...], notes?: "string" }
+ */
+router.post("/:id/drafts", requireCreatorToken, async (req, res, next) => {
+  try {
+    const { creatorProject } = req;
+
+    if (creatorProject.id !== req.params.id) {
+      return res.status(403).json({ error: "Token does not match this project" });
+    }
+
+    if (!["IN_PROGRESS", "REVISION_REQUESTED"].includes(creatorProject.status)) {
+      return res
+        .status(400)
+        .json({ error: "Cannot submit draft in current project status: " + creatorProject.status });
+    }
+
+    const { fileUrls, notes } = req.body;
+
+    if (!fileUrls || !Array.isArray(fileUrls) || fileUrls.length === 0) {
+      return res.status(400).json({ error: "fileUrls array is required" });
+    }
+
+    if (!fileUrls.every((url) => typeof url === "string" && url.length > 0)) {
+      return res.status(400).json({ error: "All fileUrls must be non-empty strings" });
+    }
+
+    // Create draft and update project atomically
+    const draft = await prisma.$transaction(async (tx) => {
+      const latestDraft = await tx.projectDraft.findFirst({
+        where: { projectId: creatorProject.id },
+        orderBy: { version: "desc" },
+      });
+      const version = latestDraft ? latestDraft.version + 1 : 1;
+
+      const newDraft = await tx.projectDraft.create({
+        data: {
+          projectId: creatorProject.id,
+          version,
+          fileUrls,
+          notes: notes || null,
+          status: "SUBMITTED",
+        },
+      });
+
+      await tx.project.update({
+        where: { id: creatorProject.id },
+        data: { status: "DRAFT_SUBMITTED" },
+      });
+
+      return newDraft;
+    });
+
+    // Notify brand about new draft
+    if (creatorProject.brandProfile?.user?.id) {
+      createNotification(creatorProject.brandProfile.user.id, {
+        type: "DRAFT_SUBMITTED",
+        title: "New draft submitted",
+        body: `${creatorProject.creatorName} submitted a new draft for review.`,
+        linkUrl: `/operator/project/${creatorProject.id}`,
+      }).catch(() => {});
+    }
+
+    res.status(201).json({ draft });
   } catch (err) {
     next(err);
   }

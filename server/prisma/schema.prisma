@@ -19,15 +19,13 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  brandProfile   BrandProfile?
-  creatorProfile CreatorProfile?
-  messages       Message[]
-  notifications  Notification[]
+  brandProfile  BrandProfile?
+  notifications Notification[]
 }
 
 enum UserRole {
   OPERATOR
-  CREATOR
+  ADMIN
 }
 
 // ─── BRAND (OPERATOR) PROFILE ───
@@ -45,193 +43,193 @@ model BrandProfile {
   googleMapsUrl String?
   yelpUrl       String?
 
-  vibe                Json // ["Cozy & Warm", "Minimalist"]
-  values              Json // ["Community-first", "Sustainability"]
-  contentComfortZones Json // ["Ambiance / Interior", "Food & Drink"]
-  vibeScales           Json? // { cozyEnergetic: 0-100, quietBuzzy: 0-100, classicModern: 0-100, casualElevated: 0-100 }
+  vibe                    Json // ["Cozy & Warm", "Minimalist"]
+  values                  Json // ["Community-first", "Sustainability"]
+  contentComfortZones     Json // ["Ambiance / Interior", "Food & Drink"]
+  vibeScales              Json? // { cozyEnergetic: 0-100, quietBuzzy: 0-100, classicModern: 0-100, casualElevated: 0-100 }
   guestExperienceKeywords Json? // ["warm", "neighborhood", "slow"]
-  visualRefUrls        Json? // ["https://..."]
-  contentNoGos         String?
+  visualRefUrls           Json? // ["https://..."]
+  contentNoGos            String?
 
   budgetMin Int? // cents
   budgetMax Int? // cents
 
-  cuisineTypes    Json? // ["Italian", "Coffee & Beverage", "Bakery & Pastry"]
+  cuisineTypes Json? // ["Italian", "Coffee & Beverage", "Bakery & Pastry"]
 
   vibeAnalysis    Json?
   profilePhotoUrl String?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  contentRequests ContentRequest[]
-  projects        Project[]
-}
-
-// ─── CREATOR PROFILE ───
-
-model CreatorProfile {
-  id     String @id @default(uuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
-
-  displayName     String
-  bio             String?
-  instagramHandle String?
-  tiktokHandle    String?
-
-  contentStyles Json // ["Warm & Editorial", "Documentary"]
-  strengths     Json // ["Food photography", "Reels", "Ambiance"]
-  neighborhoods Json // ["Evanston", "Logan Square"]
-  dreamBrands   Json? // ["Colectivo", "Metric Coffee"]
-
-  cuisineSpecialties Json? // ["Italian", "Bakery & Pastry", "Coffee & Beverage"]
-  brandNoGos         String? // free-text: "no fast food chains, no corporate brands"
-
-  vibeTags Json? // ["warm-light", "minimalist", "community-feel"]
-  tier CreatorTier? @default(NEW)
-
-  profilePhotoUrl String?
-  isAvailable     Boolean @default(true)
+  subscriptionTier   SubscriptionTier   @default(BASIC)
+  subscriptionStatus SubscriptionStatus @default(TRIAL)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  portfolioItems PortfolioItem[]
-  matches        Match[]
-  projects       Project[]
+  briefs   Brief[]
+  projects Project[]
 }
 
-enum CreatorTier {
-  NEW
-  VERIFIED
+enum SubscriptionTier {
+  BASIC
   PRO
 }
 
-// ─── PORTFOLIO ───
-
-model PortfolioItem {
-  id               String         @id @default(uuid())
-  creatorProfileId String
-  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id])
-
-  imageUrl    String
-  caption     String?
-  contentType String?
-  vibeTags    Json?
-  verified    Boolean @default(false)
-
-  createdAt DateTime @default(now())
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  TRIAL
 }
 
-// ─── CONTENT REQUESTS ───
+// ─── BRIEFS ───
 
-model ContentRequest {
+model Brief {
   id             String       @id @default(uuid())
   brandProfileId String
   brandProfile   BrandProfile @relation(fields: [brandProfileId], references: [id])
 
-  contentType      String
-  description      String?
-  stylePreferences Json?
-  budgetRange      String?
-  contentGoal      String?
-  subject          String?
-  creativeDirection String?
-  deliverables     Json?
-  timeline         String?
-  usageRights      String?
-  briefTemplate    Json?
-  compensationType CompensationType @default(FLAT_FEE)
-  compensationDetails Json?
+  title               String
+  campaignGoal        CampaignGoal
+  contentTypes        Json // string array: ["REEL", "CAROUSEL", "STORY", "TIKTOK", "PHOTO_SET", "BLOG_POST"]
+  numberOfDeliverables Int
+  creativeDirection   String // free text
+  referenceImageUrls  Json? // string array — uploaded reference images
+  dos                 String? // free text
+  donts               String? // free text
+  deadline            DateTime?
+  compensationType    CompensationType
+  compensationAmount  Int? // cents (for flat fee / hybrid cash component)
+  compensationDetails Json? // flexible: {description, cashAmount, productValue, etc.}
+  usageRights         UsageRights
+  locationRequirement LocationRequirement
+  additionalNotes     String?
+  revisionsIncluded   Int          @default(1)
+  status              BriefStatus  @default(DRAFT)
+  aiSuggestions       Json? // AI-generated suggestions shown during creation
+  closedAt            DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
-  status RequestStatus @default(MATCHING)
+  applications Application[]
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  matches Match[]
+enum CampaignGoal {
+  EVENT_PROMO
+  MENU_LAUNCH
+  SEASONAL_SPECIAL
+  GENERAL_CONTENT
+  GRAND_OPENING
+  SLOW_PERIOD_FILL
 }
 
 enum CompensationType {
-  FLAT_FEE
   FREE_PRODUCT
-  DISCOUNT_CODE
+  FLAT_FEE
   HYBRID
   COMMISSION
-  COUPON_CODE
-  BONUS
 }
 
-enum RequestStatus {
-  MATCHING
-  PRESENTED
-  SELECTED
-  COMPLETED
+enum UsageRights {
+  ORGANIC_SOCIAL
+  PAID_ADS
+  IN_STORE
+  WEBSITE
+  ALL
+}
+
+enum LocationRequirement {
+  IN_PERSON
+  REMOTE
+  FLEXIBLE
+}
+
+enum BriefStatus {
+  DRAFT
+  OPEN
+  CLOSED
   CANCELLED
 }
 
-// ─── MATCHES (max 3 per request) ───
+// ─── APPLICATIONS ───
 
-model Match {
-  id               String         @id @default(uuid())
-  contentRequestId String
-  contentRequest   ContentRequest @relation(fields: [contentRequestId], references: [id])
-  creatorProfileId String
-  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id])
+model Application {
+  id      String @id @default(uuid())
+  briefId String
+  brief   Brief  @relation(fields: [briefId], references: [id])
 
-  matchScore     Int
-  matchRationale String
-  matchSignals   Json?
-  matchInsights  Json? // ["Style Fit: 95%", "Local Expert", "Cuisine Match"]
-
-  contentPreview String
-  deliverables   String
-  price          Int // cents
-  timeline       String
-  usageRights    String
-  style          String
-
-  status MatchStatus @default(PRESENTED)
-  viewedAt DateTime?
-  preAcceptMessages Json?
-  declineReason     String?
-
-  createdAt DateTime @default(now())
+  applicantType        ApplicantType
+  agencyName           String?
+  creatorName          String
+  creatorHandle        String // primary platform handle
+  creatorPlatform      CreatorPlatform
+  followerCount        Int?
+  engagementRate       Float? // percentage
+  audienceDemographics Json? // {ageBreakdown: {}, locationBreakdown: {}, genderBreakdown: {}}
+  topPostUrls          Json? // string array
+  portfolioUrls        Json? // string array — links or uploaded file URLs
+  contentStyleTags     Json? // string array
+  pitch                String // "why I'm a good fit"
+  compensationAsk      String? // free text — their rate or "accepts offered terms"
+  availabilityConfirmed Boolean @default(false)
+  contactEmail         String
+  aiMatchScore         Float? // 0-100 calculated by matching algo
+  aiMatchRationale     String? // AI-generated explanation
+  status               ApplicationStatus @default(PENDING)
+  viewedByBrandAt      DateTime?
+  selectedAt           DateTime?
+  createdAt            DateTime          @default(now())
 
   project Project?
 }
 
-enum MatchStatus {
-  PRESENTED
+enum ApplicantType {
+  INDIVIDUAL
+  AGENCY
+}
+
+enum CreatorPlatform {
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  REDNOTE
+  OTHER
+}
+
+enum ApplicationStatus {
+  PENDING
   SELECTED
   DECLINED
+  WITHDRAWN
+  REJECTED
 }
 
 // ─── PROJECTS ───
 
 model Project {
-  id               String         @id @default(uuid())
-  matchId          String         @unique
-  match            Match          @relation(fields: [matchId], references: [id])
-  brandProfileId   String
-  brandProfile     BrandProfile   @relation(fields: [brandProfileId], references: [id])
-  creatorProfileId String
-  creatorProfile   CreatorProfile @relation(fields: [creatorProfileId], references: [id])
+  id              String       @id @default(uuid())
+  applicationId   String       @unique
+  application     Application  @relation(fields: [applicationId], references: [id])
+  brandProfileId  String
+  brandProfile    BrandProfile @relation(fields: [brandProfileId], references: [id])
 
-  status ProjectStatus @default(BRIEF_SENT)
+  creatorName        String
+  creatorEmail       String
+  creatorAccessToken String   @unique // temporary portal access token
 
-  deliverables String
-  price        Int // cents
-  timeline     String
-  usageRights  String
-  briefText    String?
-  usageRightsDoc String?
-  compensationType CompensationType @default(FLAT_FEE)
+  status             ProjectStatus @default(AWAITING_CREATOR_ACCEPTANCE)
+  briefText          String // snapshot of brief at time of project creation
+  deliverables       String
+  price              Int // cents — agreed amount
+  compensationType   CompensationType
   compensationDetails Json?
+  usageRights        UsageRights
+  revisionsIncluded  Int      @default(1)
+  revisionsUsed      Int      @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  creatorAcceptedAt DateTime?
+  contentDueAt      DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   drafts      ProjectDraft[]
   transaction Transaction?
@@ -239,11 +237,14 @@ model Project {
 }
 
 enum ProjectStatus {
-  BRIEF_SENT
+  AWAITING_CREATOR_ACCEPTANCE
+  ACCEPTED
+  IN_PROGRESS
   DRAFT_SUBMITTED
   REVISION_REQUESTED
   APPROVED
-  DELIVERED
+  COMPLETED
+  DISPUTED
 }
 
 // ─── DRAFTS ───
@@ -275,16 +276,15 @@ model Transaction {
   projectId String  @unique
   project   Project @relation(fields: [projectId], references: [id])
 
-  amount        Int // cents
-  platformFee   Int // cents
-  creatorPayout Int // cents
+  amount        Int // total in cents
+  platformFee   Int // 10% in cents
+  creatorPayout Int // 90% in cents
 
-  type   TransactionType
-  status TransactionStatus @default(PENDING)
-  escrowStatus EscrowStatus @default(HELD)
+  status       TransactionStatus @default(PENDING)
+  escrowStatus EscrowStatus      @default(HELD)
 
-  stripePaymentIntentId String?
-  stripeTransferId      String?
+  stripePaymentIntentId String? // v2
+  stripeTransferId      String? // v2
 
   demoMode Boolean @default(true)
 
@@ -296,40 +296,43 @@ enum EscrowStatus {
   HELD
   RELEASED
   CANCELLED
-}
-
-enum TransactionType {
-  COMMISSION
-  PAYOUT
+  DISPUTED
 }
 
 enum TransactionStatus {
   PENDING
-  COMPLETED
-  FAILED
+  ESCROW_HELD
+  RELEASED
   REFUNDED
+  FAILED
 }
 
 // ─── MESSAGES ───
 
 model Message {
-  id        String   @id @default(uuid())
-  projectId String
-  project   Project  @relation(fields: [projectId], references: [id])
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  text      String
-  createdAt DateTime @default(now())
+  id         String      @id @default(uuid())
+  projectId  String
+  project    Project     @relation(fields: [projectId], references: [id])
+  senderType SenderType
+  senderName String
+  text       String
+  createdAt  DateTime    @default(now())
 
   @@index([projectId, createdAt])
+}
+
+enum SenderType {
+  BRAND
+  CREATOR
 }
 
 // ─── NOTIFICATIONS ───
 
 model Notification {
   id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId    String? // null for creator notifications
+  user      User?    @relation(fields: [userId], references: [id])
+  email     String? // for creator notifications sent via email
   type      String
   title     String
   body      String
@@ -338,4 +341,27 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, read, createdAt])
+}
+
+// ─── CAMPAIGN DATA (Analytics) ───
+
+model CampaignData {
+  id                     String   @id @default(uuid())
+  briefId                String
+  brandProfileId         String
+  campaignGoal           String
+  contentTypes           Json
+  compensationType       String
+  compensationAmount     Int?
+  neighborhood           String
+  city                   String
+  cuisineTypes           Json
+  numberOfApplications   Int      @default(0)
+  timeToFirstApplication Int? // minutes
+  selectedCreatorTier    String? // follower tier: NANO/MICRO/MID/MACRO
+  wasContentApproved     Boolean?
+  revisionsRequested     Int      @default(0)
+  brandSatisfaction      Int? // 1-5 rating
+  completedAt            DateTime?
+  createdAt              DateTime @default(now())
 }

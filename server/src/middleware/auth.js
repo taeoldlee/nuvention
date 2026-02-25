@@ -17,7 +17,6 @@ async function requireAuth(req, res, next) {
       where: { id: userId },
       include: {
         brandProfile: true,
-        creatorProfile: true,
       },
     });
 
@@ -46,7 +45,6 @@ async function optionalAuth(req, res, next) {
         where: { id: userId },
         include: {
           brandProfile: true,
-          creatorProfile: true,
         },
       });
       if (user) {
@@ -71,15 +69,38 @@ function requireOperatorWithBrand(req, res, next) {
   next();
 }
 
-function requireCreatorWithProfile(req, res, next) {
-  if (req.user.role !== "CREATOR") {
-    return res.status(403).json({ error: "Only creators can perform this action" });
+/**
+ * Creator portal auth middleware.
+ * Reads x-creator-token header, looks up project by creatorAccessToken.
+ * Attaches project to req.creatorProject.
+ */
+async function requireCreatorToken(req, res, next) {
+  try {
+    const token = req.headers["x-creator-token"];
+
+    if (!token) {
+      return res.status(401).json({ error: "Creator access token required." });
+    }
+
+    const project = await prisma.project.findUnique({
+      where: { creatorAccessToken: token },
+      include: {
+        application: { include: { brief: true } },
+        brandProfile: {
+          include: { user: { select: { id: true, name: true } } },
+        },
+      },
+    });
+
+    if (!project) {
+      return res.status(401).json({ error: "Invalid or expired access token." });
+    }
+
+    req.creatorProject = project;
+    next();
+  } catch (err) {
+    next(err);
   }
-  if (!req.user.creatorProfile) {
-    return res.status(404).json({ error: "Creator profile not found." });
-  }
-  req.creatorProfile = req.user.creatorProfile;
-  next();
 }
 
-module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorWithProfile };
+module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorToken };

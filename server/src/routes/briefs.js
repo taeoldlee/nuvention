@@ -1,92 +1,87 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
-const { requireAuth } = require("../middleware/auth");
-const { generateUsageRightsDoc } = require("../services/documents");
-const { createCharge } = require("../services/payments");
-const { createNotification } = require("../services/notifications");
+const { requireAuth, requireOperatorWithBrand } = require("../middleware/auth");
 
 // All routes require authentication
 router.use(requireAuth);
 
 /**
- * GET /api/briefs
- * Get incoming briefs for the current creator.
- * Returns matches where this creator was selected or presented.
+ * POST /api/briefs
+ * Create a new brief (operator only).
  */
-router.get("/", async (req, res, next) => {
+router.post("/", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "CREATOR") {
-      return res.status(403).json({ error: "Only creators can view briefs" });
-    }
+    const {
+      title,
+      campaignGoal,
+      contentTypes,
+      numberOfDeliverables,
+      creativeDirection,
+      referenceImageUrls,
+      dos,
+      donts,
+      deadline,
+      compensationType,
+      compensationAmount,
+      compensationDetails,
+      usageRights,
+      locationRequirement,
+      additionalNotes,
+      revisionsIncluded,
+      status,
+      aiSuggestions,
+    } = req.body;
 
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user.id },
+    const brief = await prisma.brief.create({
+      data: {
+        brandProfileId: req.brandProfile.id,
+        title,
+        campaignGoal,
+        contentTypes,
+        numberOfDeliverables,
+        creativeDirection,
+        referenceImageUrls: referenceImageUrls || null,
+        dos: dos || null,
+        donts: donts || null,
+        deadline: deadline ? new Date(deadline) : null,
+        compensationType,
+        compensationAmount: compensationAmount || null,
+        compensationDetails: compensationDetails || null,
+        usageRights,
+        locationRequirement,
+        additionalNotes: additionalNotes || null,
+        revisionsIncluded: revisionsIncluded ?? 1,
+        status: status || "DRAFT",
+        aiSuggestions: aiSuggestions || null,
+      },
     });
 
-    if (!creatorProfile) {
-      return res.json({ briefs: [] });
+    res.status(201).json({ brief });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/briefs
+ * List the current brand's briefs. Optional ?status= filter.
+ */
+router.get("/", requireOperatorWithBrand, async (req, res, next) => {
+  try {
+    const where = { brandProfileId: req.brandProfile.id };
+
+    if (req.query.status) {
+      where.status = req.query.status;
     }
 
-    const matches = await prisma.match.findMany({
-      where: {
-        creatorProfileId: creatorProfile.id,
-        status: { in: ["PRESENTED", "SELECTED"] },
-      },
+    const briefs = await prisma.brief.findMany({
+      where,
       include: {
-        contentRequest: {
-          include: {
-            brandProfile: {
-              include: {
-                user: {
-                  select: { id: true, name: true, avatarUrl: true },
-                },
-              },
-            },
-          },
-        },
-        project: true,
+        _count: { select: { applications: true } },
       },
       orderBy: { createdAt: "desc" },
     });
-
-    // Only show briefs that don't have a project yet (not yet accepted)
-    const pendingMatches = matches.filter((match) => !match.project);
-
-    // Transform into brief-friendly format
-    const briefs = pendingMatches.map((match) => ({
-      matchId: match.id,
-      status: match.status,
-      matchRationale: match.matchRationale,
-      matchSignals: match.matchSignals,
-      contentPreview: match.contentPreview,
-      deliverables: match.deliverables,
-      price: match.price,
-      timeline: match.timeline,
-      usageRights: match.usageRights,
-      style: match.style,
-      compensationType: match.contentRequest?.compensationType || "FLAT_FEE",
-      compensationDetails: match.contentRequest?.compensationDetails || null,
-      preAcceptMessages: match.preAcceptMessages || [],
-      contentRequest: {
-        id: match.contentRequest.id,
-        contentType: match.contentRequest.contentType,
-        description: match.contentRequest.description,
-      },
-      brand: {
-        id: match.contentRequest.brandProfile.id,
-        businessName: match.contentRequest.brandProfile.businessName,
-        neighborhood: match.contentRequest.brandProfile.neighborhood,
-        vibe: match.contentRequest.brandProfile.vibe,
-        contentComfortZones: match.contentRequest.brandProfile.contentComfortZones,
-        cuisineTypes: match.contentRequest.brandProfile.cuisineTypes,
-        profilePhotoUrl: match.contentRequest.brandProfile.profilePhotoUrl,
-        user: match.contentRequest.brandProfile.user,
-      },
-      hasProject: !!match.project,
-      projectId: match.project?.id || null,
-      createdAt: match.createdAt,
-    }));
 
     res.json({ briefs });
   } catch (err) {
@@ -95,291 +90,209 @@ router.get("/", async (req, res, next) => {
 });
 
 /**
- * POST /api/briefs/:matchId/view
- * Mark a brief as viewed by the creator.
+ * GET /api/briefs/:id
+ * Get brief detail. If the authenticated user is the owning operator,
+ * include applications with AI ranking (sorted by aiMatchScore desc).
  */
-router.post("/:matchId/view", async (req, res, next) => {
+router.get("/:id", async (req, res, next) => {
   try {
-    if (req.user.role !== "CREATOR") {
-      return res.status(403).json({ error: "Only creators can view briefs" });
-    }
-
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!creatorProfile) {
-      return res.status(404).json({ error: "Creator profile not found" });
-    }
-
-    const match = await prisma.match.findUnique({
-      where: { id: req.params.matchId },
-    });
-
-    if (!match) {
-      return res.status(404).json({ error: "Brief not found" });
-    }
-
-    if (match.creatorProfileId !== creatorProfile.id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
-
-    // Only set viewedAt if not already set
-    if (!match.viewedAt) {
-      await prisma.match.update({
-        where: { id: match.id },
-        data: { viewedAt: new Date() },
-      });
-    }
-
-    res.json({ message: "Brief view recorded" });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * POST /api/briefs/:matchId/accept
- * Creator accepts a brief (match).
- */
-router.post("/:matchId/accept", async (req, res, next) => {
-  try {
-    if (req.user.role !== "CREATOR") {
-      return res.status(403).json({ error: "Only creators can accept briefs" });
-    }
-
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-
-    if (!creatorProfile) {
-      return res.status(404).json({ error: "Creator profile not found" });
-    }
-
-    const match = await prisma.match.findUnique({
-      where: { id: req.params.matchId },
+    const brief = await prisma.brief.findUnique({
+      where: { id: req.params.id },
       include: {
-        contentRequest: {
-          include: {
-            brandProfile: true,
-          },
-        },
-        project: true,
+        brandProfile: true,
+        _count: { select: { applications: true } },
       },
     });
 
-    if (!match) {
+    if (!brief) {
       return res.status(404).json({ error: "Brief not found" });
     }
 
-    if (match.creatorProfileId !== creatorProfile.id) {
-      return res.status(403).json({ error: "Access denied" });
-    }
+    // If the authenticated user is the owning operator, include ranked applications
+    const isOwner =
+      req.user.role === "OPERATOR" &&
+      req.user.brandProfile &&
+      brief.brandProfileId === req.user.brandProfile.id;
 
-    if (!["PRESENTED", "SELECTED"].includes(match.status)) {
-      return res.status(400).json({
-        error: "This brief has already been processed",
+    if (isOwner) {
+      const applications = await prisma.application.findMany({
+        where: { briefId: brief.id },
+        orderBy: { aiMatchScore: "desc" },
       });
+      brief.applications = applications;
     }
 
-    // If a project already exists, just return it
-    if (match.project) {
-      return res.json({ message: "Brief already accepted", project: match.project });
-    }
-
-    // Create the project and update all statuses atomically
-    const usageRightsDoc = generateUsageRightsDoc({
-      businessName: match.contentRequest?.brandProfile?.businessName,
-      contentType: match.contentRequest?.contentType,
-      usageRights: match.usageRights,
-      timeline: match.timeline,
-    });
-
-    const project = await prisma.$transaction(async (tx) => {
-      // Update match status to SELECTED if it was PRESENTED
-      if (match.status === "PRESENTED") {
-        await tx.match.update({
-          where: { id: match.id },
-          data: { status: "SELECTED" },
-        });
-      }
-
-      // Update content request status
-      await tx.contentRequest.update({
-        where: { id: match.contentRequestId },
-        data: { status: "SELECTED" },
-      });
-
-      // Decline competing matches for this content request
-      await tx.match.updateMany({
-        where: {
-          contentRequestId: match.contentRequestId,
-          id: { not: match.id },
-          status: "PRESENTED",
-        },
-        data: { status: "DECLINED" },
-      });
-
-      const proj = await tx.project.create({
-        data: {
-          matchId: match.id,
-          brandProfileId: match.contentRequest.brandProfileId,
-          creatorProfileId: creatorProfile.id,
-          status: "BRIEF_SENT",
-          deliverables: match.deliverables,
-          price: match.price,
-          timeline: match.timeline,
-          usageRights: match.usageRights,
-          briefText: `Content request for ${match.contentRequest.contentType}. ${match.contentPreview || ""}`.trim(),
-          usageRightsDoc,
-          compensationType: match.contentRequest.compensationType || "FLAT_FEE",
-          compensationDetails: match.contentRequest.compensationDetails || null,
-        },
-        include: {
-          brandProfile: {
-            include: {
-              user: { select: { id: true, name: true, avatarUrl: true } },
-            },
-          },
-        },
-      });
-
-      return proj;
-    });
-
-    // Create transaction after project is committed (outside $transaction to avoid FK error)
-    if (match.price > 0) {
-      await createCharge(project.id, match.price);
-    }
-
-    // Notify operator that creator accepted
-    const operatorUserId = project.brandProfile?.user?.id || project.brandProfile?.userId;
-    if (operatorUserId) {
-      createNotification(operatorUserId, {
-        type: "BRIEF_ACCEPTED",
-        title: "Creator accepted your brief",
-        body: `${creatorProfile.displayName || req.user.name} accepted your ${match.contentRequest?.contentType || "content"} brief.`,
-        linkUrl: `/operator/project/${project.id}`,
-      }).catch(() => {});
-    }
-
-    res.json({
-      message: "Brief accepted",
-      project,
-      brandName: project.brandProfile?.businessName || project.brandProfile?.user?.name,
-      projectId: project.id,
-    });
+    res.json({ brief });
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * POST /api/briefs/:matchId/question
- * Creator asks a pre-accept question on a match.
- * Body: { text }
+ * GET /api/briefs/:id/applications
+ * List applications for a brief, AI-ranked.
  */
-router.post("/:matchId/question", async (req, res, next) => {
+router.get("/:id/applications", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "CREATOR") {
-      return res.status(403).json({ error: "Only creators can ask questions" });
-    }
-
-    const { text } = req.body;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ error: "text is required" });
-    }
-
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user.id },
-    });
-    if (!creatorProfile) {
-      return res.status(404).json({ error: "Creator profile not found" });
-    }
-
-    const match = await prisma.match.findUnique({
-      where: { id: req.params.matchId },
-      include: {
-        contentRequest: {
-          include: { brandProfile: { select: { userId: true } } },
-        },
-      },
+    const brief = await prisma.brief.findUnique({
+      where: { id: req.params.id },
     });
 
-    if (!match) return res.status(404).json({ error: "Brief not found" });
-    if (match.creatorProfileId !== creatorProfile.id) {
+    if (!brief) {
+      return res.status(404).json({ error: "Brief not found" });
+    }
+
+    if (brief.brandProfileId !== req.brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    const existing = Array.isArray(match.preAcceptMessages) ? match.preAcceptMessages : [];
-    const newMsg = { userId: req.user.id, name: req.user.name, text: text.trim(), createdAt: new Date().toISOString() };
-    const updated = await prisma.match.update({
-      where: { id: match.id },
-      data: { preAcceptMessages: [...existing, newMsg] },
+    const applications = await prisma.application.findMany({
+      where: { briefId: brief.id },
+      orderBy: { aiMatchScore: "desc" },
     });
 
-    // Notify operator
-    const operatorUserId = match.contentRequest?.brandProfile?.userId;
-    if (operatorUserId) {
-      createNotification(operatorUserId, {
-        type: "BRIEF_QUESTION",
-        title: `Question from ${creatorProfile.displayName || req.user.name}`,
-        body: text.trim().slice(0, 100),
-        linkUrl: `/operator/dashboard`,
-      }).catch(() => {});
-    }
-
-    res.json({ preAcceptMessages: updated.preAcceptMessages });
+    res.json({ applications });
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * POST /api/briefs/:matchId/decline
- * Creator declines a brief (match).
+ * PUT /api/briefs/:id
+ * Update a brief. Only allowed for DRAFT or OPEN status.
  */
-router.post("/:matchId/decline", async (req, res, next) => {
+router.put("/:id", requireOperatorWithBrand, async (req, res, next) => {
   try {
-    if (req.user.role !== "CREATOR") {
-      return res.status(403).json({ error: "Only creators can decline briefs" });
-    }
-
-    const creatorProfile = await prisma.creatorProfile.findUnique({
-      where: { userId: req.user.id },
+    const existing = await prisma.brief.findUnique({
+      where: { id: req.params.id },
     });
 
-    if (!creatorProfile) {
-      return res.status(404).json({ error: "Creator profile not found" });
-    }
-
-    const match = await prisma.match.findUnique({
-      where: { id: req.params.matchId },
-    });
-
-    if (!match) {
+    if (!existing) {
       return res.status(404).json({ error: "Brief not found" });
     }
 
-    if (match.creatorProfileId !== creatorProfile.id) {
+    if (existing.brandProfileId !== req.brandProfile.id) {
       return res.status(403).json({ error: "Access denied" });
     }
 
-    if (match.status === "DECLINED") {
-      return res.status(400).json({ error: "Brief has already been declined" });
+    if (!["DRAFT", "OPEN"].includes(existing.status)) {
+      return res
+        .status(400)
+        .json({ error: "Can only update briefs in DRAFT or OPEN status" });
     }
 
-    const { reason } = req.body || {};
+    const {
+      title,
+      campaignGoal,
+      contentTypes,
+      numberOfDeliverables,
+      creativeDirection,
+      referenceImageUrls,
+      dos,
+      donts,
+      deadline,
+      compensationType,
+      compensationAmount,
+      compensationDetails,
+      usageRights,
+      locationRequirement,
+      additionalNotes,
+      revisionsIncluded,
+      status,
+      aiSuggestions,
+    } = req.body;
 
-    const updatedMatch = await prisma.match.update({
-      where: { id: match.id },
+    const brief = await prisma.brief.update({
+      where: { id: req.params.id },
       data: {
-        status: "DECLINED",
-        ...(reason ? { declineReason: reason.trim().slice(0, 200) } : {}),
+        ...(title !== undefined && { title }),
+        ...(campaignGoal !== undefined && { campaignGoal }),
+        ...(contentTypes !== undefined && { contentTypes }),
+        ...(numberOfDeliverables !== undefined && { numberOfDeliverables }),
+        ...(creativeDirection !== undefined && { creativeDirection }),
+        ...(referenceImageUrls !== undefined && { referenceImageUrls }),
+        ...(dos !== undefined && { dos }),
+        ...(donts !== undefined && { donts }),
+        ...(deadline !== undefined && { deadline: deadline ? new Date(deadline) : null }),
+        ...(compensationType !== undefined && { compensationType }),
+        ...(compensationAmount !== undefined && { compensationAmount }),
+        ...(compensationDetails !== undefined && { compensationDetails }),
+        ...(usageRights !== undefined && { usageRights }),
+        ...(locationRequirement !== undefined && { locationRequirement }),
+        ...(additionalNotes !== undefined && { additionalNotes }),
+        ...(revisionsIncluded !== undefined && { revisionsIncluded }),
+        ...(status !== undefined && { status }),
+        ...(aiSuggestions !== undefined && { aiSuggestions }),
       },
     });
 
-    res.json({ message: "Brief declined", match: updatedMatch });
+    res.json({ brief });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/briefs/:id/close
+ * Close a brief. Sets status to CLOSED and records closedAt timestamp.
+ */
+router.post("/:id/close", requireOperatorWithBrand, async (req, res, next) => {
+  try {
+    const existing = await prisma.brief.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Brief not found" });
+    }
+
+    if (existing.brandProfileId !== req.brandProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const brief = await prisma.brief.update({
+      where: { id: req.params.id },
+      data: {
+        status: "CLOSED",
+        closedAt: new Date(),
+      },
+    });
+
+    res.json({ brief });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * DELETE /api/briefs/:id
+ * Cancel (delete) a brief. Only allowed for DRAFT status.
+ */
+router.delete("/:id", requireOperatorWithBrand, async (req, res, next) => {
+  try {
+    const existing = await prisma.brief.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!existing) {
+      return res.status(404).json({ error: "Brief not found" });
+    }
+
+    if (existing.brandProfileId !== req.brandProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    if (existing.status !== "DRAFT") {
+      return res
+        .status(400)
+        .json({ error: "Can only delete briefs in DRAFT status" });
+    }
+
+    await prisma.brief.delete({
+      where: { id: req.params.id },
+    });
+
+    res.json({ message: "Brief deleted" });
   } catch (err) {
     next(err);
   }

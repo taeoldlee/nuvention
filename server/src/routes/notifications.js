@@ -31,7 +31,7 @@ router.get("/unread-count", async (req, res, next) => {
   }
 });
 
-/** POST /api/notifications/read-all — mark all as read (must be before /:id/read) */
+/** POST /api/notifications/read-all — mark all as read */
 router.post("/read-all", async (req, res, next) => {
   try {
     await prisma.notification.updateMany({

@@ -7,10 +7,10 @@ const cors = require("cors");
 // Route imports
 const authRoutes = require("./routes/auth");
 const brandRoutes = require("./routes/brands");
-const creatorRoutes = require("./routes/creators");
-const requestRoutes = require("./routes/requests");
-const projectRoutes = require("./routes/projects");
 const briefRoutes = require("./routes/briefs");
+const portalRoutes = require("./routes/portal");
+const applicationRoutes = require("./routes/applications");
+const projectRoutes = require("./routes/projects");
 const aiRoutes = require("./routes/ai");
 const uploadRoutes = require("./routes/uploads");
 const statsRoutes = require("./routes/stats");
@@ -37,16 +37,15 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
-    service: "mise-api",
+    service: "locale-api-v2",
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV || "development",
   });
 });
 
 // ─── Upload timeout middleware ───
-// Extend timeout to 5 minutes for upload routes (videos can be large)
 const uploadTimeout = (req, res, next) => {
-  req.setTimeout(5 * 60 * 1000); // 5 minutes
+  req.setTimeout(5 * 60 * 1000);
   res.setTimeout(5 * 60 * 1000);
   next();
 };
@@ -54,10 +53,10 @@ const uploadTimeout = (req, res, next) => {
 // ─── Mount Routes ───
 app.use("/api/auth", authRoutes);
 app.use("/api/brands", brandRoutes);
-app.use("/api/creators", uploadTimeout, creatorRoutes);
-app.use("/api/requests", requestRoutes);
-app.use("/api/projects", projectRoutes);
 app.use("/api/briefs", briefRoutes);
+app.use("/api/portal", portalRoutes);
+app.use("/api/applications", applicationRoutes);
+app.use("/api/projects", projectRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/uploads", uploadTimeout, uploadRoutes);
 app.use("/api/stats", statsRoutes);
@@ -77,7 +76,6 @@ app.get("*", (req, res, next) => {
 app.use((err, req, res, next) => {
   console.error("[Error]", err.stack || err.message || err);
 
-  // Prisma known request error
   if (err.code === "P2002") {
     return res.status(409).json({
       error: "A record with this unique value already exists",
@@ -91,7 +89,6 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Multer file size error
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
       error: "File too large. Maximum size is 100MB for videos, 10MB for images.",
@@ -116,7 +113,7 @@ app.use((err, req, res, next) => {
 const PORT = parseInt(process.env.PORT, 10) || 3001;
 
 app.listen(PORT, () => {
-  console.log(`\n  Locale API running on http://localhost:${PORT}`);
+  console.log(`\n  Locale API v2 running on http://localhost:${PORT}`);
   console.log(`  Environment: ${process.env.NODE_ENV || "development"}`);
   console.log(`  CORS origin: ${corsOrigin}`);
   console.log(`  OpenAI: ${process.env.OPENAI_API_KEY ? "configured" : "not configured (using fallbacks)"}`);

@@ -12,11 +12,6 @@ router.get("/demo-users", async (req, res, next) => {
       where: { isDemo: true },
       include: {
         brandProfile: true,
-        creatorProfile: {
-          include: {
-            portfolioItems: true,
-          },
-        },
       },
       orderBy: { createdAt: "asc" },
     });
@@ -30,7 +25,7 @@ router.get("/demo-users", async (req, res, next) => {
 /**
  * POST /api/auth/demo-login
  * Body: { userId }
- * Returns user with brand/creator profile.
+ * Returns user with brand profile.
  */
 router.post("/demo-login", async (req, res, next) => {
   try {
@@ -44,11 +39,6 @@ router.post("/demo-login", async (req, res, next) => {
       where: { id: userId },
       include: {
         brandProfile: true,
-        creatorProfile: {
-          include: {
-            portfolioItems: true,
-          },
-        },
       },
     });
 
@@ -56,7 +46,7 @@ router.post("/demo-login", async (req, res, next) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const profile = user.brandProfile || user.creatorProfile || null;
+    const profile = user.brandProfile || null;
     res.json({ user, profile });
   } catch (err) {
     next(err);

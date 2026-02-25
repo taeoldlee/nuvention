@@ -1,99 +1,76 @@
 const express = require("express");
 const router = express.Router();
-const { analyzeBrandFromUrl, analyzeCreatorPortfolio, generateRequestSuggestions } = require("../services/ai");
 const prisma = require("../config/db");
+const { requireAuth, requireOperatorWithBrand } = require("../middleware/auth");
+const { generateBriefSuggestions, rankApplication } = require("../services/ai");
 
 /**
- * POST /api/ai/analyze-brand
- * Analyze brand from submitted data using OpenAI.
- * Body: { url: "https://..." } or { businessName, neighborhood, vibe, etc. }
+ * POST /api/ai/suggest-brief
+ * AI suggestions during brief creation.
+ * Body: { campaignGoal, contentTypes }
  */
-router.post("/analyze-brand", async (req, res, next) => {
+router.post("/suggest-brief", requireAuth, requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const { url, businessName, neighborhood, vibe } = req.body;
+    const { campaignGoal, contentTypes } = req.body;
 
-    if (url) {
-      // Analyze from URL
-      const analysis = await analyzeBrandFromUrl(url);
-      return res.json({ analysis });
+    if (!campaignGoal) {
+      return res.status(400).json({ error: "campaignGoal is required" });
     }
 
-    // If no URL, return a vibe analysis based on submitted data
-    if (!businessName) {
-      return res.status(400).json({ error: "Either url or businessName is required" });
-    }
-
-    const vibeArray = Array.isArray(vibe) ? vibe : [];
-    const analysis = {
-      businessName,
-      neighborhood: neighborhood || "Evanston",
-      vibe: vibeArray,
-      vibeAnalysis: {
-        primaryVibe: vibeArray[0] || "Unique Local Spot",
-        aestheticTags: vibeArray.flatMap((v) =>
-          v
-            .toLowerCase()
-            .split(/[&,]+/)
-            .map((s) => s.trim().replace(/\s+/g, "-"))
-            .filter(Boolean)
-        ),
-        contentRecommendations: [
-          "Signature interior shots during golden hour",
-          "Close-up menu highlights",
-          "Community moments",
-          "Behind-the-scenes preparation",
-        ],
-        avoidTags: ["stock-photo-style", "overly-corporate", "generic"],
-      },
-    };
-
-    res.json({ analysis });
+    const suggestions = await generateBriefSuggestions(req.brandProfile, campaignGoal, contentTypes);
+    res.json({ suggestions });
   } catch (err) {
     next(err);
   }
 });
 
 /**
- * POST /api/ai/analyze-portfolio
- * Analyze creator portfolio images via OpenAI Vision.
- * Body: { imageUrls: ["https://...", ...] }
+ * POST /api/ai/rank-applications
+ * AI ranking of applications against a brief.
+ * Body: { briefId }
  */
-router.post("/analyze-portfolio", async (req, res, next) => {
+router.post("/rank-applications", requireAuth, requireOperatorWithBrand, async (req, res, next) => {
   try {
-    const { imageUrls } = req.body;
+    const { briefId } = req.body;
 
-    if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
-      return res.status(400).json({ error: "imageUrls array is required" });
+    if (!briefId) {
+      return res.status(400).json({ error: "briefId is required" });
     }
 
-    const analysis = await analyzeCreatorPortfolio(imageUrls);
-    res.json({ analysis });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * POST /api/ai/suggest-request
- * Generate content request suggestions based on the user's brand profile.
- */
-router.post("/suggest-request", async (req, res, next) => {
-  try {
-    const userId = req.headers["x-user-id"];
-    if (!userId) {
-      return res.status(401).json({ error: "Not authenticated" });
-    }
-
-    const brand = await prisma.brandProfile.findFirst({
-      where: { userId },
+    const brief = await prisma.brief.findUnique({
+      where: { id: briefId },
+      include: { brandProfile: true },
     });
 
-    if (!brand) {
-      return res.status(404).json({ error: "Brand profile not found. Complete onboarding first." });
+    if (!brief) {
+      return res.status(404).json({ error: "Brief not found" });
     }
 
-    const suggestions = await generateRequestSuggestions(brand);
-    res.json({ suggestions });
+    if (brief.brandProfileId !== req.brandProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    const applications = await prisma.application.findMany({
+      where: { briefId, status: "PENDING" },
+    });
+
+    const ranked = [];
+    for (const app of applications) {
+      const { score, rationale } = await rankApplication(app, brief, brief.brandProfile);
+
+      await prisma.application.update({
+        where: { id: app.id },
+        data: {
+          aiMatchScore: score,
+          aiMatchRationale: rationale,
+        },
+      });
+
+      ranked.push({ id: app.id, score, rationale });
+    }
+
+    ranked.sort((a, b) => b.score - a.score);
+    res.json({ ranked });
   } catch (err) {
     next(err);
   }

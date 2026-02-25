@@ -73,11 +73,11 @@ export default function MessageThread({ projectId }) {
           </p>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.userId === user?.id;
+            const isMe = msg.senderType === 'BRAND';
             return (
               <div key={msg.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                 <div className="w-7 h-7 rounded-full bg-bgWarm flex items-center justify-center flex-shrink-0 text-xs font-bold text-muted border border-border">
-                  {msg.user?.name?.charAt(0) || '?'}
+                  {msg.senderName?.charAt(0) || '?'}
                 </div>
                 <div className={`max-w-[75%] ${isMe ? 'text-right' : ''}`}>
                   <div className={`inline-block rounded-xl px-3 py-2 text-sm font-body ${
@@ -88,7 +88,7 @@ export default function MessageThread({ projectId }) {
                     {msg.text}
                   </div>
                   <p className="text-[10px] text-muted mt-0.5 font-body">
-                    {msg.user?.name?.split(' ')[0]} · {formatTime(msg.createdAt)}
+                    {msg.senderName?.split(' ')[0]} · {formatTime(msg.createdAt)}
                   </p>
                 </div>
               </div>

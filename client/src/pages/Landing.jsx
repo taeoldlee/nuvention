@@ -26,15 +26,15 @@ import Button from '../components/marketing/Button';
 const steps = [
   {
     step: '01',
-    title: 'Set your vibe',
+    title: 'Post a brief',
     description:
-      'Answer a few quick questions about your place. We use this to find creators who already shoot your style.',
+      'Describe the content you need — style, deliverables, timeline, and budget. It takes about 2 minutes.',
   },
   {
     step: '02',
-    title: 'Pick from 3 options',
+    title: 'Review applications',
     description:
-      'See real content samples from creators matched to your vibe. No follower counts, no profiles — just the work.',
+      'Local creators apply with their portfolio and pitch. Our AI ranks them by fit so you pick the best match.',
   },
   {
     step: '03',
@@ -47,21 +47,21 @@ const steps = [
 const features = [
   {
     icon: Fingerprint,
-    title: 'Content first, profile later',
+    title: 'Creators come to you',
     description:
-      'See the work before you see the creator. You\'re picking content, not followers.',
+      'Post what you need, and local creators apply with their best work. No searching, no cold outreach.',
   },
   {
     icon: MapPin,
     title: 'Creators who know your neighborhood',
     description:
-      'We match based on where they shoot — so the content already looks like it belongs.',
+      'Our portal attracts local creators who already shoot in your area — so the content feels authentic.',
   },
   {
     icon: Sparkles,
-    title: 'No writing briefs from scratch',
+    title: 'AI-ranked applications',
     description:
-      'Pick from templates. Tell us what you need photos of. We handle the rest.',
+      'Our matching algorithm scores every application against your brand vibe, so the best fits rise to the top.',
   },
   {
     icon: ClipboardCheck,
@@ -86,15 +86,15 @@ const features = [
 const creatorFeatures = [
   {
     icon: Camera,
-    title: 'Get discovered by local brands',
+    title: 'Browse open briefs',
     description:
-      'No cold DMs or unanswered messages. Brands find you based on your work, not your follower count.',
+      'See exactly what local brands need — deliverables, budget, timeline, and creative direction — all upfront.',
   },
   {
     icon: Heart,
-    title: 'Keep creative control',
+    title: 'Apply on your terms',
     description:
-      'You choose which briefs to accept. Decline anything that doesn\'t align with your style or values.',
+      'No accounts required. Apply with your portfolio and pitch. Only take on work that fits your style and schedule.',
   },
   {
     icon: MessageCircle,
@@ -106,9 +106,9 @@ const creatorFeatures = [
 
 const trustPoints = [
   {
-    title: 'Matched by style, not follower count',
+    title: 'Ranked by fit, not follower count',
     description:
-      'We look at what creators shoot, not how many people follow them.',
+      'Our AI scores applications against your brand vibe, so the best creators rise to the top.',
     icon: ShieldCheck,
   },
   {
@@ -124,23 +124,23 @@ const trustPoints = [
     icon: FileText,
   },
   {
-    title: 'Private by default',
+    title: 'Escrow-protected payments',
     description:
-      'Creator identity stays hidden until you select a match, minimizing risk and bias.',
+      'Your payment is held in escrow until you approve the content. No risk, no surprises.',
     icon: Lock,
   },
 ];
 
 const pricing = [
   {
-    title: 'Per‑project pricing',
-    price: 'Flat fee per project',
-    description: 'Pay only when you order content.',
+    title: 'Per‑brief pricing',
+    price: 'Flat fee per brief',
+    description: 'Pay only when a creator delivers.',
     items: [
-      'Matched creators (max 3 options)',
-      'Brief template + full usage rights',
-      'In‑app review with one revision',
-      'Payment held until you approve',
+      'Post briefs to the creator portal',
+      'AI-ranked applications',
+      'In‑app review with revisions',
+      'Escrow-protected payments',
     ],
     highlight: true,
   },
@@ -158,24 +158,24 @@ const pricing = [
 
 const faqs = [
   {
-    question: 'How do you match creators to my place?',
+    question: 'How do creators find my brief?',
     answer:
-      'You tell us your vibe — we find creators who already shoot that style in your area. You see their work before you see their profile.',
+      'Your brief is posted on our public portal where local creators browse opportunities. They apply with their portfolio and a pitch explaining why they\'re a great fit.',
   },
   {
-    question: 'Do I see who the creator is before I choose?',
+    question: 'How do I pick the right creator?',
     answer:
-      'No — and that\'s intentional. You pick based on the content, not the follower count. You see who they are after you choose.',
+      'Our AI ranks every application against your brand vibe and brief requirements. You see match scores, portfolios, and pitches — then select the creator you like best.',
   },
   {
     question: 'What if I don\'t like the content?',
     answer:
-      'You review everything before it\'s final. You get one round of revisions, and nothing goes anywhere until you approve. If it\'s still not right, you don\'t pay.',
+      'You review everything before it\'s final. You get revision rounds included in your brief, and nothing goes anywhere until you approve. Payment is held in escrow until you\'re happy.',
   },
   {
-    question: 'Is this a marketplace or an agency?',
+    question: 'Do creators need an account?',
     answer:
-      'Neither. Think of it like ordering photography — you tell us what you need, we bring you options, you pick one.',
+      'No. Creators apply through our public portal without creating an account. Once selected, they get a unique link to manage their project, submit drafts, and communicate with you.',
   },
 ];
 
@@ -203,7 +203,7 @@ export default function Landing() {
               Get content that looks like your place.
             </h1>
             <p className="max-w-2xl text-base text-mid sm:text-lg">
-              We match you with local creators who already shoot your vibe. Pick from 3 options, approve what fits, and post. No negotiations, no management.
+              Post a brief, review applications from local creators, and get content that matches your vibe. No negotiations, no management.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4">
               <Button onClick={handleCreateBrief}>Get started</Button>
@@ -215,10 +215,10 @@ export default function Landing() {
 
           <FadeIn className="flex flex-wrap items-center justify-center gap-3">
             {[
-              '3 options, not 300',
+              'Creators apply to you',
               'Full usage rights',
               'Review before posting',
-              'Payment protected',
+              'Escrow-protected',
             ].map((item) => (
               <span
                 key={item}
@@ -238,11 +238,11 @@ export default function Landing() {
                 Built for busy owners who don't have time to manage creators.
               </p>
               <p className="mt-2 text-sm text-muted">
-                Every creator is matched to your vibe before you see their profile — so you're choosing content, not followers.
+                Post a brief and local creators come to you. Our AI ranks every application so you pick the best match.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              {['Style over followers', 'Just 3 options', 'Nothing posts without approval'].map((label) => (
+              {['AI-ranked applications', 'Escrow payments', 'Nothing posts without approval'].map((label) => (
                 <span key={label} className="rounded-full border border-border bg-white px-4 py-2 text-xs text-muted">
                   {label}
                 </span>
@@ -308,8 +308,8 @@ export default function Landing() {
           </div>
           <FadeIn className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {[
-              'Matched by style, not followers',
-              'Accept or decline any brief',
+              'No account required',
+              'Apply to any brief',
               'Transparent compensation',
               'Build your portfolio',
             ].map((item) => (
@@ -359,7 +359,7 @@ export default function Landing() {
               <ul className="mt-6 space-y-4 text-sm text-mid">
                 <li className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
-                  Venue similarity and neighborhood overlap
+                  AI match score based on brand vibe fit
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
@@ -367,11 +367,11 @@ export default function Landing() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
-                  Community signals and creator tier context
+                  Portfolio samples and content style tags
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="mt-1 h-1.5 w-1.5 rounded-full bg-accent" />
-                  Past outcomes and turnaround history
+                  Creator pitch and compensation ask
                 </li>
               </ul>
             </FadeIn>
@@ -420,7 +420,7 @@ export default function Landing() {
                 Ready to get content that actually looks like your place?
               </h2>
               <p className="mt-3 text-sm text-mid">
-                Set your vibe once, pick from 3 options, and post. We'll walk you through it.
+                Post a brief, pick from local creator applications, and get content you'll actually post.
               </p>
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3">

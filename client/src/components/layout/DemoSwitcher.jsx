@@ -11,7 +11,6 @@ export default function DemoSwitcher() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Auto-open when #demo hash is present
   useEffect(() => {
     if (location.hash === '#demo') {
       setOpen(true);
@@ -34,29 +33,19 @@ export default function DemoSwitcher() {
     }
   };
 
+  // Only show operators in v2 (no creator accounts)
   const allOperators = demoUsers.filter((u) => u.role === 'OPERATOR');
-  const allCreators = demoUsers.filter((u) => u.role === 'CREATOR');
-  // Show new accounts first so they're easy to find
   const operators = [...allOperators.filter((u) => !u.brandProfile), ...allOperators.filter((u) => u.brandProfile)];
-  const creators = [...allCreators.filter((u) => !u.creatorProfile), ...allCreators.filter((u) => u.creatorProfile)];
 
   const handleSelect = async (demoUser) => {
     try {
       const data = await login(demoUser.id);
       setOpen(false);
 
-      if (demoUser.role === 'OPERATOR') {
-        if (data.profile) {
-          navigate('/operator/dashboard');
-        } else {
-          navigate('/operator/onboarding');
-        }
+      if (data.profile) {
+        navigate('/operator/dashboard');
       } else {
-        if (data.profile) {
-          navigate('/creator/dashboard');
-        } else {
-          navigate('/creator/onboarding');
-        }
+        navigate('/operator/onboarding');
       }
     } catch (err) {
       console.error('Demo login failed:', err);
@@ -64,12 +53,8 @@ export default function DemoSwitcher() {
   };
 
   const getStatusText = (demoUser) => {
-    if (demoUser.role === 'OPERATOR') {
-      if (!demoUser.brandProfile) return 'New user';
-      return 'Returning';
-    }
-    if (!demoUser.creatorProfile) return 'New user';
-    return 'Returning';
+    if (!demoUser.brandProfile) return 'New user';
+    return demoUser.brandProfile.businessName;
   };
 
   return (
@@ -102,15 +87,14 @@ export default function DemoSwitcher() {
             <div className="p-4 border-b border-border bg-bgWarm">
               <h3 className="font-display text-lg font-bold text-dark">Demo Accounts</h3>
               <p className="text-xs text-muted mt-0.5">
-                Switch between users to explore different flows
+                Switch between brand accounts to explore different flows
               </p>
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto">
-              {/* Operators */}
               <div className="p-3">
                 <p className="text-xs font-semibold text-muted uppercase tracking-wider px-2 mb-2">
-                  Operators
+                  Brand Operators
                 </p>
                 {operators.map((op) => (
                   <button
@@ -125,7 +109,7 @@ export default function DemoSwitcher() {
                     <Avatar src={op.avatarUrl} name={op.name || 'New User'} size="lg" borderClass="border-accent/30" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-dark truncate">
-                        {op.brandProfile?.businessName || op.name || 'New User'}
+                        {op.name || 'New User'}
                       </p>
                       <p className="text-xs text-muted">{getStatusText(op)}</p>
                     </div>
@@ -135,39 +119,19 @@ export default function DemoSwitcher() {
                   </button>
                 ))}
               </div>
-
-              {/* Creators */}
-              <div className="p-3 pt-0">
-                <p className="text-xs font-semibold text-muted uppercase tracking-wider px-2 mb-2">
-                  Creators
-                </p>
-                {creators.map((cr) => (
-                  <button
-                    key={cr.id}
-                    onClick={() => handleSelect(cr)}
-                    className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-colors ${
-                      user?.id === cr.id
-                        ? 'bg-creatorLight border border-creator/20'
-                        : 'hover:bg-bgWarm'
-                    }`}
-                  >
-                    <Avatar src={cr.avatarUrl} name={cr.name || 'New User'} size="lg" borderClass="border-creator/30" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-dark truncate">
-                        {cr.creatorProfile?.displayName || cr.name || 'New User'}
-                      </p>
-                      <p className="text-xs text-muted">{getStatusText(cr)}</p>
-                    </div>
-                    {user?.id === cr.id && (
-                      <div className="w-2 h-2 rounded-full bg-creator flex-shrink-0" />
-                    )}
-                  </button>
-                ))}
-              </div>
             </div>
 
-            {/* Reset Demo Data */}
+            {/* Portal Link */}
             <div className="p-3 border-t border-border">
+              <button
+                onClick={() => { setOpen(false); navigate('/portal/briefs'); }}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-accent bg-accentLight hover:bg-accent/20 border border-accent/20 transition-colors mb-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+                View Public Portal
+              </button>
               <button
                 onClick={handleReseed}
                 disabled={reseedLoading}

@@ -11,53 +11,53 @@ export const updateBrandProfile = (data) => client.put('/brands/profile', data);
 export const autoImportBrand = (url) => client.post('/brands/auto-import', { url });
 export const analyzeBrandFromPlace = (placeData) => client.post('/brands/analyze-place', placeData);
 
-// ─── Creator Profiles ───
-export const getCreatorProfile = () => client.get('/creators/profile');
-export const createCreatorProfile = (data) => client.post('/creators/profile', data);
-export const updateCreatorProfile = (data) => client.put('/creators/profile', data);
-export const uploadPortfolio = (formData, { onUploadProgress } = {}) =>
-  client.post('/creators/portfolio', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    onUploadProgress,
-  });
-export const getPortfolio = () => client.get('/creators/portfolio');
-export const deletePortfolioItem = (id) => client.delete(`/creators/portfolio/${id}`);
-export const importCreatorSocial = (data) => client.post('/creators/import-social', data);
+// ─── Briefs (Brand) ───
+export const createBrief = (data) => client.post('/briefs', data);
+export const getBriefs = (status) => client.get('/briefs', { params: status ? { status } : {} });
+export const getBrief = (id) => client.get(`/briefs/${id}`);
+export const updateBrief = (id, data) => client.put(`/briefs/${id}`, data);
+export const closeBrief = (id) => client.post(`/briefs/${id}/close`);
+export const deleteBrief = (id) => client.delete(`/briefs/${id}`);
+export const getBriefApplications = (briefId) => client.get(`/briefs/${briefId}/applications`);
 
-// ─── Content Requests + Matching ───
-export const createContentRequest = (data) => client.post('/requests', data);
-export const getContentRequests = () => client.get('/requests');
-export const getContentRequest = (id) => client.get(`/requests/${id}`);
-export const selectMatch = (requestId, matchId) =>
-  client.post(`/requests/${requestId}/select/${matchId}`);
+// ─── Public Portal ───
+export const getPortalBriefs = () => client.get('/portal/briefs');
+export const getPortalBrief = (id) => client.get(`/portal/briefs/${id}`);
+export const submitApplication = (briefId, data) => client.post(`/portal/briefs/${briefId}/apply`, data);
+
+// ─── Applications ───
+export const getApplication = (id) => client.get(`/applications/${id}`);
+export const selectApplication = (id) => client.post(`/applications/${id}/select`);
+export const rejectApplication = (id) => client.post(`/applications/${id}/reject`);
 
 // ─── Projects ───
 export const getProjects = () => client.get('/projects');
 export const getProject = (id) => client.get(`/projects/${id}`);
-export const submitDraft = (projectId, data) =>
-  client.post(`/projects/${projectId}/drafts`, data);
-export const approveDraft = (projectId, draftId) =>
-  client.post(`/projects/${projectId}/drafts/${draftId}/approve`);
-export const requestRevision = (projectId, draftId, feedback) =>
-  client.post(`/projects/${projectId}/drafts/${draftId}/revision`, { feedback });
-export const deliverProject = (projectId) =>
-  client.post(`/projects/${projectId}/deliver`);
+export const completeProject = (projectId) => client.post(`/projects/${projectId}/complete`);
 export const downloadUsageRightsPDF = (projectId) =>
   client.get(`/projects/${projectId}/usage-rights-pdf`, { responseType: 'blob' });
 
-// ─── Messages ───
+// ─── Creator Portal (token-based) ───
+const creatorClient = (token) => ({
+  accept: (projectId) => client.post(`/projects/${projectId}/accept`, {}, { headers: { 'x-creator-token': token } }),
+  decline: (projectId) => client.post(`/projects/${projectId}/decline`, {}, { headers: { 'x-creator-token': token } }),
+  getProject: (projectId) => client.get(`/projects/${projectId}`, { headers: { 'x-creator-token': token } }),
+  submitDraft: (projectId, data) => client.post(`/projects/${projectId}/drafts`, data, { headers: { 'x-creator-token': token } }),
+  getMessages: (projectId) => client.get(`/projects/${projectId}/messages`, { headers: { 'x-creator-token': token } }),
+  sendMessage: (projectId, text) => client.post(`/projects/${projectId}/messages`, { text }, { headers: { 'x-creator-token': token } }),
+});
+export { creatorClient };
+
+// ─── Brand Draft Review ───
+export const approveDraft = (projectId, draftId, feedback) =>
+  client.post(`/projects/${projectId}/drafts/${draftId}/approve`, { feedback });
+export const requestRevision = (projectId, draftId, feedback) =>
+  client.post(`/projects/${projectId}/drafts/${draftId}/revision`, { feedback });
+
+// ─── Messages (Brand) ───
 export const getProjectMessages = (projectId) => client.get(`/projects/${projectId}/messages`);
 export const sendProjectMessage = (projectId, text) =>
   client.post(`/projects/${projectId}/messages`, { text });
-
-// ─── Briefs (Creator) ───
-export const getBriefs = () => client.get('/briefs');
-export const markBriefViewed = (matchId) => client.post(`/briefs/${matchId}/view`);
-export const acceptBrief = (matchId) => client.post(`/briefs/${matchId}/accept`);
-export const declineBrief = (matchId, reason) =>
-  client.post(`/briefs/${matchId}/decline`, reason ? { reason } : {});
-export const askBriefQuestion = (matchId, text) =>
-  client.post(`/briefs/${matchId}/question`, { text });
 
 // ─── Notifications ───
 export const getNotifications = () => client.get('/notifications');
@@ -66,10 +66,8 @@ export const markNotificationRead = (id) => client.post(`/notifications/${id}/re
 export const markAllNotificationsRead = () => client.post('/notifications/read-all');
 
 // ─── AI ───
-export const analyzeBrand = (data) => client.post('/ai/analyze-brand', data);
-export const analyzePortfolio = (imageUrls) =>
-  client.post('/ai/analyze-portfolio', { imageUrls });
-export const getRequestSuggestions = () => client.post('/ai/suggest-request');
+export const getBriefSuggestions = (data) => client.post('/ai/suggest-brief', data);
+export const rankApplications = (briefId) => client.post('/ai/rank-applications', { briefId });
 
 // ─── Uploads ───
 export const uploadImage = (formData) =>
@@ -83,8 +81,7 @@ export const uploadImages = (formData, { onUploadProgress } = {}) =>
   });
 
 // ─── Stats ───
-export const getOperatorStats = () => client.get('/stats/operator');
-export const getCreatorStats = () => client.get('/stats/creator');
+export const getBrandStats = () => client.get('/stats/brand');
 
 // ─── Admin ───
 export const reseedDatabase = () => client.post('/admin/reseed');

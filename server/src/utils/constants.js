@@ -1,4 +1,4 @@
-// ─── Shared Constants for Locale ───
+// ─── Shared Constants for Locale v2 ───
 
 const VIBE_OPTIONS = [
   "Cozy & Warm",
@@ -32,30 +32,18 @@ const CONTENT_COMFORT_ZONES = [
   "Customer Stories",
 ];
 
-const CONTENT_STYLES = [
-  "Warm",
-  "Editorial",
-  "Documentary",
-  "Candid",
+const CONTENT_STYLE_TAGS = [
   "Clean",
-  "Minimal",
-  "Bold",
-  "Energetic",
-  "Moody",
+  "Minimalist",
   "Cinematic",
+  "Candid",
   "Bright",
+  "Moody",
+  "Documentary",
   "Lifestyle",
-];
-
-const CREATOR_STRENGTHS = [
-  "Food photography",
-  "Interior / ambiance",
-  "Reels / short-form video",
-  "Story content",
-  "Community moments",
-  "Behind-the-scenes",
-  "Product close-ups",
-  "Lifestyle & people",
+  "Editorial",
+  "Raw",
+  "Playful",
 ];
 
 const NEIGHBORHOODS = [
@@ -73,31 +61,67 @@ const NEIGHBORHOODS = [
   "Lakeview",
 ];
 
-const BUDGET_RANGES = [
-  "$100 - $200",
-  "$200 - $350",
-  "$350 - $500",
-  "$500+",
+const CAMPAIGN_GOALS = [
+  { value: "EVENT_PROMO", label: "Event Promo" },
+  { value: "MENU_LAUNCH", label: "Menu Launch" },
+  { value: "SEASONAL_SPECIAL", label: "Seasonal Special" },
+  { value: "GENERAL_CONTENT", label: "General Content" },
+  { value: "GRAND_OPENING", label: "Grand Opening" },
+  { value: "SLOW_PERIOD_FILL", label: "Slow Period Fill" },
 ];
 
 const CONTENT_TYPES = [
-  "Ambiance / Interior",
-  "Food & Drink",
-  "Community / Culture",
-  "Behind the Scenes",
-  "Seasonal Special",
+  "REEL",
+  "CAROUSEL",
+  "STORY",
+  "TIKTOK",
+  "PHOTO_SET",
+  "BLOG_POST",
 ];
 
-const PLATFORM_FEE_RATE = 0.15;
+const COMPENSATION_TYPES = [
+  { value: "FREE_PRODUCT", label: "Free Product" },
+  { value: "FLAT_FEE", label: "Flat Fee" },
+  { value: "HYBRID", label: "Hybrid" },
+  { value: "COMMISSION", label: "Commission" },
+];
+
+const USAGE_RIGHTS_OPTIONS = [
+  { value: "ORGANIC_SOCIAL", label: "Organic Social Only" },
+  { value: "PAID_ADS", label: "Paid Ads" },
+  { value: "IN_STORE", label: "In-Store" },
+  { value: "WEBSITE", label: "Website" },
+  { value: "ALL", label: "All" },
+];
+
+const LOCATION_REQUIREMENTS = [
+  { value: "IN_PERSON", label: "Must Visit In Person" },
+  { value: "REMOTE", label: "Remote OK" },
+  { value: "FLEXIBLE", label: "Flexible" },
+];
+
+const CREATOR_PLATFORMS = [
+  { value: "INSTAGRAM", label: "Instagram" },
+  { value: "TIKTOK", label: "TikTok" },
+  { value: "YOUTUBE", label: "YouTube" },
+  { value: "REDNOTE", label: "RedNote" },
+  { value: "OTHER", label: "Other" },
+];
+
+// Platform fee: 10% on every completed transaction
+const PLATFORM_FEE_RATE = 0.10;
 
 module.exports = {
   VIBE_OPTIONS,
   VALUE_OPTIONS,
   CONTENT_COMFORT_ZONES,
-  CONTENT_STYLES,
-  CREATOR_STRENGTHS,
+  CONTENT_STYLE_TAGS,
   NEIGHBORHOODS,
-  BUDGET_RANGES,
+  CAMPAIGN_GOALS,
   CONTENT_TYPES,
+  COMPENSATION_TYPES,
+  USAGE_RIGHTS_OPTIONS,
+  LOCATION_REQUIREMENTS,
+  CREATOR_PLATFORMS,
   PLATFORM_FEE_RATE,
 };
