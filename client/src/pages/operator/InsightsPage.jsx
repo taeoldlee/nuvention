@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import client from '../../api/client';
+import { getInsights } from '../../api';
 import FadeIn from '../../components/marketing/FadeIn';
 import StatCard from '../../components/common/StatCard';
 
@@ -129,7 +129,7 @@ export default function InsightsPage() {
       setLoading(true);
       setError('');
       try {
-        const res = await client.get('/stats/insights');
+        const res = await getInsights();
         setData(res.data);
       } catch (err) {
         setError('Could not load insights.');

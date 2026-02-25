@@ -105,11 +105,11 @@ router.get("/insights", async (req, res, next) => {
         : null;
 
     // ── AI Recommendation ──
+    const sortedNeighborhoods = [...neighborhoodBenchmarks].sort((a, b) => b.campaigns - a.campaigns);
     const primaryNeighborhood =
-      neighborhoodBenchmarks.sort((a, b) => b.campaigns - a.campaigns)[0]?.neighborhood ||
-      brandProfile.neighborhood;
+      sortedNeighborhoods[0]?.neighborhood || brandProfile.neighborhood;
     const bestTopContent =
-      neighborhoodBenchmarks[0]?.topContentType || "REEL";
+      sortedNeighborhoods[0]?.topContentType || "REEL";
 
     let aiRecommendation = null;
 

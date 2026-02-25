@@ -57,7 +57,7 @@ export default function ApplicationFilters({ applications, onChange }) {
     }
 
     onChange(filtered);
-  }, [activeFilter, sortBy, applications]);
+  }, [activeFilter, sortBy, applications, onChange]);
 
   if (applications.length === 0) return null;
 

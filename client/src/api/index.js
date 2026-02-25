@@ -103,5 +103,5 @@ export const reseedDatabase = () => client.post('/admin/reseed');
 // ─── Insights ───
 export const getInsights = () => client.get('/stats/insights');
 
-// ─── Alias for legacy SuggestionPanel compatibility ───
-export const getRequestSuggestions = (data) => client.post('/ai/suggest-brief', data || {});
+// ─── Alias (used by SuggestionPanel) ───
+export const getRequestSuggestions = getBriefSuggestions;
