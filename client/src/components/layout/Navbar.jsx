@@ -15,6 +15,7 @@ export default function Navbar() {
     { to: '/operator/dashboard', label: 'Dashboard' },
     { to: '/operator/brief/new', label: 'Create Brief' },
     { to: '/portal/briefs', label: 'Public Portal' },
+    { to: '/operator/insights', label: 'Insights' },
     { to: '/operator/settings', label: 'Settings' },
   ];
 

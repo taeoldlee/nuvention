@@ -7,6 +7,7 @@ import CreateBrief from './pages/operator/CreateBrief';
 import BriefDetail from './pages/operator/BriefDetail';
 import OperatorProjectView from './pages/operator/ProjectView';
 import OperatorSettings from './pages/operator/Settings';
+import InsightsPage from './pages/operator/InsightsPage';
 import BriefPortal from './pages/portal/BriefPortal';
 import AgencyOnboarding from './pages/agency/Onboarding';
 import AgencyDashboard from './pages/agency/Dashboard';
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/operator/brief/:id" element={<BriefDetail />} />
         <Route path="/operator/project/:id" element={<OperatorProjectView />} />
         <Route path="/operator/settings" element={<OperatorSettings />} />
+        <Route path="/operator/insights" element={<InsightsPage />} />
 
         {/* Agency Routes */}
         <Route path="/agency/onboarding" element={<AgencyOnboarding />} />
