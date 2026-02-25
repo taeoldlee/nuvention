@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBrief, selectApplication, rejectApplication } from '../../api';
+import { useToast } from '../../contexts/ToastContext';
 import Btn from '../../components/common/Btn';
 import StatusBadge from '../../components/common/StatusBadge';
 import FadeIn from '../../components/marketing/FadeIn';
+import ApplicationFilters, { getCreatorTier } from '../../components/operator/ApplicationFilters';
+import ApplicationScoreBadge from '../../components/operator/ApplicationScoreBadge';
 
 const CAMPAIGN_GOAL_LABELS = {
   EVENT_PROMO: 'Event Promo',
@@ -141,15 +144,20 @@ function ApplicationCard({ application, onSelect, onReject, actionLoading }) {
             </div>
 
             {/* Stats Row */}
-            <div className="flex items-center gap-4 mt-2 text-sm font-body">
-              <div>
+            <div className="flex items-center gap-4 mt-2 text-sm font-body flex-wrap">
+              <div className="flex items-center gap-1.5">
                 <span className="text-muted">Followers: </span>
                 <span className="font-semibold text-dark">{formatFollowerCount(followerCount)}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-bgTan text-mid border border-border">
+                  {getCreatorTier(followerCount)}
+                </span>
               </div>
               {engagementRate != null && (
                 <div>
                   <span className="text-muted">Eng. Rate: </span>
-                  <span className="font-semibold text-dark">{engagementRate.toFixed(1)}%</span>
+                  <span className={`font-semibold ${engagementRate >= 4 ? 'text-green' : engagementRate >= 2 ? 'text-dark' : 'text-muted'}`}>
+                    {engagementRate.toFixed(1)}%
+                  </span>
                 </div>
               )}
               {compensationAsk && (
@@ -220,6 +228,8 @@ export default function BriefDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState('');
+  const [filteredApps, setFilteredApps] = useState(null);
+  const { addToast } = useToast();
 
   const loadBrief = async () => {
     setLoading(true);
@@ -242,9 +252,12 @@ export default function BriefDetail() {
     setActionLoading(`select-${applicationId}`);
     try {
       await selectApplication(applicationId);
+      addToast('Creator selected! A project has been created.', 'success');
       await loadBrief();
     } catch {
-      setError('Could not select this creator. Please try again.');
+      const msg = 'Could not select this creator. Please try again.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setActionLoading('');
     }
@@ -254,9 +267,12 @@ export default function BriefDetail() {
     setActionLoading(`reject-${applicationId}`);
     try {
       await rejectApplication(applicationId);
+      addToast('Application declined.', 'info');
       await loadBrief();
     } catch {
-      setError('Could not reject this application. Please try again.');
+      const msg = 'Could not reject this application. Please try again.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setActionLoading('');
     }
@@ -295,8 +311,9 @@ export default function BriefDetail() {
 
   const contentTypes = Array.isArray(brief.contentTypes) ? brief.contentTypes : [];
   const applications = Array.isArray(brief.applications) ? brief.applications : [];
-  const pendingApps = applications.filter((a) => a.status === 'PENDING');
-  const actionedApps = applications.filter((a) => a.status !== 'PENDING');
+  const displayApps = filteredApps ?? applications;
+  const pendingApps = displayApps.filter((a) => a.status === 'PENDING');
+  const actionedApps = displayApps.filter((a) => a.status !== 'PENDING');
 
   return (
     <div className="min-h-screen bg-bgWarm">
@@ -425,7 +442,9 @@ export default function BriefDetail() {
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <>
+                <ApplicationFilters applications={applications} onChange={setFilteredApps} />
+                <div className="space-y-3">
                 {/* Pending applications first, sorted by match score */}
                 {pendingApps.map((app) => (
                   <ApplicationCard
@@ -454,6 +473,7 @@ export default function BriefDetail() {
                   />
                 ))}
               </div>
+              </>
             )}
           </section>
         </FadeIn>
