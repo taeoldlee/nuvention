@@ -308,18 +308,12 @@ router.post("/auto-import", async (req, res, next) => {
       });
     }
 
-    // Step 3: No AI and no known fallback — return empty shell for manual entry
+    // Step 3: No AI and no known fallback — use URL-based extraction with sensible defaults
+    const extractedData = await analyzeBrandFromUrl(url);
     return res.json({
-      source: "manual",
+      source: "fallback",
       urlType,
-      data: {
-        businessName: "",
-        neighborhood: "",
-        vibe: [],
-        values: [],
-        contentComfortZones: [],
-      },
-      message: "Could not auto-detect brand info. Please fill in manually.",
+      data: extractedData,
     });
   } catch (err) {
     next(err);
