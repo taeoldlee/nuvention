@@ -12,7 +12,7 @@ export default function AppShell() {
   return (
     <div className="min-h-screen bg-bgTan">
       {showNav && <Navbar />}
-      <main className={showNav ? 'pt-16' : ''}>
+      <main className={showNav ? 'pt-14' : ''}>
         <Outlet />
       </main>
       <DemoSwitcher />
