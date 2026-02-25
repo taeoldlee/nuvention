@@ -22,7 +22,6 @@ export default function Navbar() {
   const agencyLinks = [
     { to: '/agency/dashboard', label: 'Dashboard' },
     { to: '/agency/roster', label: 'Roster' },
-    { to: '/portal/briefs', label: 'Browse Briefs' },
     { to: '/agency/settings', label: 'Settings' },
   ];
 
