@@ -89,9 +89,6 @@ export default function Onboarding() {
       const res = await autoImportBrand(importUrl.trim());
       const data = res.data?.data || res.data;
       formActions.applyImportData(data);
-      if (res.data?.source === 'manual') {
-        addToast('Could not auto-detect brand info. Please fill in manually.', 'info');
-      }
       setStep(1);
     } catch (err) {
       setImportError(
