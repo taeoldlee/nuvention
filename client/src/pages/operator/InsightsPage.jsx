@@ -309,11 +309,12 @@ export default function InsightsPage() {
               <div className="mb-6">
                 <h2 className="font-display text-lg font-semibold text-dark mb-4">Creator Tier Performance</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {TIER_ORDER.filter((t) => data.creatorTierPerformance?.[t]).map((tier) => {
+                  {TIER_ORDER.filter((t) => data.creatorTierPerformance?.[t]).map((tier, idx, arr) => {
                     const tierData = data.creatorTierPerformance[tier];
-                    const allRates = Object.values(data.creatorTierPerformance).map((d) => d.avgAcceptanceRate);
+                    const allRates = arr.map((t) => data.creatorTierPerformance[t].avgAcceptanceRate);
                     const maxRate = Math.max(...allRates);
-                    const isBest = tierData.avgAcceptanceRate === maxRate && maxRate > 0;
+                    const firstBest = arr.find((t) => data.creatorTierPerformance[t].avgAcceptanceRate === maxRate);
+                    const isBest = tier === firstBest && maxRate > 0;
                     return <TierCard key={tier} tier={tier} data={tierData} isBest={isBest} />;
                   })}
                   {Object.keys(data.creatorTierPerformance || {}).length === 0 && (
