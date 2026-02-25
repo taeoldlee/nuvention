@@ -275,3 +275,23 @@ locale/
 │
 └── package.json               # Root monorepo config
 ```
+
+---
+
+## Recent Enhancements (develop_tavishi_pivot)
+
+### Bug Fixes
+- Toast notifications repositioned to top-right (below navbar) for better UX.
+- Fixed `getRequestSuggestions` missing export in the API client that caused a runtime error in `SuggestionPanel`.
+
+### New Features
+
+**AI Brief Suggestions** — During brief creation, operators can click "Get AI Suggestions" to receive context-aware recommendations for creative direction, dos/don'ts, and deliverable structure. Each suggestion can be applied individually with a "Use" button.
+
+**Enhanced Application Review** — The brief detail page now includes filter pills (All / High Match / Nano·Micro / Pending Only), sort controls, a match-score summary bar, color-coded `ApplicationScoreBadge` indicators, and creator tier labels (NANO/MICRO/MID/MACRO) on each application card.
+
+**Campaign Insights** — A new `/operator/insights` page shows aggregated campaign intelligence once an operator has completed 3+ campaigns. Analytics include offer-type acceptance rates, creator tier performance, neighborhood benchmarks, and an AI-generated recommendation. A locked-state with progress bar encourages early adoption.
+
+**Project View Enhancement** — The operator project view now renders a `ProjectStatusTracker` step indicator in the project header and a `DraftHistory` section below draft submissions. All project actions (Approve, Request Revision, Complete) now surface toast notifications.
+
+**Settings Enhancement** — The operator settings page gains a tabbed panel (Profile / Subscription / Notifications / Data) for editing brand profile details, viewing plan options, managing notification preferences, and exporting campaign data as CSV.
