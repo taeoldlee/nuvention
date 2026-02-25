@@ -119,11 +119,102 @@ Removed the conditional toast. The user is already being navigated to the review
 
 ---
 
+---
+
+## Bug 3 — Auto-import returns empty business name, location, and vibe
+
+### Symptom
+
+When an operator pasted a Google Maps or Yelp URL into the onboarding import field and clicked **Import**, the review step showed blank values for business name, neighborhood, vibe, values, and content comfort zones — the user had to fill everything in manually as if they hadn't imported anything.
+
+### Root Cause
+
+`POST /api/brands/auto-import` has three steps:
+
+1. Try AI (OpenAI) — skipped when no API key
+2. Try known demo fallbacks — only matched 4 hardcoded Evanston businesses
+3. **Fallback** — was returning an empty shell object:
+
+```js
+// Before fix
+return res.json({
+  source: "manual",
+  data: {
+    businessName: "",
+    neighborhood: "",
+    vibe: [],
+    values: [],
+    contentComfortZones: [],
+    vibeAnalysis: null,
+  },
+});
+```
+
+Any real business URL that wasn't one of the four hardcoded demo entries would hit step 3 and receive empty data. `analyzeBrandFromUrl()` already existed and contained `fallbackBrandAnalysis()` — but step 3 wasn't calling it.
+
+### Fix
+
+Changed step 3 to call `analyzeBrandFromUrl(url)` instead of returning an empty object:
+
+```diff
+- return res.json({
+-   source: "manual",
+-   data: { businessName: "", neighborhood: "", vibe: [], ... },
+- });
++ const extractedData = await analyzeBrandFromUrl(url);
++ return res.json({ source: "fallback", urlType, data: extractedData });
+```
+
+### Files Changed
+
+- `server/src/routes/brands.js` — step 3 now calls `analyzeBrandFromUrl(url)` instead of returning empty data
+
+---
+
+## Enhancement — Smart cuisine-aware fallback brand analysis (no API key needed)
+
+### Background
+
+With the step 3 fix above in place, all imports now flow through `fallbackBrandAnalysis(url)` in `server/src/services/ai.js` when no OpenAI key is configured. The original implementation of that function returned generic placeholder data regardless of the business type — not useful enough for real onboarding.
+
+### What Was Changed
+
+Rewrote `fallbackBrandAnalysis(url)` with a keyword-detection system that infers brand data directly from the URL and business name string — no external API calls needed:
+
+**Business name extraction**
+- Google Maps: parses the `/place/Business+Name/` URL segment
+- Yelp: parses the `/biz/business-name-12345` slug, strips trailing numeric IDs, title-cases each word
+
+**Neighborhood extraction**
+- Scans the URL for 19 known Chicago/Evanston neighborhoods (URL-encoded, hyphenated, and plain variants)
+
+**Cuisine detection (19 categories)**
+- Matches keywords from the business name + URL against 19 cuisine signal lists:
+  Japanese, Mexican, Italian, American, Bakery & Pastry, Coffee & Beverage, Thai, Indian, Chinese, Korean, French, Mediterranean, Seafood, Vegan & Plant-Based, Bar & Cocktails, Brunch & Breakfast, Desserts & Sweets, and more
+
+**Cuisine → brand profile mapping**
+- Each detected cuisine maps to curated `vibe[]`, `values[]`, `contentComfortZones[]`, `aestheticTags[]`, and `contentRecommendations[]`
+- Example: a URL containing "ramen" → Japanese → `["Minimalist & Clean", "Cozy & Warm"]` + content recs like "Steam rising from a fresh bowl", "Noodle pull close-up"
+
+**Full profile returned**
+- `businessName`, `neighborhood`, `vibe`, `values`, `contentComfortZones`
+- `cuisineTypes`, `budgetMin`, `budgetMax`
+- `vibeScales`, `guestExperienceKeywords`, `contentNoGos`
+- `vibeAnalysis` with `primaryVibe`, `aestheticTags`, `contentRecommendations`, `avoidTags`
+
+### Files Changed
+
+- `server/src/services/ai.js` — complete rewrite of `fallbackBrandAnalysis()` with 19-cuisine keyword detection system
+
+---
+
 ## Summary
 
 | # | Location | Symptom | Fix |
 |---|----------|---------|-----|
 | 1 | `server/.env` + `server/src/config/s3.js` | AWS error shown to user on image upload | Removed placeholder AWS credentials so S3 falls back to disk storage |
 | 2 | `client/src/pages/operator/Onboarding.jsx` | Confusing toast on every URL import in demo mode | Removed toast for expected `source === 'manual'` fallback path |
+| 3 | `server/src/routes/brands.js` | Auto-import returned empty business name, location, and vibe | Step 3 now calls `analyzeBrandFromUrl()` instead of returning an empty object |
+| 4 | `server/src/services/ai.js` | Fallback brand analysis returned generic placeholder data | Rewrote `fallbackBrandAnalysis()` with 19-cuisine keyword detection — extracts real name, neighborhood, vibe, and content strategy from URL alone |
 
-Neither fix changes any application logic, API contracts, or UI structure — both are pure removal of unintended side effects.
+Fixes 1 and 2 are pure removals of unintended side effects with no logic changes. Fixes 3 and 4 correct a broken data flow and replace a useless stub with a working no-API-key implementation.
