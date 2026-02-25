@@ -9,10 +9,13 @@ import {
   sendProjectMessage,
 } from '../../api';
 import { formatDate, formatCents, formatCompensation } from '../../utils/constants';
+import { useToast } from '../../contexts/ToastContext';
 import Btn from '../../components/common/Btn';
 import StatusBadge from '../../components/common/StatusBadge';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MessageThread from '../../components/common/MessageThread';
+import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
+import DraftHistory from '../../components/operator/DraftHistory';
 
 export default function ProjectView() {
   const { id } = useParams();
@@ -25,6 +28,7 @@ export default function ProjectView() {
   const [feedbackText, setFeedbackText] = useState('');
   const [showRevisionInput, setShowRevisionInput] = useState(null); // draftId or null
   const [expandedDraft, setExpandedDraft] = useState(null);
+  const { addToast } = useToast();
 
   const loadProject = async () => {
     setLoading(true);
@@ -49,9 +53,12 @@ export default function ProjectView() {
     setActionLoading('approve');
     try {
       await approveDraft(id, draftId);
+      addToast('Draft approved! Ready to complete and release payment.', 'success');
       await loadProject();
     } catch {
-      setError('Could not approve draft.');
+      const msg = 'Could not approve draft.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setActionLoading('');
     }
@@ -62,11 +69,14 @@ export default function ProjectView() {
     setActionLoading('revision');
     try {
       await requestRevision(id, draftId, feedbackText.trim());
+      addToast('Revision request sent to creator.', 'info');
       setFeedbackText('');
       setShowRevisionInput(null);
       await loadProject();
     } catch {
-      setError('Could not request revision.');
+      const msg = 'Could not request revision.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setActionLoading('');
     }
@@ -77,8 +87,11 @@ export default function ProjectView() {
     try {
       const res = await completeProject(id);
       setProject(res.data.project);
+      addToast('Project completed! Payment has been released.', 'success');
     } catch {
-      setError('Could not complete project.');
+      const msg = 'Could not complete project.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setActionLoading('');
     }
@@ -133,7 +146,7 @@ export default function ProjectView() {
 
         {/* ─── Project Header ─── */}
         <div className="card mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-5">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center flex-shrink-0">
                 <span className="text-base font-bold text-accent">
@@ -154,6 +167,7 @@ export default function ProjectView() {
               <StatusBadge status={project.status} />
             </div>
           </div>
+          <ProjectStatusTracker status={project.status} className="pt-2 border-t border-border" />
         </div>
 
         {error && (
@@ -501,6 +515,9 @@ export default function ProjectView() {
                 </div>
               )}
             </div>
+
+            {/* Draft History (shows when >1 draft exists) */}
+            <DraftHistory drafts={drafts} />
 
             {/* Messages */}
             <MessageThread projectId={id} />

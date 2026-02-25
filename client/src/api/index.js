@@ -99,3 +99,9 @@ export const getAgencyStats = () => client.get('/agencies/stats');
 
 // ─── Admin ───
 export const reseedDatabase = () => client.post('/admin/reseed');
+
+// ─── Insights ───
+export const getInsights = () => client.get('/stats/insights');
+
+// ─── Alias (used by SuggestionPanel) ───
+export const getRequestSuggestions = getBriefSuggestions;

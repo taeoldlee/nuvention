@@ -18,6 +18,7 @@ const adminRoutes = require("./routes/admin");
 const notificationRoutes = require("./routes/notifications");
 const messageRoutes = require("./routes/messages");
 const agencyRoutes = require("./routes/agencies");
+const insightsRoutes = require("./routes/insights");
 
 const app = express();
 
@@ -65,6 +66,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/projects", messageRoutes);
 app.use("/api/agencies", agencyRoutes);
+app.use("/api/stats", insightsRoutes);
 
 // ─── Serve Frontend (production) ───
 const clientDist = path.join(__dirname, "../../client/dist");

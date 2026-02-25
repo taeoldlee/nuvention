@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import { createBrief } from '../../api';
 import Btn from '../../components/common/Btn';
 import FadeIn from '../../components/marketing/FadeIn';
+import AISuggestionCards from '../../components/operator/AISuggestionCards';
 
 const CAMPAIGN_GOALS = [
   { value: 'EVENT_PROMO', label: 'Event Promo' },
@@ -74,11 +76,16 @@ export default function CreateBrief() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const { addToast } = useToast();
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setError('');
+    if (fieldErrors[field]) setFieldErrors((prev) => ({ ...prev, [field]: '' }));
   };
+
+  const handleSuggestionApply = (field, value) => updateField(field, value);
 
   const toggleContentType = (type) => {
     setForm((prev) => ({
@@ -108,7 +115,23 @@ export default function CreateBrief() {
     return null;
   };
 
+  const validateFields = () => {
+    const errors = {};
+    if (!form.title.trim()) errors.title = 'Title is required.';
+    if (!form.campaignGoal) errors.campaignGoal = 'Select a campaign goal.';
+    if (form.contentTypes.length === 0) errors.contentTypes = 'Select at least one content type.';
+    if (!form.creativeDirection.trim()) errors.creativeDirection = 'Creative direction is required.';
+    if (!form.compensationType) errors.compensationType = 'Select a compensation type.';
+    if (needsAmount && (!form.compensationAmount || Number(form.compensationAmount) <= 0))
+      errors.compensationAmount = 'Enter the compensation amount.';
+    if (!form.usageRights) errors.usageRights = 'Select usage rights.';
+    if (!form.locationRequirement) errors.locationRequirement = 'Select a location requirement.';
+    return errors;
+  };
+
   const handleSubmit = async (status) => {
+    const errors = validateFields();
+    setFieldErrors(errors);
     const validationError = validate();
     if (validationError) {
       setError(validationError);
@@ -139,11 +162,12 @@ export default function CreateBrief() {
       };
 
       await createBrief(payload);
+      addToast(status === 'OPEN' ? 'Brief published successfully!' : 'Brief saved as draft.', 'success');
       navigate('/operator/dashboard');
     } catch (err) {
-      setError(
-        err.response?.data?.error || 'Something went wrong. Please try again.'
-      );
+      const msg = err.response?.data?.error || 'Something went wrong. Please try again.';
+      setError(msg);
+      addToast(msg, 'error');
     } finally {
       setSubmitting(false);
     }
@@ -201,8 +225,9 @@ export default function CreateBrief() {
                 value={form.title}
                 onChange={(e) => updateField('title', e.target.value)}
                 placeholder="e.g. Summer Menu Launch Reel"
-                className={inputClass}
+                className={`${inputClass} ${fieldErrors.title ? 'border-red-400 focus:ring-red-200' : ''}`}
               />
+              {fieldErrors.title && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.title}</p>}
             </div>
 
             {/* Campaign Goal */}
@@ -213,7 +238,7 @@ export default function CreateBrief() {
               <select
                 value={form.campaignGoal}
                 onChange={(e) => updateField('campaignGoal', e.target.value)}
-                className={selectClass}
+                className={`${selectClass} ${fieldErrors.campaignGoal ? 'border-red-400 focus:ring-red-200' : ''}`}
               >
                 <option value="">Select a goal...</option>
                 {CAMPAIGN_GOALS.map((g) => (
@@ -222,6 +247,13 @@ export default function CreateBrief() {
                   </option>
                 ))}
               </select>
+              {fieldErrors.campaignGoal && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.campaignGoal}</p>}
+              {/* AI Suggestion Cards — appears when campaign goal is selected */}
+              <AISuggestionCards
+                campaignGoal={form.campaignGoal}
+                contentTypes={form.contentTypes}
+                onApply={handleSuggestionApply}
+              />
             </div>
 
             {/* Content Types */}
@@ -232,6 +264,7 @@ export default function CreateBrief() {
               <p className="text-xs text-muted font-body mb-2">
                 Select all that apply.
               </p>
+              {fieldErrors.contentTypes && <p className="mb-2 text-xs text-red-600 font-body">{fieldErrors.contentTypes}</p>}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {CONTENT_TYPES.map((ct) => (
                   <label
@@ -274,14 +307,17 @@ export default function CreateBrief() {
             <div>
               <label className={labelClass}>
                 Creative Direction <span className="text-red-400">*</span>
+                <span className="float-right text-xs font-normal text-muted">{form.creativeDirection.length}/500</span>
               </label>
               <textarea
                 value={form.creativeDirection}
                 onChange={(e) => updateField('creativeDirection', e.target.value)}
                 placeholder="Describe the look, feel, and story you want the content to tell..."
                 rows={4}
-                className={`${inputClass} resize-none`}
+                maxLength={500}
+                className={`${inputClass} resize-none ${fieldErrors.creativeDirection ? 'border-red-400' : ''}`}
               />
+              {fieldErrors.creativeDirection && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.creativeDirection}</p>}
             </div>
 
             {/* Dos */}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Btn from '../../components/common/Btn';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
+import SettingsEnhancement from '../../components/operator/SettingsEnhancement';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -161,6 +162,9 @@ export default function Settings() {
             <p className="text-sm text-dark font-body">{user?.role || '--'}</p>
           </div>
         </div>
+
+        {/* Enhanced Settings Tabs */}
+        <SettingsEnhancement profile={profile} />
       </div>
     </div>
   );
