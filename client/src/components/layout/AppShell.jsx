@@ -7,7 +7,8 @@ export default function AppShell() {
   const { user } = useAuth();
   const { pathname } = useLocation();
   const isOnboarding = pathname.includes('/onboarding');
-  const showNav = user && !isOnboarding;
+  const isPortal = pathname.startsWith('/portal');
+  const showNav = user && !isOnboarding && !isPortal;
 
   return (
     <div className="min-h-screen bg-bgTan">
