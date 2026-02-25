@@ -12,6 +12,7 @@ router.get("/demo-users", async (req, res, next) => {
       where: { isDemo: true },
       include: {
         brandProfile: true,
+        agencyProfile: true,
       },
       orderBy: { createdAt: "asc" },
     });
@@ -39,6 +40,7 @@ router.post("/demo-login", async (req, res, next) => {
       where: { id: userId },
       include: {
         brandProfile: true,
+        agencyProfile: true,
       },
     });
 
@@ -46,7 +48,7 @@ router.post("/demo-login", async (req, res, next) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const profile = user.brandProfile || null;
+    const profile = user.brandProfile || user.agencyProfile || null;
     res.json({ user, profile });
   } catch (err) {
     next(err);

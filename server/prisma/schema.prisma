@@ -20,12 +20,14 @@ model User {
   updatedAt DateTime @updatedAt
 
   brandProfile  BrandProfile?
+  agencyProfile AgencyProfile?
   notifications Notification[]
 }
 
 enum UserRole {
   OPERATOR
   ADMIN
+  AGENCY
 }
 
 // ─── BRAND (OPERATOR) PROFILE ───
@@ -78,6 +80,52 @@ enum SubscriptionStatus {
   ACTIVE
   CANCELLED
   TRIAL
+}
+
+// ─── AGENCY PROFILE ───
+
+model AgencyProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
+
+  agencyName   String
+  contactName  String
+  contactEmail String
+  agencyType   String // Talent Management / Content Studio / Marketing Agency
+  serviceArea  String?
+  bio          String?
+  websiteUrl   String?
+  specialties  Json? // ["Food & Beverage", "Lifestyle", "Events"]
+  logoUrl      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  creators     AgencyCreator[]
+  applications Application[]
+}
+
+model AgencyCreator {
+  id               String        @id @default(uuid())
+  agencyProfileId  String
+  agencyProfile    AgencyProfile @relation(fields: [agencyProfileId], references: [id])
+
+  name             String
+  handle           String
+  platform         CreatorPlatform
+  followerCount    Int?
+  engagementRate   Float?
+  topPostUrls      Json? // string array
+  portfolioUrls    Json? // string array
+  contentStyleTags Json? // string array
+  contactEmail     String?
+  bio              String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applications Application[]
 }
 
 // ─── BRIEFS ───
@@ -155,6 +203,11 @@ model Application {
   id      String @id @default(uuid())
   briefId String
   brief   Brief  @relation(fields: [briefId], references: [id])
+
+  agencyProfileId      String?
+  agencyProfile        AgencyProfile? @relation(fields: [agencyProfileId], references: [id])
+  agencyCreatorId      String?
+  agencyCreator        AgencyCreator? @relation(fields: [agencyCreatorId], references: [id])
 
   applicantType        ApplicantType
   agencyName           String?
