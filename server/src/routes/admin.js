@@ -1,12 +1,17 @@
 const express = require("express");
 const router = express.Router();
+const { requireAuth, requireAdmin } = require("../middleware/auth");
 
 /**
  * POST /api/admin/reseed
  * Re-runs the seed script to reset all demo data to its starting state.
- * No auth required — this is a demo-only admin endpoint.
+ * Requires ADMIN role. Disabled entirely in production.
  */
-router.post("/reseed", async (req, res, next) => {
+router.post("/reseed", requireAuth, requireAdmin, async (req, res, next) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(403).json({ error: "Reseed is disabled in production." });
+  }
+
   try {
     console.log("[Admin] Reseed requested — running seed script...");
 

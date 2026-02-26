@@ -105,6 +105,17 @@ async function requireCreatorToken(req, res, next) {
   }
 }
 
+/**
+ * Requires the authenticated user to have the ADMIN role.
+ * Must be used after requireAuth.
+ */
+function requireAdmin(req, res, next) {
+  if (req.user.role !== "ADMIN") {
+    return res.status(403).json({ error: "Admin access required." });
+  }
+  next();
+}
+
 function requireAgencyWithProfile(req, res, next) {
   if (req.user.role !== "AGENCY") {
     return res.status(403).json({ error: "Only agencies can perform this action" });
@@ -116,4 +127,4 @@ function requireAgencyWithProfile(req, res, next) {
   next();
 }
 
-module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorToken, requireAgencyWithProfile };
+module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorToken, requireAgencyWithProfile, requireAdmin };
