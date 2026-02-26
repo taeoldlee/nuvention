@@ -14,30 +14,44 @@ router.get("/briefs", async (req, res, next) => {
     // Auto-close any OPEN briefs whose deadline has passed
     await closeExpiredBriefs();
 
-    const briefs = await prisma.brief.findMany({
-      where: {
-        status: "OPEN",
-        // Exclude briefs with a past deadline (belt-and-suspenders with auto-close above)
-        OR: [
-          { deadline: null },
-          { deadline: { gte: new Date() } },
-        ],
-      },
-      include: {
-        brandProfile: {
-          select: {
-            businessName: true,
-            neighborhood: true,
-            city: true,
-            profilePhotoUrl: true,
-            vibe: true,
-          },
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
+    const skip = (page - 1) * limit;
+
+    const where = {
+      status: "OPEN",
+      // Exclude briefs with a past deadline (belt-and-suspenders with auto-close above)
+      OR: [
+        { deadline: null },
+        { deadline: { gte: new Date() } },
+      ],
+    };
+    const include = {
+      brandProfile: {
+        select: {
+          businessName: true,
+          neighborhood: true,
+          city: true,
+          profilePhotoUrl: true,
+          vibe: true,
         },
       },
-      orderBy: { createdAt: "desc" },
-    });
+    };
 
-    res.json({ briefs });
+    const [briefs, total] = await Promise.all([
+      prisma.brief.findMany({
+        where,
+        include,
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.brief.count({ where }),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    res.json({ briefs, total, page, totalPages });
   } catch (err) {
     next(err);
   }

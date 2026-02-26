@@ -210,7 +210,7 @@ export default function CreatorProjectPage() {
             <MessageThread
               projectId={id}
               senderRole="CREATOR"
-              fetchFn={(pid) => api.getMessages(pid)}
+              fetchFn={(pid, params) => api.getMessages(pid, params)}
               sendFn={(pid, text) => api.sendMessage(pid, text)}
             />
           </div>
