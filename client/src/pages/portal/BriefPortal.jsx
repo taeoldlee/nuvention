@@ -290,7 +290,6 @@ function ApplicationForm({ briefId, onSuccess }) {
     setSubmitting(true);
     try {
       const data = {
-        applicantType: 'INDIVIDUAL',
         creatorName: form.creatorName.trim(),
         creatorHandle: form.creatorHandle.trim().replace(/^@/, ''),
         creatorPlatform: form.creatorPlatform,

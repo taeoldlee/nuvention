@@ -91,20 +91,6 @@ export const getBrandStats = () => client.get('/stats/brand');
 export const getTransactions = () => client.get('/transactions');
 export const getTransaction = (id) => client.get(`/transactions/${id}`);
 
-// ─── Agency ───
-export const getAgencyProfile = () => client.get('/agencies/profile');
-export const createAgencyProfile = (data) => client.post('/agencies/profile', data);
-export const updateAgencyProfile = (data) => client.put('/agencies/profile', data);
-export const getAgencyRoster = () => client.get('/agencies/roster');
-export const addRosterCreator = (data) => client.post('/agencies/roster', data);
-export const updateRosterCreator = (id, data) => client.put(`/agencies/roster/${id}`, data);
-export const deleteRosterCreator = (id) => client.delete(`/agencies/roster/${id}`);
-export const getAgencyBriefs = () => client.get('/agencies/briefs');
-export const getAgencyBrief = (id) => client.get(`/agencies/briefs/${id}`);
-export const agencyApply = (briefId, data) => client.post(`/agencies/briefs/${briefId}/apply`, data);
-export const getAgencyApplications = () => client.get('/agencies/applications');
-export const getAgencyStats = () => client.get('/agencies/stats');
-
 // ─── Admin ───
 export const reseedDatabase = () => client.post('/admin/reseed');
 

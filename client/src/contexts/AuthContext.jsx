@@ -63,7 +63,6 @@ export function AuthProvider({ children }) {
     logout,
     refreshProfile,
     isOperator: user?.role === 'OPERATOR',
-    isAgency: user?.role === 'AGENCY',
     hasProfile: !!profile,
   };
 

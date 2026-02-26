@@ -10,10 +10,7 @@ router.get("/demo-users", async (req, res, next) => {
   try {
     const users = await prisma.user.findMany({
       where: { isDemo: true },
-      include: {
-        brandProfile: true,
-        agencyProfile: true,
-      },
+      include: { brandProfile: true },
       orderBy: { createdAt: "asc" },
     });
 
@@ -38,17 +35,14 @@ router.post("/demo-login", async (req, res, next) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: {
-        brandProfile: true,
-        agencyProfile: true,
-      },
+      include: { brandProfile: true },
     });
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const profile = user.brandProfile || user.agencyProfile || null;
+    const profile = user.brandProfile || null;
     res.json({ user, profile });
   } catch (err) {
     next(err);

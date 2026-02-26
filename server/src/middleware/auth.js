@@ -17,7 +17,6 @@ async function requireAuth(req, res, next) {
       where: { id: userId },
       include: {
         brandProfile: true,
-        agencyProfile: true,
       },
     });
 
@@ -46,7 +45,6 @@ async function optionalAuth(req, res, next) {
         where: { id: userId },
         include: {
           brandProfile: true,
-          agencyProfile: true,
         },
       });
       if (user) {
@@ -116,15 +114,4 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-function requireAgencyWithProfile(req, res, next) {
-  if (req.user.role !== "AGENCY") {
-    return res.status(403).json({ error: "Only agencies can perform this action" });
-  }
-  if (!req.user.agencyProfile) {
-    return res.status(404).json({ error: "Agency profile not found. Complete onboarding first." });
-  }
-  req.agencyProfile = req.user.agencyProfile;
-  next();
-}
-
-module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorToken, requireAgencyWithProfile, requireAdmin };
+module.exports = { requireAuth, optionalAuth, requireOperatorWithBrand, requireCreatorToken, requireAdmin };

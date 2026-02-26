@@ -36,29 +36,17 @@ export default function DemoSwitcher() {
   // Split users by role
   const allOperators = demoUsers.filter((u) => u.role === 'OPERATOR');
   const operators = [...allOperators.filter((u) => !u.brandProfile), ...allOperators.filter((u) => u.brandProfile)];
-  const allAgencies = demoUsers.filter((u) => u.role === 'AGENCY');
-  const agencies = [...allAgencies.filter((u) => !u.agencyProfile), ...allAgencies.filter((u) => u.agencyProfile)];
-
   const handleSelect = async (demoUser) => {
     try {
       const data = await login(demoUser.id);
       setOpen(false);
-
-      if (demoUser.role === 'AGENCY') {
-        navigate(data.profile ? '/agency/dashboard' : '/agency/onboarding');
-      } else {
-        navigate(data.profile ? '/operator/dashboard' : '/operator/onboarding');
-      }
+      navigate(data.profile ? '/operator/dashboard' : '/operator/onboarding');
     } catch (err) {
       console.error('Demo login failed:', err);
     }
   };
 
   const getStatusText = (demoUser) => {
-    if (demoUser.role === 'AGENCY') {
-      if (!demoUser.agencyProfile) return 'New agency';
-      return demoUser.agencyProfile.agencyName;
-    }
     if (!demoUser.brandProfile) return 'New user';
     return demoUser.brandProfile.businessName;
   };
@@ -126,35 +114,6 @@ export default function DemoSwitcher() {
                 ))}
               </div>
 
-              {agencies.length > 0 && (
-                <div className="p-3 pt-0">
-                  <p className="text-xs font-semibold text-muted uppercase tracking-wider px-2 mb-2">
-                    Agency Accounts
-                  </p>
-                  {agencies.map((ag) => (
-                    <button
-                      key={ag.id}
-                      onClick={() => handleSelect(ag)}
-                      className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-colors ${
-                        user?.id === ag.id
-                          ? 'bg-purple-50 border border-purple-200'
-                          : 'hover:bg-bgWarm'
-                      }`}
-                    >
-                      <Avatar src={ag.avatarUrl} name={ag.name || 'New Agency'} size="lg" borderClass="border-purple-300" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-dark truncate">
-                          {ag.name || 'New Agency'}
-                        </p>
-                        <p className="text-xs text-muted">{getStatusText(ag)}</p>
-                      </div>
-                      {user?.id === ag.id && (
-                        <div className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* Public Portal */}

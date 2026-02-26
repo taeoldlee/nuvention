@@ -16,8 +16,6 @@ async function main() {
   await prisma.application.deleteMany();
   await prisma.brief.deleteMany();
   await prisma.campaignData.deleteMany();
-  await prisma.agencyCreator.deleteMany();
-  await prisma.agencyProfile.deleteMany();
   await prisma.brandProfile.deleteMany();
   await prisma.user.deleteMany();
   console.log('  All tables cleared.\n');
@@ -70,8 +68,7 @@ async function main() {
       isDemo: true,
     },
   });
-  console.log('  Created operator: New Operator (no name, no profile)');
-  console.log(`  Total users: 4\n`);
+  console.log('  Created operator: New Operator (no name, no profile)\n');
 
   // ─── BRAND PROFILES ────────────────────────────────────────────
   console.log('Creating brand profiles...');
@@ -166,169 +163,6 @@ async function main() {
   });
   console.log('  Created brand: Hewn Bread (Evanston)');
   console.log('  (New Operator has no brand profile)\n');
-
-  // ─── AGENCY USERS ────────────────────────────────────────────
-  console.log('Creating agency users...');
-
-  const sarah = await prisma.user.create({
-    data: {
-      id: 'demo-agency-sarah',
-      email: 'sarah@northshorecreators.com',
-      name: 'Sarah Kim',
-      role: 'AGENCY',
-      isDemo: true,
-      avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-    },
-  });
-  console.log('  Created agency user: Sarah Kim');
-
-  const newAgency = await prisma.user.create({
-    data: {
-      id: 'demo-agency-new',
-      email: 'newagency@locale.app',
-      name: '',
-      role: 'AGENCY',
-      isDemo: true,
-    },
-  });
-  console.log('  Created agency user: New Agency (no profile)\n');
-
-  // ─── AGENCY PROFILES ─────────────────────────────────────────
-  console.log('Creating agency profiles...');
-
-  const northShoreAgency = await prisma.agencyProfile.create({
-    data: {
-      userId: sarah.id,
-      agencyName: 'North Shore Creators',
-      contactName: 'Sarah Kim',
-      contactEmail: 'sarah@northshorecreators.com',
-      agencyType: 'Talent Management',
-      serviceArea: 'Chicago North Shore (Evanston, Wilmette, Winnetka, Highland Park)',
-      bio: 'We connect North Shore restaurants and cafes with vetted local creators who understand the community. Our roster specializes in food, lifestyle, and hospitality content.',
-      websiteUrl: 'https://northshorecreators.com',
-      specialties: ['Food & Beverage', 'Lifestyle', 'Hospitality', 'Local Business'],
-    },
-  });
-  console.log('  Created agency: North Shore Creators');
-  console.log('  (New Agency has no profile)\n');
-
-  // ─── AGENCY ROSTER ───────────────────────────────────────────
-  console.log('Creating agency roster creators...');
-
-  const mikeChen = await prisma.agencyCreator.create({
-    data: {
-      agencyProfileId: northShoreAgency.id,
-      name: 'Mike Chen',
-      handle: 'mikechen.photo',
-      platform: 'INSTAGRAM',
-      followerCount: 45000,
-      engagementRate: 3.2,
-      topPostUrls: [
-        'https://instagram.com/p/example5',
-        'https://instagram.com/p/example6',
-      ],
-      portfolioUrls: ['https://mikechenphotography.com'],
-      contentStyleTags: ['Clean', 'Minimalist', 'Editorial'],
-      contactEmail: 'mike@northshorecreators.com',
-      bio: 'Commercial food photographer with 5+ years of experience shooting for restaurants across Chicago.',
-    },
-  });
-  console.log('  Roster: Mike Chen (IG, 45K)');
-
-  const avaThompson = await prisma.agencyCreator.create({
-    data: {
-      agencyProfileId: northShoreAgency.id,
-      name: 'Ava Thompson',
-      handle: 'ava.creates',
-      platform: 'TIKTOK',
-      followerCount: 18000,
-      engagementRate: 6.8,
-      topPostUrls: [
-        'https://tiktok.com/@ava.creates/video1',
-        'https://tiktok.com/@ava.creates/video2',
-      ],
-      contentStyleTags: ['Energetic', 'Lifestyle', 'Story-driven'],
-      contactEmail: 'ava@northshorecreators.com',
-      bio: 'Short-form video specialist. Turns restaurant visits into engaging narratives that drive foot traffic.',
-    },
-  });
-  console.log('  Roster: Ava Thompson (TikTok, 18K)');
-
-  const jinPark = await prisma.agencyCreator.create({
-    data: {
-      agencyProfileId: northShoreAgency.id,
-      name: 'Jin Park',
-      handle: 'jin.eats.evanston',
-      platform: 'INSTAGRAM',
-      followerCount: 9500,
-      engagementRate: 8.4,
-      topPostUrls: [
-        'https://instagram.com/p/example7',
-        'https://instagram.com/p/example8',
-      ],
-      contentStyleTags: ['Warm', 'Community', 'Authentic'],
-      contactEmail: 'jin@northshorecreators.com',
-      bio: 'Evanston local and food enthusiast. High engagement nano-influencer with deep community roots.',
-    },
-  });
-  console.log('  Roster: Jin Park (IG, 9.5K)');
-
-  const lucyWang = await prisma.agencyCreator.create({
-    data: {
-      agencyProfileId: northShoreAgency.id,
-      name: 'Lucy Wang',
-      handle: 'lucy.tastes',
-      platform: 'TIKTOK',
-      followerCount: 32000,
-      engagementRate: 5.1,
-      topPostUrls: [
-        'https://tiktok.com/@lucy.tastes/video1',
-        'https://tiktok.com/@lucy.tastes/video2',
-      ],
-      contentStyleTags: ['Cinematic', 'Story-driven', 'Moody'],
-      contactEmail: 'lucy@northshorecreators.com',
-      bio: 'Cinematic food storyteller. Specializes in moody, atmospheric restaurant content that feels like a short film.',
-    },
-  });
-  console.log('  Roster: Lucy Wang (TikTok, 32K)');
-
-  const samOkafor = await prisma.agencyCreator.create({
-    data: {
-      agencyProfileId: northShoreAgency.id,
-      name: 'Sam Okafor',
-      handle: 'sam.eats.chi',
-      platform: 'INSTAGRAM',
-      followerCount: 21000,
-      engagementRate: 4.7,
-      topPostUrls: [
-        'https://instagram.com/p/example_sam1',
-        'https://instagram.com/p/example_sam2',
-      ],
-      portfolioUrls: ['https://samokafor.com'],
-      contentStyleTags: ['Bright', 'Lifestyle', 'Community'],
-      contactEmail: 'sam@northshorecreators.com',
-      bio: 'Lifestyle and community-focused food photographer. Known for capturing the social side of dining — groups, celebrations, neighborhood regulars.',
-    },
-  });
-  console.log('  Roster: Sam Okafor (IG, 21K)');
-
-  const riaMehra = await prisma.agencyCreator.create({
-    data: {
-      agencyProfileId: northShoreAgency.id,
-      name: 'Ria Mehra',
-      handle: 'ria.bitesize',
-      platform: 'YOUTUBE',
-      followerCount: 67000,
-      engagementRate: 3.9,
-      topPostUrls: [
-        'https://youtube.com/@ria.bitesize/video1',
-      ],
-      contentStyleTags: ['Editorial', 'Long-form', 'Polished'],
-      contactEmail: 'ria@northshorecreators.com',
-      bio: 'YouTube food reviewer and editorial photographer. Creates in-depth restaurant features that drive discovery and repeat visits.',
-    },
-  });
-  console.log('  Roster: Ria Mehra (YouTube, 67K)\n');
 
   // ─── BRIEFS ────────────────────────────────────────────────────
   console.log('Creating briefs...');
@@ -524,7 +358,7 @@ async function main() {
   const app1a = await prisma.application.create({
     data: {
       briefId: brief1.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Shaurya Garg',
       creatorHandle: 'shauryaeats',
       creatorPlatform: 'INSTAGRAM',
@@ -551,7 +385,7 @@ async function main() {
   const app1b = await prisma.application.create({
     data: {
       briefId: brief1.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Katelyn Liu',
       creatorHandle: 'kk.ameliu',
       creatorPlatform: 'TIKTOK',
@@ -577,7 +411,7 @@ async function main() {
   const app1c = await prisma.application.create({
     data: {
       briefId: brief1.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Dani Reyes',
       creatorHandle: 'dani.creates',
       creatorPlatform: 'INSTAGRAM',
@@ -602,36 +436,32 @@ async function main() {
   const app1d = await prisma.application.create({
     data: {
       briefId: brief1.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: mikeChen.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
-      creatorName: 'Mike Chen',
-      creatorHandle: 'mikechen.photo',
+      creatorName: 'Jin Park',
+      creatorHandle: 'jin.eats.evanston',
       creatorPlatform: 'INSTAGRAM',
-      followerCount: 45000,
-      engagementRate: 3.2,
+      followerCount: 9500,
+      engagementRate: 8.4,
       topPostUrls: [
-        'https://instagram.com/p/example5',
-        'https://instagram.com/p/example6',
+        'https://instagram.com/p/example_jin1',
+        'https://instagram.com/p/example_jin2',
       ],
-      contentStyleTags: ['Clean', 'Minimalist', 'Editorial'],
-      pitch: 'Our agency has worked with 30+ restaurants in the North Shore area. Mike specializes in high-end food photography with a minimalist approach that elevates any dish.',
-      compensationAsk: '$400 for full package',
+      contentStyleTags: ['Warm', 'Community', 'Authentic'],
+      pitch: 'Evanston local and weekly Todoroki regular! I know the staff by name and have been photographing their food for my personal feed for over a year. My warm, community-focused style would be a natural fit.',
+      compensationAsk: 'Accepts offered terms',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'jin@locale.app',
       aiMatchScore: 65,
-      aiMatchRationale: 'Experienced but style is more minimalist/corporate than Todoroki\'s warm, cozy brand. Higher ask may not align with budget.',
+      aiMatchRationale: 'Strong community connection but smaller portfolio. Authentic local voice but limited professional food photography experience.',
       status: 'REJECTED',
     },
   });
-  console.log('  App 1d: Mike (agency) x Todoroki Ramen (score 65, REJECTED)');
+  console.log('  App 1d: Jin x Todoroki Ramen (score 65, REJECTED)');
 
   // --- Brief 2 applications (Patisserie Coralie) ---
   const app2a = await prisma.application.create({
     data: {
       briefId: brief2.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Emma Nakamura',
       creatorHandle: 'emma.bakes',
       creatorPlatform: 'INSTAGRAM',
@@ -658,7 +488,7 @@ async function main() {
   const app2b = await prisma.application.create({
     data: {
       briefId: brief2.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Shaurya Garg',
       creatorHandle: 'shauryaeats',
       creatorPlatform: 'INSTAGRAM',
@@ -683,7 +513,7 @@ async function main() {
   const app2c = await prisma.application.create({
     data: {
       briefId: brief2.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Katelyn Liu',
       creatorHandle: 'kk.ameliu',
       creatorPlatform: 'TIKTOK',
@@ -707,7 +537,7 @@ async function main() {
   const app2d = await prisma.application.create({
     data: {
       briefId: brief2.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Priya Desai',
       creatorHandle: 'priya.tableview',
       creatorPlatform: 'INSTAGRAM',
@@ -732,10 +562,6 @@ async function main() {
   const app2e = await prisma.application.create({
     data: {
       briefId: brief2.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: avaThompson.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Ava Thompson',
       creatorHandle: 'ava.creates',
       creatorPlatform: 'TIKTOK',
@@ -746,22 +572,22 @@ async function main() {
         'https://tiktok.com/@ava.creates/video2',
       ],
       contentStyleTags: ['Energetic', 'Lifestyle', 'Story-driven'],
-      pitch: 'Ava brings a fresh, story-driven approach to food content. She recently created a viral pastry series for a Wilmette bakery that drove 40% more weekend foot traffic. She can deliver Stories and Carousels alongside her signature short-form videos.',
+      pitch: 'I bring a fresh, story-driven approach to food content. Recently created a viral pastry series for a Wilmette bakery that drove 40% more weekend foot traffic. I can deliver Stories and Carousels alongside my signature short-form videos.',
       compensationAsk: '$300',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'ava@locale.app',
       aiMatchScore: 72,
       aiMatchRationale: 'Strong video storytelling skills. Energetic style is slightly different from Coralie\'s refined aesthetic but high engagement rate shows audience resonance.',
       status: 'PENDING',
     },
   });
-  console.log('  App 2e: Ava (agency) x Coralie (score 72, PENDING)');
+  console.log('  App 2e: Ava x Coralie (score 72, PENDING)');
 
   // --- Brief 3 applications (Hewn Bread BTS) ---
   const app3a = await prisma.application.create({
     data: {
       briefId: brief3.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Dani Reyes',
       creatorHandle: 'dani.creates',
       creatorPlatform: 'INSTAGRAM',
@@ -786,7 +612,7 @@ async function main() {
   const app3b = await prisma.application.create({
     data: {
       briefId: brief3.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Shaurya Garg',
       creatorHandle: 'shauryaeats',
       creatorPlatform: 'INSTAGRAM',
@@ -807,37 +633,32 @@ async function main() {
   });
   console.log('  App 3b: Shaurya x Hewn BTS (score 82, PENDING)');
 
-  // Agency app for Hewn BTS
   const app3c = await prisma.application.create({
     data: {
       briefId: brief3.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: jinPark.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Jin Park',
       creatorHandle: 'jin.eats.evanston',
       creatorPlatform: 'INSTAGRAM',
       followerCount: 9500,
       engagementRate: 8.4,
-      topPostUrls: ['https://instagram.com/p/example7', 'https://instagram.com/p/example8'],
+      topPostUrls: ['https://instagram.com/p/example_jin1', 'https://instagram.com/p/example_jin2'],
       contentStyleTags: ['Warm', 'Community', 'Authentic'],
-      pitch: 'Jin is the perfect fit — he\'s an Evanston local who already visits Hewn weekly. His authentic, community-driven style captures the neighborhood feel. He\'s an early riser and has shot BTS content for 3 other local bakeries.',
+      pitch: 'Evanston local here — I already visit Hewn weekly! My authentic, community-driven style captures the neighborhood feel. I\'m an early riser and have shot BTS content for 3 other local bakeries.',
       compensationAsk: 'Accepts offered terms',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'jin@locale.app',
       aiMatchScore: 87,
       aiMatchRationale: 'Local Evanston creator with authentic community style. High engagement nano-influencer — perfect match for Hewn\'s artisan craft narrative.',
       status: 'PENDING',
     },
   });
-  console.log('  App 3c: Jin (agency) x Hewn BTS (score 87, PENDING)');
+  console.log('  App 3c: Jin x Hewn BTS (score 87, PENDING)');
 
   // --- Brief 5 applications (Valentine's — CLOSED brief, so these are historical) ---
   const app5a = await prisma.application.create({
     data: {
       briefId: brief5.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Emma Nakamura',
       creatorHandle: 'emma.bakes',
       creatorPlatform: 'INSTAGRAM',
@@ -860,7 +681,7 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief5.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Priya Desai',
       creatorHandle: 'priya.tableview',
       creatorPlatform: 'INSTAGRAM',
@@ -882,32 +703,28 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief5.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: lucyWang.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Lucy Wang',
       creatorHandle: 'lucy.tastes',
       creatorPlatform: 'TIKTOK',
       followerCount: 32000,
       engagementRate: 5.1,
       contentStyleTags: ['Cinematic', 'Story-driven', 'Moody'],
-      pitch: 'Lucy\'s cinematic style would make the macaron unboxing feel like a luxury brand ad. She\'s done similar gift reveal content for high-end chocolatiers with great results.',
+      pitch: 'My cinematic style would make the macaron unboxing feel like a luxury brand ad. I\'ve done similar gift reveal content for high-end chocolatiers with great results.',
       compensationAsk: '$350',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'lucy.wang@gmail.com',
       aiMatchScore: 75,
       aiMatchRationale: 'Cinematic style could work but moody tone may clash with Coralie\'s bright, airy brand. Worth considering for video.',
       status: 'DECLINED',
     },
   });
-  console.log('  App 5c: Lucy (agency) x Coralie Valentine\'s (score 75, DECLINED)');
+  console.log('  App 5c: Lucy x Coralie Valentine\'s (score 75, DECLINED)');
 
   // --- Brief 6 applications (Hewn Farmers Market) ---
   await prisma.application.create({
     data: {
       briefId: brief6.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Dani Reyes',
       creatorHandle: 'dani.creates',
       creatorPlatform: 'INSTAGRAM',
@@ -929,7 +746,7 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief6.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Marcus Williams',
       creatorHandle: 'marcus.mornings',
       creatorPlatform: 'INSTAGRAM',
@@ -951,10 +768,6 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief6.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: samOkafor.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Sam Okafor',
       creatorHandle: 'sam.eats.chi',
       creatorPlatform: 'INSTAGRAM',
@@ -962,22 +775,22 @@ async function main() {
       engagementRate: 4.7,
       topPostUrls: ['https://instagram.com/p/example_sam1'],
       contentStyleTags: ['Bright', 'Lifestyle', 'Community'],
-      pitch: 'Sam is our community specialist — he captures the social energy of food events beautifully. He\'s covered 20+ food festivals and markets and knows how to show both the product and the people.',
+      pitch: 'I\'m a community specialist — I capture the social energy of food events. I\'ve covered 20+ food festivals and markets and know how to show both the product and the people.',
       compensationAsk: 'Accepts offered terms',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'sam.okafor@gmail.com',
       aiMatchScore: 85,
       aiMatchRationale: 'Community-focused creator with event coverage experience. Bright, social style suits the market atmosphere.',
       status: 'PENDING',
     },
   });
-  console.log('  App 6c: Sam (agency) x Hewn Farmers Market (score 85, PENDING)');
+  console.log('  App 6c: Sam x Hewn Farmers Market (score 85, PENDING)');
 
   // --- Brief 7 applications (Todoroki Grand Opening) ---
   await prisma.application.create({
     data: {
       briefId: brief7.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Katelyn Liu',
       creatorHandle: 'kk.ameliu',
       creatorPlatform: 'TIKTOK',
@@ -999,7 +812,7 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief7.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Shaurya Garg',
       creatorHandle: 'shauryaeats',
       creatorPlatform: 'INSTAGRAM',
@@ -1021,7 +834,7 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief7.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Marcus Williams',
       creatorHandle: 'marcus.mornings',
       creatorPlatform: 'INSTAGRAM',
@@ -1043,56 +856,48 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief7.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: lucyWang.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Lucy Wang',
       creatorHandle: 'lucy.tastes',
       creatorPlatform: 'TIKTOK',
       followerCount: 32000,
       engagementRate: 5.1,
       contentStyleTags: ['Cinematic', 'Story-driven', 'Moody'],
-      pitch: 'Lucy\'s cinematic style is perfect for a grand opening. She can create a mini-doc feel — the build-up, the doors opening, the first bowls going out. Her last restaurant opening video hit 150K views.',
+      pitch: 'My cinematic style is perfect for a grand opening. I create mini-doc content — the build-up, the doors opening, the first bowls going out. My last restaurant opening video hit 150K views.',
       compensationAsk: '$500',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'lucy.wang@gmail.com',
       aiMatchScore: 86,
       aiMatchRationale: 'Cinematic storytelling approach would create compelling grand opening narrative. Strong video portfolio with restaurant experience.',
       status: 'PENDING',
     },
   });
-  console.log('  App 7d: Lucy (agency) x Todoroki Grand Opening (score 86, PENDING)');
+  console.log('  App 7d: Lucy x Todoroki Grand Opening (score 86, PENDING)');
 
   await prisma.application.create({
     data: {
       briefId: brief7.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: mikeChen.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Mike Chen',
       creatorHandle: 'mikechen.photo',
       creatorPlatform: 'INSTAGRAM',
       followerCount: 45000,
       engagementRate: 3.2,
       contentStyleTags: ['Clean', 'Minimalist', 'Editorial'],
-      pitch: 'Mike\'s polished editorial photography would provide the hero images for the grand opening. He\'s shot 8 restaurant launches and knows how to capture the "before & after" story of a new space.',
+      pitch: 'My polished editorial photography would provide the hero images for the grand opening. I\'ve shot 8 restaurant launches and know how to capture the "before & after" story of a new space.',
       compensationAsk: '$450',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'mike.chen@gmail.com',
       aiMatchScore: 74,
       aiMatchRationale: 'Experienced restaurant launch photographer but minimalist style slightly different from Todoroki\'s warm brand. Strong portfolio regardless.',
       status: 'PENDING',
     },
   });
-  console.log('  App 7e: Mike (agency) x Todoroki Grand Opening (score 74, PENDING)');
+  console.log('  App 7e: Mike x Todoroki Grand Opening (score 74, PENDING)');
 
   // --- Brief 8 applications (Coralie Mother's Day) ---
   await prisma.application.create({
     data: {
       briefId: brief8.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Emma Nakamura',
       creatorHandle: 'emma.bakes',
       creatorPlatform: 'INSTAGRAM',
@@ -1114,7 +919,7 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief8.id,
-      applicantType: 'INDIVIDUAL',
+
       creatorName: 'Priya Desai',
       creatorHandle: 'priya.tableview',
       creatorPlatform: 'INSTAGRAM',
@@ -1136,26 +941,22 @@ async function main() {
   await prisma.application.create({
     data: {
       briefId: brief8.id,
-      agencyProfileId: northShoreAgency.id,
-      agencyCreatorId: riaMehra.id,
-      applicantType: 'AGENCY',
-      agencyName: 'North Shore Creators',
       creatorName: 'Ria Mehra',
       creatorHandle: 'ria.bitesize',
       creatorPlatform: 'YOUTUBE',
       followerCount: 67000,
       engagementRate: 3.9,
       contentStyleTags: ['Editorial', 'Long-form', 'Polished'],
-      pitch: 'Ria can create a full brunch experience video for YouTube alongside Instagram carousel content. Her editorial style matches Coralie\'s brand, and a Mother\'s Day feature would drive significant discovery.',
+      pitch: 'I can create a full brunch experience video for YouTube alongside Instagram carousel content. My editorial style matches Coralie\'s brand, and a Mother\'s Day feature would drive significant discovery.',
       compensationAsk: '$400',
       availabilityConfirmed: true,
-      contactEmail: 'bookings@northshorecreators.com',
+      contactEmail: 'ria.mehra@gmail.com',
       aiMatchScore: 82,
       aiMatchRationale: 'Editorial style aligns well. YouTube reach would expand brand visibility. Long-form format tells a richer story.',
       status: 'PENDING',
     },
   });
-  console.log('  App 8c: Ria (agency) x Coralie Mother\'s Day (score 82, PENDING)\n');
+  console.log('  App 8c: Ria x Coralie Mother\'s Day (score 82, PENDING)\n');
 
   // ─── PROJECTS (from selected applications) ─────────────────────
   console.log('Creating projects...');
@@ -1656,11 +1457,10 @@ async function main() {
 
   // ─── SUMMARY ───────────────────────────────────────────────────
   console.log('=== Seed complete ===');
-  console.log('  6 users (4 operators, 2 agency)');
+  console.log('  4 users (4 operators)');
   console.log('  3 brand profiles');
-  console.log('  1 agency profile + 6 roster creators');
   console.log('  8 briefs (6 OPEN, 1 DRAFT, 1 CLOSED)');
-  console.log('  ~27 applications across 7 briefs (9 from agency)');
+  console.log('  ~27 applications across 7 briefs');
   console.log('  2 projects (1 DRAFT_SUBMITTED, 1 COMPLETED)');
   console.log('  3 project drafts');
   console.log('  2 transactions');
@@ -1668,7 +1468,6 @@ async function main() {
   console.log('  12 notifications');
   console.log('\nDemo accounts:');
   console.log('  Operators: josh@todoroki.com, marie@coralie.com, ellen@hewn.com, newoperator@locale.app');
-  console.log('  Agencies: sarah@northshorecreators.com, newagency@locale.app');
   console.log('  Public portal: /portal/briefs (no login required)');
 }
 

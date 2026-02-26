@@ -163,8 +163,6 @@ router.post("/briefs/:id/apply", async (req, res, next) => {
     }
 
     const {
-      applicantType,
-      agencyName,
       creatorName,
       creatorHandle,
       creatorPlatform,
@@ -212,19 +210,9 @@ router.post("/briefs/:id/apply", async (req, res, next) => {
       });
     }
 
-    // Validate applicantType enum if provided
-    const validApplicantTypes = ["INDIVIDUAL", "AGENCY"];
-    if (applicantType && !validApplicantTypes.includes(applicantType)) {
-      return res.status(400).json({
-        error: `Invalid applicantType. Must be one of: ${validApplicantTypes.join(", ")}`,
-      });
-    }
-
     const application = await prisma.application.create({
       data: {
         briefId: brief.id,
-        applicantType: applicantType || "INDIVIDUAL",
-        agencyName: agencyName || null,
         creatorName,
         creatorHandle,
         creatorPlatform,

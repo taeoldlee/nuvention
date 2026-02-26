@@ -14,21 +14,11 @@ import Payments from './pages/operator/Payments';
 import BriefPortal from './pages/portal/BriefPortal';
 import ApplicationStatus from './pages/portal/ApplicationStatus';
 import CreatorProjectPage from './pages/portal/CreatorProjectPage';
-import AgencyOnboarding from './pages/agency/Onboarding';
-import AgencyDashboard from './pages/agency/Dashboard';
-import AgencyBriefDetail from './pages/agency/BriefDetail';
-import AgencyRoster from './pages/agency/Roster';
-import AgencySettings from './pages/agency/Settings';
 import { useAuth } from './contexts/AuthContext';
 
 function HomeRedirect() {
-  const { user, isAgency, hasProfile } = useAuth();
+  const { user, hasProfile } = useAuth();
   if (!user) return <Landing />;
-  if (isAgency) {
-    return hasProfile
-      ? <Navigate to="/agency/dashboard" replace />
-      : <Navigate to="/agency/onboarding" replace />;
-  }
   if (!hasProfile) {
     return <Navigate to="/operator/onboarding" replace />;
   }
@@ -53,13 +43,6 @@ export default function App() {
         <Route path="/operator/settings" element={<OperatorSettings />} />
         <Route path="/operator/insights" element={<InsightsPage />} />
         <Route path="/operator/payments" element={<Payments />} />
-
-        {/* Agency Routes */}
-        <Route path="/agency/onboarding" element={<AgencyOnboarding />} />
-        <Route path="/agency/dashboard" element={<AgencyDashboard />} />
-        <Route path="/agency/brief/:id" element={<AgencyBriefDetail />} />
-        <Route path="/agency/roster" element={<AgencyRoster />} />
-        <Route path="/agency/settings" element={<AgencySettings />} />
 
         {/* Public Portal (no auth required) */}
         <Route path="/portal/briefs" element={<BriefPortal />} />

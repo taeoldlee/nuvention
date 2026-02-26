@@ -17,7 +17,7 @@ const statsRoutes = require("./routes/stats");
 const adminRoutes = require("./routes/admin");
 const notificationRoutes = require("./routes/notifications");
 const messageRoutes = require("./routes/messages");
-const agencyRoutes = require("./routes/agencies");
+
 const insightsRoutes = require("./routes/insights");
 const transactionRoutes = require("./routes/transactions");
 
@@ -66,7 +66,7 @@ app.use("/api/stats", statsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/projects", messageRoutes);
-app.use("/api/agencies", agencyRoutes);
+
 app.use("/api/stats", insightsRoutes);
 app.use("/api/transactions", transactionRoutes);
 
