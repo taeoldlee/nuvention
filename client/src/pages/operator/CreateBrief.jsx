@@ -33,11 +33,11 @@ const COMPENSATION_TYPES = [
 ];
 
 const USAGE_RIGHTS = [
-  { value: 'ORGANIC_SOCIAL', label: 'Organic Social' },
-  { value: 'PAID_ADS', label: 'Paid Ads' },
-  { value: 'IN_STORE', label: 'In-Store' },
-  { value: 'WEBSITE', label: 'Website' },
-  { value: 'ALL', label: 'All' },
+  { value: 'ORGANIC_SOCIAL', label: 'Organic Social', description: 'Repost on your brand social feeds only' },
+  { value: 'PAID_ADS', label: 'Paid Ads', description: 'Run content as paid social or display ads' },
+  { value: 'IN_STORE', label: 'In-Store', description: 'Display in physical location (menus, signage)' },
+  { value: 'WEBSITE', label: 'Website', description: 'Feature on your website or landing pages' },
+  { value: 'ALL', label: 'All Rights', description: 'Full usage across social, ads, web, and in-store' },
 ];
 
 const LOCATION_REQUIREMENTS = [
@@ -130,7 +130,7 @@ function ProgressStepper({ currentStep, onStepClick }) {
 
 // ─── Step 1: Basics ───
 
-function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleSuggestionApply }) {
+function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleSuggestionApply, aiSuggestion, onSuggestionLoaded }) {
   const needsAmount =
     form.compensationType === 'FLAT_FEE' || form.compensationType === 'HYBRID';
 
@@ -169,13 +169,17 @@ function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleS
           ))}
         </select>
         {fieldErrors.campaignGoal && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.campaignGoal}</p>}
-        {/* AI Suggestion Cards */}
-        <AISuggestionCards
-          campaignGoal={form.campaignGoal}
-          contentTypes={form.contentTypes}
-          onApply={handleSuggestionApply}
-        />
       </div>
+
+      {/* AI Suggestion Cards (Step 1: compensation + deliverables) */}
+      <AISuggestionCards
+        campaignGoal={form.campaignGoal}
+        contentTypes={form.contentTypes}
+        onApply={handleSuggestionApply}
+        step={1}
+        suggestion={aiSuggestion}
+        onSuggestionLoaded={onSuggestionLoaded}
+      />
 
       {/* Content Types */}
       <div>
@@ -273,9 +277,19 @@ function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleS
 
 // ─── Step 2: Creative Details ───
 
-function StepCreativeDetails({ form, updateField, fieldErrors }) {
+function StepCreativeDetails({ form, updateField, fieldErrors, handleSuggestionApply, aiSuggestion, onSuggestionLoaded }) {
   return (
     <div className="space-y-6">
+      {/* AI Suggestion Cards (Step 2: creative direction + do's + don'ts) */}
+      <AISuggestionCards
+        campaignGoal={form.campaignGoal}
+        contentTypes={form.contentTypes}
+        onApply={handleSuggestionApply}
+        step={2}
+        suggestion={aiSuggestion}
+        onSuggestionLoaded={onSuggestionLoaded}
+      />
+
       {/* Creative Direction */}
       <div>
         <label className={labelClass}>
@@ -339,19 +353,31 @@ function StepCreativeDetails({ form, updateField, fieldErrors }) {
         <label className={labelClass}>
           Usage Rights <span className="text-red-400">*</span>
         </label>
-        <select
-          value={form.usageRights}
-          onChange={(e) => updateField('usageRights', e.target.value)}
-          className={`${selectClass} ${fieldErrors.usageRights ? 'border-red-400 focus:ring-red-200' : ''}`}
-        >
-          <option value="">Select usage rights...</option>
+        {fieldErrors.usageRights && <p className="mb-2 text-xs text-red-600 font-body">{fieldErrors.usageRights}</p>}
+        <div className="space-y-2">
           {USAGE_RIGHTS.map((ur) => (
-            <option key={ur.value} value={ur.value}>
-              {ur.label}
-            </option>
+            <label
+              key={ur.value}
+              className={`flex items-start gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all font-body ${
+                form.usageRights === ur.value
+                  ? 'border-accent bg-accent/5'
+                  : 'border-border bg-white hover:border-accent/40'
+              }`}
+            >
+              <input
+                type="radio"
+                name="usageRights"
+                checked={form.usageRights === ur.value}
+                onChange={() => updateField('usageRights', ur.value)}
+                className="accent-accent w-4 h-4 mt-0.5"
+              />
+              <div>
+                <span className="text-sm font-medium text-dark">{ur.label}</span>
+                <p className="text-xs text-muted mt-0.5">{ur.description}</p>
+              </div>
+            </label>
           ))}
-        </select>
-        {fieldErrors.usageRights && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.usageRights}</p>}
+        </div>
       </div>
 
       {/* Location Requirement */}
@@ -564,6 +590,7 @@ export default function CreateBrief() {
     additionalNotes: '',
   });
 
+  const [aiSuggestion, setAiSuggestion] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState({});
@@ -856,6 +883,8 @@ export default function CreateBrief() {
                 toggleContentType={toggleContentType}
                 fieldErrors={fieldErrors}
                 handleSuggestionApply={handleSuggestionApply}
+                aiSuggestion={aiSuggestion}
+                onSuggestionLoaded={setAiSuggestion}
               />
             )}
 
@@ -865,6 +894,9 @@ export default function CreateBrief() {
                 form={form}
                 updateField={updateField}
                 fieldErrors={fieldErrors}
+                handleSuggestionApply={handleSuggestionApply}
+                aiSuggestion={aiSuggestion}
+                onSuggestionLoaded={setAiSuggestion}
               />
             )}
 

@@ -8,11 +8,10 @@ const FIELD_LABELS = {
   donts: "Don'ts",
 };
 
-export default function AISuggestionCards({ campaignGoal, contentTypes, onApply }) {
+export default function AISuggestionCards({ campaignGoal, contentTypes, onApply, step, suggestion, onSuggestionLoaded }) {
   const { addToast } = useToast();
-  const [suggestion, setSuggestion] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   if (!campaignGoal) return null;
 
@@ -20,8 +19,9 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
     setLoading(true);
     try {
       const res = await getBriefSuggestions({ campaignGoal, contentTypes });
-      setSuggestion(res.data.suggestions || res.data);
-      setVisible(true);
+      const data = res.data.suggestions || res.data;
+      onSuggestionLoaded(data);
+      setCollapsed(false);
     } catch {
       addToast('Could not load AI suggestions. Try again.', 'error');
     } finally {
@@ -34,7 +34,8 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
     addToast(`"${FIELD_LABELS[field] || field}" filled from suggestion.`, 'success');
   };
 
-  if (!visible) {
+  // Show fetch button if no suggestions loaded yet
+  if (!suggestion) {
     return (
       <div className="mt-3">
         <button
@@ -59,12 +60,35 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
     );
   }
 
-  if (!suggestion) return null;
+  // Collapsed state - show a small toggle to re-expand
+  if (collapsed) {
+    return (
+      <div className="mt-3">
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className="flex items-center gap-2 text-xs text-accent font-body font-semibold hover:underline"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+          </svg>
+          Show AI Suggestions
+        </button>
+      </div>
+    );
+  }
 
+  // Determine which cards to show based on step
   const comp = suggestion.compensationRange;
   const compNote = comp
-    ? (comp.note || `$${Math.round((comp.min || 0) / 100)}–$${Math.round((comp.max || 0) / 100)}`)
+    ? (comp.note || `$${Math.round((comp.min || 0) / 100)}\u2013$${Math.round((comp.max || 0) / 100)}`)
     : null;
+
+  const hasStep1Content = suggestion.deliverableStructure || compNote;
+  const hasStep2Content = suggestion.creativeDirection || suggestion.dos || suggestion.donts;
+  const hasContent = step === 1 ? hasStep1Content : hasStep2Content;
+
+  if (!hasContent) return null;
 
   return (
     <div className="mt-4 rounded-xl border border-accent/20 bg-bgWarm overflow-hidden">
@@ -77,7 +101,7 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
         </div>
         <button
           type="button"
-          onClick={() => setVisible(false)}
+          onClick={() => setCollapsed(true)}
           className="text-muted hover:text-dark transition-colors"
           aria-label="Close suggestions"
         >
@@ -88,23 +112,8 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
       </div>
 
       <div className="p-4 space-y-3">
-        {suggestion.creativeDirection && (
-          <div className="flex items-start justify-between gap-3 p-3 bg-white rounded-lg border border-border">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-accent font-body uppercase tracking-wide font-semibold mb-1">Creative Direction</p>
-              <p className="text-sm text-dark font-body leading-relaxed">{suggestion.creativeDirection}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => handleApply('creativeDirection', suggestion.creativeDirection)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-accentLight text-accent text-xs font-semibold font-body hover:bg-accent/20 transition-colors"
-            >
-              Use
-            </button>
-          </div>
-        )}
-
-        {suggestion.deliverableStructure && (
+        {/* Step 1: Compensation Range + Deliverables */}
+        {step === 1 && suggestion.deliverableStructure && (
           <div className="flex items-start justify-between gap-3 p-3 bg-white rounded-lg border border-border">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-accent font-body uppercase tracking-wide font-semibold mb-1">Suggested Deliverables</p>
@@ -120,7 +129,7 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
           </div>
         )}
 
-        {compNote && (
+        {step === 1 && compNote && (
           <div className="flex items-center justify-between gap-3 p-3 bg-white rounded-lg border border-border">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-accent font-body uppercase tracking-wide font-semibold mb-1">Compensation Range</p>
@@ -129,39 +138,58 @@ export default function AISuggestionCards({ campaignGoal, contentTypes, onApply 
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {suggestion.dos && (
-            <div className="flex items-start justify-between gap-3 p-3 bg-greenBg/30 rounded-lg border border-green/20">
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-green font-body uppercase tracking-wide font-semibold mb-1">Do's</p>
-                <p className="text-xs text-dark font-body leading-relaxed">{suggestion.dos}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleApply('dos', suggestion.dos)}
-                className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-greenBg text-green text-xs font-semibold font-body hover:bg-green/15 transition-colors"
-              >
-                Use
-              </button>
+        {/* Step 2: Creative Direction + Do's + Don'ts */}
+        {step === 2 && suggestion.creativeDirection && (
+          <div className="flex items-start justify-between gap-3 p-3 bg-white rounded-lg border border-border">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] text-accent font-body uppercase tracking-wide font-semibold mb-1">Creative Direction</p>
+              <p className="text-sm text-dark font-body leading-relaxed">{suggestion.creativeDirection}</p>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => handleApply('creativeDirection', suggestion.creativeDirection)}
+              className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-accentLight text-accent text-xs font-semibold font-body hover:bg-accent/20 transition-colors"
+            >
+              Use
+            </button>
+          </div>
+        )}
 
-          {suggestion.donts && (
-            <div className="flex items-start justify-between gap-3 p-3 bg-red-50/50 rounded-lg border border-red-200/50">
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] text-red-600 font-body uppercase tracking-wide font-semibold mb-1">Don'ts</p>
-                <p className="text-xs text-dark font-body leading-relaxed">{suggestion.donts}</p>
+        {step === 2 && (suggestion.dos || suggestion.donts) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {suggestion.dos && (
+              <div className="flex items-start justify-between gap-3 p-3 bg-greenBg/30 rounded-lg border border-green/20">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-green font-body uppercase tracking-wide font-semibold mb-1">Do's</p>
+                  <p className="text-xs text-dark font-body leading-relaxed">{suggestion.dos}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleApply('dos', suggestion.dos)}
+                  className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-greenBg text-green text-xs font-semibold font-body hover:bg-green/15 transition-colors"
+                >
+                  Use
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => handleApply('donts', suggestion.donts)}
-                className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-semibold font-body hover:bg-red-100 transition-colors"
-              >
-                Use
-              </button>
-            </div>
-          )}
-        </div>
+            )}
+
+            {suggestion.donts && (
+              <div className="flex items-start justify-between gap-3 p-3 bg-red-50/50 rounded-lg border border-red-200/50">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-red-600 font-body uppercase tracking-wide font-semibold mb-1">Don'ts</p>
+                  <p className="text-xs text-dark font-body leading-relaxed">{suggestion.donts}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleApply('donts', suggestion.donts)}
+                  className="flex-shrink-0 px-2.5 py-1 rounded-lg bg-red-50 text-red-600 text-xs font-semibold font-body hover:bg-red-100 transition-colors"
+                >
+                  Use
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
