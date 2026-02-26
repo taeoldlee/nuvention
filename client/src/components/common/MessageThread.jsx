@@ -1,9 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import { getProjectMessages, sendProjectMessage } from '../../api';
 
-export default function MessageThread({ projectId }) {
-  const { user } = useAuth();
+/**
+ * MessageThread — works for both brand and creator views.
+ *
+ * Props:
+ *   projectId   – required
+ *   senderRole  – 'BRAND' (default) or 'CREATOR'
+ *   fetchFn     – optional async (projectId) => res  (overrides default brand fetch)
+ *   sendFn      – optional async (projectId, text) => res  (overrides default brand send)
+ */
+export default function MessageThread({ projectId, senderRole = 'BRAND', fetchFn, sendFn }) {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -11,9 +18,12 @@ export default function MessageThread({ projectId }) {
   const bottomRef = useRef(null);
   const intervalRef = useRef(null);
 
+  const doFetch = fetchFn || getProjectMessages;
+  const doSend = sendFn || sendProjectMessage;
+
   const fetchMessages = async () => {
     try {
-      const res = await getProjectMessages(projectId);
+      const res = await doFetch(projectId);
       setMessages(res.data.messages || []);
       setError('');
     } catch (err) {
@@ -37,7 +47,7 @@ export default function MessageThread({ projectId }) {
     if (!text.trim() || sending) return;
     setSending(true);
     try {
-      await sendProjectMessage(projectId, text.trim());
+      await doSend(projectId, text.trim());
       setText('');
       await fetchMessages();
     } catch (err) {
@@ -73,7 +83,7 @@ export default function MessageThread({ projectId }) {
           </p>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.senderType === 'BRAND';
+            const isMe = msg.senderType === senderRole;
             return (
               <div key={msg.id} className={`flex gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                 <div className="w-7 h-7 rounded-full bg-bgWarm flex items-center justify-center flex-shrink-0 text-xs font-bold text-muted border border-border">
