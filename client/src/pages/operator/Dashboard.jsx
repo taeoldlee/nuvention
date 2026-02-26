@@ -181,11 +181,22 @@ export default function Dashboard() {
               <h2 className="font-display text-xl font-semibold text-dark">
                 Recent Briefs
               </h2>
-              {briefs.length > 0 && (
-                <span className="text-sm text-muted font-body">
-                  {briefs.length} brief{briefs.length !== 1 ? 's' : ''}
-                </span>
-              )}
+              <div className="flex items-center gap-4">
+                {briefs.length > 0 && (
+                  <span className="text-sm text-muted font-body">
+                    {briefs.length} brief{briefs.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+                <button
+                  onClick={() => navigate('/operator/briefs')}
+                  className="text-sm font-body font-semibold text-accent hover:text-accent/80 transition-colors inline-flex items-center gap-1"
+                >
+                  View All
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {briefs.length === 0 ? (
@@ -258,11 +269,22 @@ export default function Dashboard() {
               <h2 className="font-display text-xl font-semibold text-dark">
                 Active Projects
               </h2>
-              {activeProjects.length > 0 && (
-                <span className="text-sm text-muted font-body">
-                  {activeProjects.length} project{activeProjects.length !== 1 ? 's' : ''}
-                </span>
-              )}
+              <div className="flex items-center gap-4">
+                {activeProjects.length > 0 && (
+                  <span className="text-sm text-muted font-body">
+                    {activeProjects.length} project{activeProjects.length !== 1 ? 's' : ''}
+                  </span>
+                )}
+                <button
+                  onClick={() => navigate('/operator/projects')}
+                  className="text-sm font-body font-semibold text-accent hover:text-accent/80 transition-colors inline-flex items-center gap-1"
+                >
+                  View All
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {activeProjects.length === 0 ? (
