@@ -41,8 +41,12 @@ function EditableField({ label, value, displayValue, fieldKey, onSave, saving })
   const [draft, setDraft] = useState(value || '');
 
   const handleSave = async () => {
-    await onSave(fieldKey, draft.trim());
-    setEditing(false);
+    try {
+      await onSave(fieldKey, draft.trim());
+      setEditing(false);
+    } catch {
+      // Stay in edit mode so user can retry
+    }
   };
 
   const handleCancel = () => {
@@ -96,7 +100,7 @@ function EditableField({ label, value, displayValue, fieldKey, onSave, saving })
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accentLight transition-all"
+          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accentLight transition-all"
           title={`Edit ${label.toLowerCase()}`}
         >
           <PencilIcon className="w-3.5 h-3.5" />
@@ -131,8 +135,12 @@ function EditableTagField({ label, tags, fieldKey, onSave, saving, tagStyle = 'd
   };
 
   const handleSave = async () => {
-    await onSave(fieldKey, draftTags);
-    setEditing(false);
+    try {
+      await onSave(fieldKey, draftTags);
+      setEditing(false);
+    } catch {
+      // Stay in edit mode so user can retry
+    }
   };
 
   const handleCancel = () => {
@@ -220,7 +228,7 @@ function EditableTagField({ label, tags, fieldKey, onSave, saving, tagStyle = 'd
         <button
           type="button"
           onClick={() => setEditing(true)}
-          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accentLight transition-all flex-shrink-0 ml-2"
+          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1.5 rounded-lg text-muted hover:text-accent hover:bg-accentLight transition-all flex-shrink-0 ml-2"
           title={`Edit ${label.toLowerCase()}`}
         >
           <PencilIcon className="w-3.5 h-3.5" />
@@ -267,8 +275,9 @@ export default function Settings() {
       await updateBrandProfile({ [fieldKey]: value });
       await refreshProfile();
       addToast('Profile updated.', 'success');
-    } catch {
+    } catch (err) {
       addToast('Could not save. Please try again.', 'error');
+      throw err;
     } finally {
       setSaving(false);
     }
