@@ -36,6 +36,9 @@ export default function ImageLightbox({ images, initialIndex = 0, onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image viewer, ${index + 1} of ${total}`}
       onClick={onClose}
     >
       {/* Image counter */}
