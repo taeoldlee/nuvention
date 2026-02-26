@@ -15,6 +15,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MessageThread from '../../components/common/MessageThread';
 import ProjectStatusTracker from '../../components/common/ProjectStatusTracker';
+import ImageLightbox from '../../components/common/ImageLightbox';
 import DraftHistory from '../../components/operator/DraftHistory';
 
 export default function ProjectView() {
@@ -28,6 +29,8 @@ export default function ProjectView() {
   const [feedbackText, setFeedbackText] = useState('');
   const [showRevisionInput, setShowRevisionInput] = useState(null); // draftId or null
   const [expandedDraft, setExpandedDraft] = useState(null);
+  const [lightbox, setLightbox] = useState(null); // { images, index }
+  const [comparing, setComparing] = useState(false);
   const { addToast } = useToast();
 
   const loadProject = async () => {
@@ -338,6 +341,87 @@ export default function ProjectView() {
                 )}
               </h2>
 
+              {/* Compare Versions toggle */}
+              {drafts.length >= 2 && (
+                <div className="mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setComparing((v) => !v)}
+                    className={`inline-flex items-center gap-1.5 text-sm font-body font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                      comparing
+                        ? 'bg-accent text-white border-accent'
+                        : 'bg-white text-mid border-border hover:border-accent/40 hover:text-accent'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                    </svg>
+                    {comparing ? 'Exit Comparison' : 'Compare Versions'}
+                  </button>
+                </div>
+              )}
+
+              {/* Side-by-side comparison view */}
+              {comparing && drafts.length >= 2 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {drafts.slice(0, 2).map((draft, colIdx) => {
+                    const imgs = Array.isArray(draft.fileUrls) ? draft.fileUrls : [];
+                    return (
+                      <div
+                        key={draft.id}
+                        className={`rounded-xl border p-4 ${
+                          colIdx === 0
+                            ? 'border-accent/30 bg-accentLight/20'
+                            : 'border-border bg-bgWarm/50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-sm font-semibold text-dark font-body">
+                            Version {draft.version}
+                          </span>
+                          <StatusBadge status={draft.status} />
+                          {colIdx === 0 && (
+                            <span className="text-[10px] uppercase tracking-wider text-accent font-semibold font-body">
+                              Latest
+                            </span>
+                          )}
+                        </div>
+                        {imgs.length > 0 && (
+                          <div className="grid grid-cols-2 gap-2 mb-3">
+                            {imgs.map((url, i) => (
+                              <div
+                                key={typeof url === 'string' ? url : i}
+                                className="aspect-square rounded-lg border border-border overflow-hidden bg-bgTan cursor-pointer"
+                                onClick={() => setLightbox({ images: imgs, index: i })}
+                              >
+                                <img
+                                  src={typeof url === 'string' ? url : url.url}
+                                  alt={`V${draft.version} - ${i + 1}`}
+                                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                                  onError={(e) => { e.target.style.display = 'none'; }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {draft.notes && (
+                          <div className="bg-white rounded-lg p-3 border border-border">
+                            <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">Creator Notes</p>
+                            <p className="text-sm text-dark font-body leading-relaxed">{draft.notes}</p>
+                          </div>
+                        )}
+                        {draft.feedback && (
+                          <div className="bg-orange-50 rounded-lg p-3 border border-orange-200 mt-2">
+                            <p className="text-xs text-orange-600 font-body uppercase tracking-wide mb-1">Your Feedback</p>
+                            <p className="text-sm text-orange-800 font-body leading-relaxed">{draft.feedback}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
               {drafts.length === 0 ? (
                 <div className="text-center py-8">
                   <svg className="w-10 h-10 text-muted/40 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
@@ -397,6 +481,28 @@ export default function ProjectView() {
                           </div>
                         </button>
 
+                        {/* Collapsed thumbnail strip */}
+                        {!isExpanded && images.length > 0 && (
+                          <div className="mt-3 flex items-center gap-1.5">
+                            {images.slice(0, 4).map((url, i) => (
+                              <img
+                                key={typeof url === 'string' ? url : i}
+                                src={typeof url === 'string' ? url : url.url}
+                                alt={`Draft ${draft.version} thumb ${i + 1}`}
+                                className="w-10 h-10 rounded object-cover border border-border cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setLightbox({ images, index: i });
+                                }}
+                                onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                            ))}
+                            {images.length > 4 && (
+                              <span className="text-xs text-muted font-body ml-1">+{images.length - 4}</span>
+                            )}
+                          </div>
+                        )}
+
                         {/* Expanded content */}
                         {isExpanded && (
                           <div className="mt-4 space-y-4">
@@ -406,7 +512,8 @@ export default function ProjectView() {
                                 {images.map((url, i) => (
                                   <div
                                     key={typeof url === 'string' ? url : i}
-                                    className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan"
+                                    className="aspect-square rounded-xl border border-border overflow-hidden bg-bgTan cursor-pointer"
+                                    onClick={() => setLightbox({ images, index: i })}
                                   >
                                     <img
                                       src={typeof url === 'string' ? url : url.url}
@@ -524,6 +631,15 @@ export default function ProjectView() {
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      {lightbox && (
+        <ImageLightbox
+          images={lightbox.images}
+          initialIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
     </div>
   );
 }
