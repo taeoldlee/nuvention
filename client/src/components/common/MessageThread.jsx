@@ -77,6 +77,7 @@ export default function MessageThread({ projectId, senderRole = 'BRAND', fetchFn
   };
 
   useEffect(() => {
+    hasLoadedEarlier.current = false;
     fetchMessages();
     intervalRef.current = setInterval(fetchMessages, 10000);
     return () => clearInterval(intervalRef.current);
