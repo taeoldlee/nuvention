@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth, requireOperatorWithBrand } = require("../middleware/auth");
+const { closeExpiredBriefs } = require("../services/briefExpiry");
 
 // All routes require authentication
 router.use(requireAuth);
@@ -69,6 +70,9 @@ router.post("/", requireOperatorWithBrand, async (req, res, next) => {
  */
 router.get("/", requireOperatorWithBrand, async (req, res, next) => {
   try {
+    // Auto-close any OPEN briefs whose deadline has passed
+    await closeExpiredBriefs();
+
     const where = { brandProfileId: req.brandProfile.id };
 
     if (req.query.status) {
