@@ -227,6 +227,7 @@ model Application {
   aiMatchScore         Float? // 0-100 calculated by matching algo
   aiMatchRationale     String? // AI-generated explanation
   status               ApplicationStatus @default(PENDING)
+  statusToken          String            @unique @default(uuid())
   viewedByBrandAt      DateTime?
   selectedAt           DateTime?
   createdAt            DateTime          @default(now())

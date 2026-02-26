@@ -168,4 +168,69 @@ router.post("/briefs/:id/apply", async (req, res, next) => {
   }
 });
 
+/**
+ * GET /api/portal/applications/:token
+ * Look up application status by statusToken (public, no auth).
+ */
+router.get("/applications/:token", async (req, res, next) => {
+  try {
+    const application = await prisma.application.findUnique({
+      where: { statusToken: req.params.token },
+      include: {
+        brief: {
+          select: {
+            id: true,
+            title: true,
+            campaignGoal: true,
+            contentTypes: true,
+            compensationType: true,
+            compensationAmount: true,
+            deadline: true,
+            status: true,
+            brandProfile: {
+              select: {
+                businessName: true,
+                neighborhood: true,
+                city: true,
+                profilePhotoUrl: true,
+              },
+            },
+          },
+        },
+        project: {
+          select: {
+            id: true,
+            creatorAccessToken: true,
+            status: true,
+          },
+        },
+      },
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    // Only expose project link (with creatorAccessToken) when selected
+    const project =
+      application.status === "SELECTED" && application.project
+        ? application.project
+        : null;
+
+    res.json({
+      application: {
+        id: application.id,
+        status: application.status,
+        creatorName: application.creatorName,
+        creatorHandle: application.creatorHandle,
+        createdAt: application.createdAt,
+        brief: application.brief,
+        project,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 module.exports = router;

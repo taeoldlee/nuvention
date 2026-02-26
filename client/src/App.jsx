@@ -9,6 +9,8 @@ import OperatorProjectView from './pages/operator/ProjectView';
 import OperatorSettings from './pages/operator/Settings';
 import InsightsPage from './pages/operator/InsightsPage';
 import BriefPortal from './pages/portal/BriefPortal';
+import ApplicationStatus from './pages/portal/ApplicationStatus';
+import CreatorProjectPage from './pages/portal/CreatorProjectPage';
 import AgencyOnboarding from './pages/agency/Onboarding';
 import AgencyDashboard from './pages/agency/Dashboard';
 import AgencyBriefDetail from './pages/agency/BriefDetail';
@@ -56,6 +58,8 @@ export default function App() {
         {/* Public Portal (no auth required) */}
         <Route path="/portal/briefs" element={<BriefPortal />} />
         <Route path="/portal/briefs/:id" element={<BriefPortal />} />
+        <Route path="/portal/application/:token" element={<ApplicationStatus />} />
+        <Route path="/portal/project/:id" element={<CreatorProjectPage />} />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

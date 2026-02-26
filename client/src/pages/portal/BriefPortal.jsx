@@ -310,8 +310,8 @@ function ApplicationForm({ briefId, onSuccess }) {
       if (data.portfolioUrls.length === 0) data.portfolioUrls = null;
       if (data.contentStyleTags.length === 0) data.contentStyleTags = null;
 
-      await submitApplication(briefId, data);
-      onSuccess();
+      const res = await submitApplication(briefId, data);
+      onSuccess(res.data.application);
     } catch (err) {
       const msg =
         err.response?.data?.error || 'Something went wrong. Please try again.';
@@ -604,9 +604,39 @@ function ApplicationForm({ briefId, onSuccess }) {
 
 function BriefDetailView({ brief, onBack }) {
   const [submitted, setSubmitted] = useState(false);
+  const [statusToken, setStatusToken] = useState(null);
+  const [copied, setCopied] = useState(false);
 
   const contentTypes = Array.isArray(brief.contentTypes) ? brief.contentTypes : [];
   const vibes = Array.isArray(brief.brandProfile?.vibe) ? brief.brandProfile.vibe : [];
+
+  const handleSuccess = (application) => {
+    setStatusToken(application.statusToken);
+    setSubmitted(true);
+  };
+
+  const statusUrl = statusToken
+    ? `${window.location.origin}/portal/application/${statusToken}`
+    : null;
+
+  const handleCopyLink = async () => {
+    if (!statusUrl) return;
+    try {
+      await navigator.clipboard.writeText(statusUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for browsers without clipboard API
+      const input = document.createElement('input');
+      input.value = statusUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   if (submitted) {
     return (
@@ -623,6 +653,45 @@ function BriefDetailView({ brief, onBack }) {
               Your application has been sent to {brief.brandProfile?.businessName || 'the brand'}.
               They will review it and reach out if you are selected.
             </p>
+
+            {/* Status Tracking Link */}
+            {statusUrl && (
+              <div className="bg-bgWarm border border-border rounded-xl p-4 mb-6 mx-auto max-w-md">
+                <p className="text-sm font-semibold text-dark font-body mb-2">Track Your Application</p>
+                <p className="text-xs text-muted font-body mb-3">
+                  Bookmark or copy this link to check your application status anytime.
+                </p>
+                <div className="flex items-center gap-2">
+                  <a
+                    href={statusUrl}
+                    className="flex-1 text-xs text-accent font-body truncate hover:underline"
+                  >
+                    {statusUrl}
+                  </a>
+                  <button
+                    onClick={handleCopyLink}
+                    className="flex-shrink-0 inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold font-body border border-border bg-white hover:bg-bgWarm text-mid transition-colors"
+                  >
+                    {copied ? (
+                      <>
+                        <svg className="w-3.5 h-3.5 text-green" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 0 1 1.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 0 0-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 0 1-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H9.75" />
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <button
               onClick={onBack}
               className="inline-flex items-center justify-center font-body font-semibold transition-all duration-300 rounded-xl px-6 py-3 text-base border-2 border-border bg-white hover:bg-bgWarm text-mid hover:shadow-sm"
@@ -794,7 +863,7 @@ function BriefDetailView({ brief, onBack }) {
 
         {/* Application Form */}
         <div className="card">
-          <ApplicationForm briefId={brief.id} onSuccess={() => setSubmitted(true)} />
+          <ApplicationForm briefId={brief.id} onSuccess={handleSuccess} />
         </div>
       </div>
     </div>
