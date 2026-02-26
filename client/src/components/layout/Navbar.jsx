@@ -5,7 +5,7 @@ import NotificationBell from './NotificationBell';
 import Avatar from '../common/Avatar';
 
 export default function Navbar() {
-  const { user, profile, isAgency } = useAuth();
+  const { user, profile } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -20,17 +20,9 @@ export default function Navbar() {
     { to: '/operator/settings', label: 'Settings' },
   ];
 
-  const agencyLinks = [
-    { to: '/agency/dashboard', label: 'Dashboard' },
-    { to: '/agency/roster', label: 'Roster' },
-    { to: '/agency/settings', label: 'Settings' },
-  ];
-
-  const links = isAgency ? agencyLinks : operatorLinks;
-  const homeLink = isAgency ? '/agency/dashboard' : '/operator/dashboard';
-  const profileLabel = isAgency
-    ? (profile?.agencyName || 'New Agency')
-    : (profile?.businessName || 'New Business');
+  const links = operatorLinks;
+  const homeLink = '/operator/dashboard';
+  const profileLabel = profile?.businessName || 'New Business';
 
   const isActive = (to) =>
     location.pathname === to || location.pathname.startsWith(to + '/');
@@ -42,11 +34,6 @@ export default function Navbar() {
         <div className="flex items-center gap-6">
           <Link to={homeLink} className="flex items-center gap-2">
             <span className="font-display text-xl font-bold text-dark">Locale</span>
-            {isAgency && (
-              <span className="text-[10px] font-semibold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-full border border-purple-200">
-                Agency
-              </span>
-            )}
           </Link>
           <div className="hidden sm:flex items-center gap-0.5">
             {links.map((link) => (
@@ -72,7 +59,7 @@ export default function Navbar() {
             <p className="text-xs font-medium text-dark leading-tight">{user.name}</p>
             <p className="text-[10px] text-muted leading-tight">{profileLabel}</p>
           </div>
-          <Avatar src={user.avatarUrl} name={user.name} size="sm" borderClass={isAgency ? 'border-purple-400' : 'border-accent'} />
+          <Avatar src={user.avatarUrl} name={user.name} size="sm" borderClass="border-accent" />
 
           {/* Mobile hamburger */}
           <button
