@@ -86,6 +86,10 @@ export const uploadImages = (formData, { onUploadProgress } = {}) =>
 // ─── Stats ───
 export const getBrandStats = () => client.get('/stats/brand');
 
+// ─── Transactions ───
+export const getTransactions = () => client.get('/transactions');
+export const getTransaction = (id) => client.get(`/transactions/${id}`);
+
 // ─── Agency ───
 export const getAgencyProfile = () => client.get('/agencies/profile');
 export const createAgencyProfile = (data) => client.post('/agencies/profile', data);
