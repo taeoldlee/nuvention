@@ -299,6 +299,45 @@ router.post("/:id/complete", requireAuth, requireOperatorWithBrand, async (req, 
 // ─── Creator routes (x-creator-token auth) ──────────────────────────────────
 
 /**
+ * GET /api/projects/:id/creator
+ * Creator views their project details (via x-creator-token).
+ */
+router.get("/:id/creator", requireCreatorToken, async (req, res, next) => {
+  try {
+    const { creatorProject } = req;
+
+    if (creatorProject.id !== req.params.id) {
+      return res.status(403).json({ error: "Token does not match this project" });
+    }
+
+    // Fetch full project with all relations
+    const project = await prisma.project.findUnique({
+      where: { id: creatorProject.id },
+      include: {
+        application: { include: { brief: true } },
+        brandProfile: {
+          include: {
+            user: { select: { id: true, name: true, avatarUrl: true } },
+          },
+        },
+        drafts: { orderBy: { version: "desc" } },
+        transaction: {
+          select: {
+            status: true,
+            escrowStatus: true,
+            creatorPayout: true,
+          },
+        },
+      },
+    });
+
+    res.json({ project });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/projects/:id/accept
  * Creator accepts the project invitation.
  * Project must be AWAITING_CREATOR_ACCEPTANCE.

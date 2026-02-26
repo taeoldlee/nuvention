@@ -41,7 +41,7 @@ export const downloadUsageRightsPDF = (projectId) =>
 const creatorClient = (token) => ({
   accept: (projectId) => client.post(`/projects/${projectId}/accept`, {}, { headers: { 'x-creator-token': token } }),
   decline: (projectId) => client.post(`/projects/${projectId}/decline`, {}, { headers: { 'x-creator-token': token } }),
-  getProject: (projectId) => client.get(`/projects/${projectId}`, { headers: { 'x-creator-token': token } }),
+  getProject: (projectId) => client.get(`/projects/${projectId}/creator`, { headers: { 'x-creator-token': token } }),
   submitDraft: (projectId, data) => client.post(`/projects/${projectId}/drafts`, data, { headers: { 'x-creator-token': token } }),
   getMessages: (projectId) => client.get(`/projects/${projectId}/messages`, { headers: { 'x-creator-token': token } }),
   sendMessage: (projectId, text) => client.post(`/projects/${projectId}/messages`, { text }, { headers: { 'x-creator-token': token } }),
