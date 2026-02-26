@@ -272,11 +272,12 @@ router.post("/:id/complete", requireAuth, requireOperatorWithBrand, async (req, 
     }
 
     // Update project status
+    const completedAt = new Date();
     const updatedProject = await prisma.project.update({
       where: { id: project.id },
       data: {
         status: "COMPLETED",
-        completedAt: new Date(),
+        completedAt,
       },
       include: {
         application: { include: { brief: true } },
@@ -288,6 +289,72 @@ router.post("/:id/complete", requireAuth, requireOperatorWithBrand, async (req, 
     // Release escrow via payout
     if (project.transaction) {
       await createPayout(project.id, project.transaction.creatorPayout);
+    }
+
+    // ── Create CampaignData record for insights ──
+    try {
+      const brief = updatedProject.application?.brief;
+      const brandProfile = updatedProject.brandProfile;
+      const application = updatedProject.application;
+
+      if (brief && brandProfile) {
+        // Count applications for this brief
+        const numberOfApplications = await prisma.application.count({
+          where: { briefId: brief.id },
+        });
+
+        // Calculate time to first application (in minutes)
+        const firstApplication = await prisma.application.findFirst({
+          where: { briefId: brief.id },
+          orderBy: { createdAt: "asc" },
+          select: { createdAt: true },
+        });
+        const timeToFirstApplication = firstApplication
+          ? Math.round((firstApplication.createdAt.getTime() - brief.createdAt.getTime()) / 60000)
+          : null;
+
+        // Derive creator tier from follower count
+        const followerCount = application?.followerCount || 0;
+        let selectedCreatorTier;
+        if (followerCount >= 100000) {
+          selectedCreatorTier = "MACRO";
+        } else if (followerCount >= 50000) {
+          selectedCreatorTier = "MID";
+        } else if (followerCount >= 10000) {
+          selectedCreatorTier = "MICRO";
+        } else {
+          selectedCreatorTier = "NANO";
+        }
+
+        // Check if content was approved (project reached APPROVED -> COMPLETED)
+        const wasContentApproved = true; // project must be APPROVED before completing
+
+        // Count revisions requested on this project
+        const revisionsRequested = updatedProject.revisionsUsed || 0;
+
+        await prisma.campaignData.create({
+          data: {
+            briefId: brief.id,
+            brandProfileId: brandProfile.id,
+            campaignGoal: brief.campaignGoal,
+            contentTypes: brief.contentTypes || [],
+            compensationType: updatedProject.compensationType,
+            compensationAmount: updatedProject.price || null,
+            neighborhood: brandProfile.neighborhood,
+            city: brandProfile.city || "Evanston",
+            cuisineTypes: brandProfile.cuisineTypes || [],
+            numberOfApplications,
+            timeToFirstApplication,
+            selectedCreatorTier,
+            wasContentApproved,
+            revisionsRequested,
+            completedAt,
+          },
+        });
+      }
+    } catch (campaignDataErr) {
+      // Log but don't fail the completion — insights are non-critical
+      console.error("[projects/:id/complete] Failed to create CampaignData:", campaignDataErr);
     }
 
     res.json({ project: updatedProject });
