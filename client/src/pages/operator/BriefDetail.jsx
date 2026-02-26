@@ -143,6 +143,7 @@ function MatchScoreBadge({ score, rationale }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setShowBreakdown(!showBreakdown)}
+        aria-expanded={showBreakdown}
         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold cursor-pointer hover:ring-2 hover:ring-accent/20 transition-all ${color}`}
       >
         {pct}% match
