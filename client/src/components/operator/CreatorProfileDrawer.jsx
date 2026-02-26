@@ -56,8 +56,17 @@ function SectionLabel({ children }) {
   );
 }
 
+function isSafeUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function LinkList({ urls, label }) {
-  const list = Array.isArray(urls) ? urls.filter(Boolean) : [];
+  const list = Array.isArray(urls) ? urls.filter((u) => u && isSafeUrl(u)) : [];
   if (list.length === 0) return null;
 
   return (
