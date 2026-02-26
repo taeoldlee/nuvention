@@ -31,14 +31,25 @@ function Badge({ styles, status }) {
   );
 }
 
-function TransactionRow({ transaction, isExpanded, onToggle }) {
+function TransactionRow({ transaction, isExpanded, onToggle, onViewProject }) {
   const app = transaction.project?.application;
   const brief = app?.brief;
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onToggle();
+    }
+  };
 
   return (
     <>
       <tr
         onClick={onToggle}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        role="button"
+        aria-expanded={isExpanded}
         className="border-b border-border/50 hover:bg-bgWarm/50 transition-colors cursor-pointer"
       >
         <td className="py-3 px-3">
@@ -101,7 +112,7 @@ function TransactionRow({ transaction, isExpanded, onToggle }) {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.location.href = `/operator/project/${transaction.project.id}`;
+                    onViewProject(transaction.project.id);
                   }}
                   className="text-xs text-accent hover:text-accentDark font-semibold font-body transition-colors"
                 >
@@ -287,6 +298,7 @@ export default function Payments() {
                         transaction={t}
                         isExpanded={expandedId === t.id}
                         onToggle={() => setExpandedId(expandedId === t.id ? null : t.id)}
+                        onViewProject={(id) => navigate(`/operator/project/${id}`)}
                       />
                     ))}
                   </tbody>
