@@ -446,6 +446,8 @@ function DraftUpload({ projectId, api, onSuccess, revisionOf }) {
       setError('Maximum 6 images per draft.');
       return;
     }
+    // Revoke old preview URLs before replacing
+    previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
     setFiles(selected);
     setError('');
     // Generate previews

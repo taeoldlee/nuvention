@@ -331,6 +331,10 @@ router.get("/:id/creator", requireCreatorToken, async (req, res, next) => {
       },
     });
 
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
     res.json({ project });
   } catch (err) {
     next(err);

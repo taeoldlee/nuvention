@@ -211,6 +211,12 @@ router.get("/applications/:token", async (req, res, next) => {
       return res.status(404).json({ error: "Application not found" });
     }
 
+    // Only expose project link (with creatorAccessToken) when selected
+    const project =
+      application.status === "SELECTED" && application.project
+        ? application.project
+        : null;
+
     res.json({
       application: {
         id: application.id,
@@ -219,7 +225,7 @@ router.get("/applications/:token", async (req, res, next) => {
         creatorHandle: application.creatorHandle,
         createdAt: application.createdAt,
         brief: application.brief,
-        project: application.project,
+        project,
       },
     });
   } catch (err) {
