@@ -232,7 +232,7 @@ function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleS
         <select
           value={form.compensationType}
           onChange={(e) => updateField('compensationType', e.target.value)}
-          className={selectClass}
+          className={`${selectClass} ${fieldErrors.compensationType ? 'border-red-400 focus:ring-red-200' : ''}`}
         >
           <option value="">Select compensation...</option>
           {COMPENSATION_TYPES.map((ct) => (
@@ -241,6 +241,7 @@ function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleS
             </option>
           ))}
         </select>
+        {fieldErrors.compensationType && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.compensationType}</p>}
       </div>
 
       {/* Compensation Amount (conditional) */}
@@ -258,8 +259,9 @@ function StepBasics({ form, updateField, toggleContentType, fieldErrors, handleS
               updateField('compensationAmount', e.target.value)
             }
             placeholder="e.g. 150"
-            className={inputClass}
+            className={`${inputClass} ${fieldErrors.compensationAmount ? 'border-red-400 focus:ring-red-200' : ''}`}
           />
+          {fieldErrors.compensationAmount && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.compensationAmount}</p>}
           <p className="text-xs text-muted font-body mt-1">
             Enter the dollar amount. This will be stored as cents on the backend.
           </p>
@@ -340,7 +342,7 @@ function StepCreativeDetails({ form, updateField, fieldErrors }) {
         <select
           value={form.usageRights}
           onChange={(e) => updateField('usageRights', e.target.value)}
-          className={selectClass}
+          className={`${selectClass} ${fieldErrors.usageRights ? 'border-red-400 focus:ring-red-200' : ''}`}
         >
           <option value="">Select usage rights...</option>
           {USAGE_RIGHTS.map((ur) => (
@@ -349,6 +351,7 @@ function StepCreativeDetails({ form, updateField, fieldErrors }) {
             </option>
           ))}
         </select>
+        {fieldErrors.usageRights && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.usageRights}</p>}
       </div>
 
       {/* Location Requirement */}
@@ -361,7 +364,7 @@ function StepCreativeDetails({ form, updateField, fieldErrors }) {
           onChange={(e) =>
             updateField('locationRequirement', e.target.value)
           }
-          className={selectClass}
+          className={`${selectClass} ${fieldErrors.locationRequirement ? 'border-red-400 focus:ring-red-200' : ''}`}
         >
           <option value="">Select location requirement...</option>
           {LOCATION_REQUIREMENTS.map((lr) => (
@@ -370,6 +373,7 @@ function StepCreativeDetails({ form, updateField, fieldErrors }) {
             </option>
           ))}
         </select>
+        {fieldErrors.locationRequirement && <p className="mt-1 text-xs text-red-600 font-body">{fieldErrors.locationRequirement}</p>}
       </div>
 
       {/* Additional Notes */}
