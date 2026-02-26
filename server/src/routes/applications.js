@@ -45,6 +45,59 @@ router.get("/:id", requireOperatorWithBrand, async (req, res, next) => {
 });
 
 /**
+ * GET /api/applications/:id/profile
+ * Get full application profile data plus past rankings by the same
+ * creatorHandle on other briefs owned by this brand.
+ */
+router.get("/:id/profile", requireOperatorWithBrand, async (req, res, next) => {
+  try {
+    const { brandProfile } = req;
+
+    const application = await prisma.application.findUnique({
+      where: { id: req.params.id },
+      include: { brief: true },
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: "Application not found" });
+    }
+
+    if (application.brief.brandProfileId !== brandProfile.id) {
+      return res.status(403).json({ error: "Access denied" });
+    }
+
+    // Find other applications by the same creatorHandle on this brand's briefs
+    // (excluding the current application)
+    const pastRankings = await prisma.application.findMany({
+      where: {
+        creatorHandle: application.creatorHandle,
+        id: { not: application.id },
+        brief: {
+          brandProfileId: brandProfile.id,
+        },
+      },
+      select: {
+        id: true,
+        aiMatchScore: true,
+        status: true,
+        createdAt: true,
+        brief: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.json({ application, pastRankings });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
  * POST /api/applications/:id/select
  * Select an applicant. Creates a Project for them.
  */
