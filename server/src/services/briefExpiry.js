@@ -25,11 +25,16 @@ async function closeExpiredBriefs() {
 
   if (expiredBriefs.length === 0) return 0;
 
+  let closed = 0;
   for (const brief of expiredBriefs) {
-    await prisma.brief.update({
-      where: { id: brief.id },
+    // Use updateMany with status guard so only one concurrent caller transitions the brief
+    const result = await prisma.brief.updateMany({
+      where: { id: brief.id, status: "OPEN" },
       data: { status: "CLOSED", closedAt: now },
     });
+
+    if (result.count === 0) continue; // Another request already closed it
+    closed++;
 
     // Notify the brand owner
     if (brief.brandProfile?.userId) {
@@ -42,11 +47,11 @@ async function closeExpiredBriefs() {
     }
   }
 
-  console.log(
-    `[BriefExpiry] Auto-closed ${expiredBriefs.length} expired brief(s)`
-  );
+  if (closed > 0) {
+    console.log(`[BriefExpiry] Auto-closed ${closed} expired brief(s)`);
+  }
 
-  return expiredBriefs.length;
+  return closed;
 }
 
 module.exports = { closeExpiredBriefs };
