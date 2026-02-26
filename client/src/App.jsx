@@ -6,6 +6,8 @@ import OperatorDashboard from './pages/operator/Dashboard';
 import CreateBrief from './pages/operator/CreateBrief';
 import BriefDetail from './pages/operator/BriefDetail';
 import OperatorProjectView from './pages/operator/ProjectView';
+import AllBriefs from './pages/operator/AllBriefs';
+import AllProjects from './pages/operator/AllProjects';
 import OperatorSettings from './pages/operator/Settings';
 import InsightsPage from './pages/operator/InsightsPage';
 import Payments from './pages/operator/Payments';
@@ -43,6 +45,8 @@ export default function App() {
         {/* Operator Routes */}
         <Route path="/operator/onboarding" element={<OperatorOnboarding />} />
         <Route path="/operator/dashboard" element={<OperatorDashboard />} />
+        <Route path="/operator/briefs" element={<AllBriefs />} />
+        <Route path="/operator/projects" element={<AllProjects />} />
         <Route path="/operator/brief/new" element={<CreateBrief />} />
         <Route path="/operator/brief/:id" element={<BriefDetail />} />
         <Route path="/operator/project/:id" element={<OperatorProjectView />} />
