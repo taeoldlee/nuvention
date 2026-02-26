@@ -18,6 +18,8 @@ router.get("/briefs", async (req, res, next) => {
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 10));
     const skip = (page - 1) * limit;
 
+    const { search, compensationType, contentType, campaignGoal, sort } = req.query;
+
     const where = {
       status: "OPEN",
       // Exclude briefs with a past deadline (belt-and-suspenders with auto-close above)
@@ -26,6 +28,49 @@ router.get("/briefs", async (req, res, next) => {
         { deadline: { gte: new Date() } },
       ],
     };
+
+    // Search filter: title OR brand businessName (case-insensitive)
+    if (search && search.trim()) {
+      where.AND = [
+        {
+          OR: [
+            { title: { contains: search.trim(), mode: "insensitive" } },
+            { brandProfile: { businessName: { contains: search.trim(), mode: "insensitive" } } },
+          ],
+        },
+      ];
+    }
+
+    // Compensation type filter
+    if (compensationType) {
+      where.compensationType = compensationType;
+    }
+
+    // Content type filter (JSON array contains)
+    if (contentType) {
+      where.contentTypes = { path: [], array_contains: [contentType] };
+    }
+
+    // Campaign goal filter
+    if (campaignGoal) {
+      where.campaignGoal = campaignGoal;
+    }
+
+    // Sort
+    let orderBy;
+    switch (sort) {
+      case "deadline":
+        orderBy = [{ deadline: { sort: "asc", nulls: "last" } }];
+        break;
+      case "compensation":
+        orderBy = [{ compensationAmount: { sort: "desc", nulls: "last" } }];
+        break;
+      case "newest":
+      default:
+        orderBy = { createdAt: "desc" };
+        break;
+    }
+
     const include = {
       brandProfile: {
         select: {
@@ -42,7 +87,7 @@ router.get("/briefs", async (req, res, next) => {
       prisma.brief.findMany({
         where,
         include,
-        orderBy: { createdAt: "desc" },
+        orderBy,
         skip,
         take: limit,
       }),

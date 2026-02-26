@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getPortalBriefs, getPortalBrief, submitApplication } from '../../api';
 
@@ -882,19 +882,59 @@ export default function BriefPortal() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Filter state
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [compensationType, setCompensationType] = useState('');
+  const [contentType, setContentType] = useState('');
+  const [campaignGoal, setCampaignGoal] = useState('');
+  const [sort, setSort] = useState('newest');
+  const searchTimeout = useRef(null);
+
+  // Debounce search input
+  useEffect(() => {
+    clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      setSearch(searchInput);
+    }, 300);
+    return () => clearTimeout(searchTimeout.current);
+  }, [searchInput]);
+
+  // Reset page to 1 when any filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, compensationType, contentType, campaignGoal, sort]);
+
+  const hasActiveFilters = search || compensationType || contentType || campaignGoal || sort !== 'newest';
+
+  const clearFilters = () => {
+    setSearchInput('');
+    setSearch('');
+    setCompensationType('');
+    setContentType('');
+    setCampaignGoal('');
+    setSort('newest');
+  };
+
   // Load briefs list
   useEffect(() => {
     if (id) return; // Skip list load when viewing detail via URL
     setLoading(true);
     setError('');
-    getPortalBriefs({ page, limit: 10 })
+    const params = { page, limit: 10 };
+    if (search) params.search = search;
+    if (compensationType) params.compensationType = compensationType;
+    if (contentType) params.contentType = contentType;
+    if (campaignGoal) params.campaignGoal = campaignGoal;
+    if (sort && sort !== 'newest') params.sort = sort;
+    getPortalBriefs(params)
       .then((res) => {
         setBriefs(res.data.briefs || []);
         setTotalPages(res.data.totalPages || 1);
       })
       .catch(() => setError('Could not load briefs. Please try again.'))
       .finally(() => setLoading(false));
-  }, [id, page]);
+  }, [id, page, search, compensationType, contentType, campaignGoal, sort]);
 
   // Load single brief when accessed via URL parameter
   useEffect(() => {
@@ -988,6 +1028,88 @@ export default function BriefPortal() {
           </p>
         </div>
 
+        {/* Filter Bar */}
+        <div className="bg-white rounded-2xl border border-border p-4 mb-6 space-y-3">
+          {/* Search */}
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search briefs or brands..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+            />
+          </div>
+
+          {/* Filter Row */}
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={compensationType}
+              onChange={(e) => setCompensationType(e.target.value)}
+              className="appearance-none bg-white border border-border rounded-xl px-3 py-2 text-sm font-body text-dark focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              <option value="">All Compensation</option>
+              <option value="FREE_PRODUCT">Free Product</option>
+              <option value="FLAT_FEE">Flat Fee</option>
+              <option value="HYBRID">Hybrid</option>
+              <option value="COMMISSION">Commission</option>
+            </select>
+
+            <select
+              value={contentType}
+              onChange={(e) => setContentType(e.target.value)}
+              className="appearance-none bg-white border border-border rounded-xl px-3 py-2 text-sm font-body text-dark focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              <option value="">All Content</option>
+              <option value="REEL">Reel</option>
+              <option value="CAROUSEL">Carousel</option>
+              <option value="STORY">Story</option>
+              <option value="TIKTOK">TikTok</option>
+              <option value="PHOTO_SET">Photo Set</option>
+              <option value="BLOG_POST">Blog Post</option>
+            </select>
+
+            <select
+              value={campaignGoal}
+              onChange={(e) => setCampaignGoal(e.target.value)}
+              className="appearance-none bg-white border border-border rounded-xl px-3 py-2 text-sm font-body text-dark focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              <option value="">All Goals</option>
+              <option value="EVENT_PROMO">Event Promo</option>
+              <option value="MENU_LAUNCH">Menu Launch</option>
+              <option value="SEASONAL_SPECIAL">Seasonal Special</option>
+              <option value="GENERAL_CONTENT">General Content</option>
+              <option value="GRAND_OPENING">Grand Opening</option>
+              <option value="SLOW_PERIOD_FILL">Slow Period Fill</option>
+            </select>
+
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="appearance-none bg-white border border-border rounded-xl px-3 py-2 text-sm font-body text-dark focus:outline-none focus:ring-2 focus:ring-accent/20"
+            >
+              <option value="newest">Newest First</option>
+              <option value="deadline">Deadline Soonest</option>
+              <option value="compensation">Highest Pay</option>
+            </select>
+          </div>
+
+          {/* Active filters indicator + clear button */}
+          {hasActiveFilters && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={clearFilters}
+                className="text-xs font-body font-semibold text-accent hover:text-accent/80 transition-colors"
+              >
+                Clear all filters
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Brief List */}
         {briefs.length === 0 ? (
           <div className="card text-center py-12">
@@ -996,10 +1118,22 @@ export default function BriefPortal() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
               </svg>
             </div>
-            <h3 className="font-display text-lg font-semibold text-dark mb-2">No open briefs right now</h3>
+            <h3 className="font-display text-lg font-semibold text-dark mb-2">
+              {hasActiveFilters ? 'No briefs match your filters' : 'No open briefs right now'}
+            </h3>
             <p className="text-muted text-sm font-body max-w-sm mx-auto">
-              Check back soon -- new content opportunities are posted regularly by local businesses.
+              {hasActiveFilters
+                ? 'Try adjusting your search or filters to find more opportunities.'
+                : 'Check back soon -- new content opportunities are posted regularly by local businesses.'}
             </p>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="mt-3 text-sm font-body font-semibold text-accent hover:text-accent/80 transition-colors"
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         ) : (
           <>
