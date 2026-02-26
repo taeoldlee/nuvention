@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getBrief, selectApplication, rejectApplication } from '../../api';
 import { useToast } from '../../contexts/ToastContext';
@@ -87,19 +87,106 @@ function formatDeadline(dateStr) {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function MatchScoreBadge({ score }) {
+function parseFactors(rationale) {
+  if (!rationale) return [];
+  const factors = [];
+  const patterns = [
+    /(?:^|\n)\s*[-\u2022]?\s*(.+?):\s*(\d+)\s*(?:\/100|%)/gi,
+    /(?:^|\n)\s*[-\u2022]?\s*(.+?)\s*\((\d+)%?\)/gi,
+  ];
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(rationale)) !== null) {
+      const name = match[1].trim();
+      const score = parseInt(match[2], 10);
+      if (name.length < 40 && score >= 0 && score <= 100) {
+        factors.push({ name, score });
+      }
+    }
+    if (factors.length >= 3) break;
+  }
+  return factors.slice(0, 6);
+}
+
+function MatchScoreBadge({ score, rationale }) {
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!showBreakdown) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setShowBreakdown(false);
+    };
+    const keyHandler = (e) => {
+      if (e.key === 'Escape') setShowBreakdown(false);
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('keydown', keyHandler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+      document.removeEventListener('keydown', keyHandler);
+    };
+  }, [showBreakdown]);
+
   if (score == null) return null;
   const pct = Math.round(score);
   let color = 'bg-gray-100 text-gray-600';
-  if (pct >= 80) color = 'bg-greenBg text-green';
-  else if (pct >= 60) color = 'bg-yellowBg text-yellowText';
-  else if (pct >= 40) color = 'bg-orange-50 text-orange-700';
-  else color = 'bg-red-50 text-red-600';
+  let barColor = 'bg-gray-300';
+  if (pct >= 80) { color = 'bg-greenBg text-green'; barColor = 'bg-green'; }
+  else if (pct >= 60) { color = 'bg-yellowBg text-yellowText'; barColor = 'bg-yellowText'; }
+  else if (pct >= 40) { color = 'bg-orange-50 text-orange-700'; barColor = 'bg-orange-500'; }
+  else { color = 'bg-red-50 text-red-600'; barColor = 'bg-red-500'; }
+
+  const factors = parseFactors(rationale);
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${color}`}>
-      {pct}% match
-    </span>
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setShowBreakdown(!showBreakdown)}
+        aria-expanded={showBreakdown}
+        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold cursor-pointer hover:ring-2 hover:ring-accent/20 transition-all ${color}`}
+      >
+        {pct}% match
+        <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      {showBreakdown && (
+        <div className="absolute right-0 top-full mt-2 w-72 bg-white rounded-xl shadow-lg border border-border z-50 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="font-display text-sm font-semibold text-dark">Match Breakdown</h4>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{pct}%</span>
+          </div>
+
+          {factors.length > 0 ? (
+            <div className="space-y-2.5">
+              {factors.map((f) => (
+                <div key={f.name}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-body text-mid">{f.name}</span>
+                    <span className="text-xs font-bold text-dark">{f.score}%</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-bgTan rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${barColor}`} style={{ width: `${f.score}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : rationale ? (
+            <p className="text-xs font-body text-mid leading-relaxed">{rationale}</p>
+          ) : (
+            <p className="text-xs font-body text-muted">Score based on profile analysis.</p>
+          )}
+
+          <div className="mt-3 pt-3 border-t border-border">
+            <p className="text-[10px] font-body text-muted leading-relaxed">
+              AI analyzes 6 factors: content style, location, portfolio, engagement, compensation fit, and audience demographics.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -113,6 +200,7 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
     engagementRate,
     pitch,
     aiMatchScore,
+    aiMatchRationale,
     contentStyleTags,
     compensationAsk,
     status,
@@ -140,7 +228,7 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
               >
                 {creatorName}
               </button>
-              <MatchScoreBadge score={aiMatchScore} />
+              <MatchScoreBadge score={aiMatchScore} rationale={aiMatchRationale} />
               {isActioned && <StatusBadge status={status} />}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted font-body mt-0.5">
