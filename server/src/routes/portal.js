@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
+const { closeExpiredBriefs } = require("../services/briefExpiry");
 
 // ─── PUBLIC PORTAL ROUTES (no auth required) ───
 
@@ -10,8 +11,18 @@ const prisma = require("../config/db");
  */
 router.get("/briefs", async (req, res, next) => {
   try {
+    // Auto-close any OPEN briefs whose deadline has passed
+    await closeExpiredBriefs();
+
     const briefs = await prisma.brief.findMany({
-      where: { status: "OPEN" },
+      where: {
+        status: "OPEN",
+        // Exclude briefs with a past deadline (belt-and-suspenders with auto-close above)
+        OR: [
+          { deadline: null },
+          { deadline: { gte: new Date() } },
+        ],
+      },
       include: {
         brandProfile: {
           select: {
@@ -38,6 +49,9 @@ router.get("/briefs", async (req, res, next) => {
  */
 router.get("/briefs/:id", async (req, res, next) => {
   try {
+    // Auto-close any OPEN briefs whose deadline has passed
+    await closeExpiredBriefs();
+
     const brief = await prisma.brief.findUnique({
       where: { id: req.params.id },
       include: {
@@ -80,6 +94,13 @@ router.post("/briefs/:id/apply", async (req, res, next) => {
 
     if (brief.status !== "OPEN") {
       return res.status(400).json({ error: "This brief is no longer accepting applications" });
+    }
+
+    // Reject applications to briefs whose deadline has passed
+    if (brief.deadline && new Date(brief.deadline) < new Date()) {
+      // Auto-close the brief since it's past deadline
+      await closeExpiredBriefs();
+      return res.status(400).json({ error: "This brief's deadline has passed and it is no longer accepting applications" });
     }
 
     const {
