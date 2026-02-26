@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import {
   BadgeCheck,
   Camera,
@@ -211,6 +212,12 @@ export default function Landing() {
                 Request demo
               </Button>
             </div>
+            <Link
+              to="/portal/briefs"
+              className="text-sm text-mid hover:text-dark transition-colors"
+            >
+              I'm a creator &rarr;
+            </Link>
           </FadeIn>
 
           <FadeIn className="flex flex-wrap items-center justify-center gap-3">
@@ -320,6 +327,14 @@ export default function Landing() {
                 {item}
               </span>
             ))}
+          </FadeIn>
+          <FadeIn className="mt-8 flex justify-center">
+            <Link
+              to="/portal/briefs"
+              className="inline-flex items-center justify-center rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-accent/90 hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/80"
+            >
+              Browse open briefs &rarr;
+            </Link>
           </FadeIn>
         </section>
 
@@ -443,6 +458,7 @@ export default function Landing() {
             <a className="hover:text-dark transition-colors" href="#creators">For Creators</a>
             <a className="hover:text-dark transition-colors" href="#trust">Trust</a>
             <a className="hover:text-dark transition-colors" href="#pricing">Pricing</a>
+            <Link className="hover:text-dark transition-colors" to="/portal/briefs">Browse Briefs</Link>
           </div>
           <p>© 2026 Locale</p>
         </div>
