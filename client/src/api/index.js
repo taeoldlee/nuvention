@@ -30,6 +30,7 @@ export const getApplicationStatus = (token) => client.get(`/portal/applications/
 
 // ─── Applications ───
 export const getApplication = (id) => client.get(`/applications/${id}`);
+export const getApplicationProfile = (id) => client.get(`/applications/${id}/profile`);
 export const selectApplication = (id) => client.post(`/applications/${id}/select`);
 export const rejectApplication = (id) => client.post(`/applications/${id}/reject`);
 

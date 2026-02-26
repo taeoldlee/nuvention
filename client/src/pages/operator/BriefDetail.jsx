@@ -6,6 +6,7 @@ import Btn from '../../components/common/Btn';
 import StatusBadge from '../../components/common/StatusBadge';
 import FadeIn from '../../components/marketing/FadeIn';
 import ApplicationFilters, { getCreatorTier } from '../../components/operator/ApplicationFilters';
+import CreatorProfileDrawer from '../../components/operator/CreatorProfileDrawer';
 
 const CAMPAIGN_GOAL_LABELS = {
   EVENT_PROMO: 'Event Promo',
@@ -102,7 +103,7 @@ function MatchScoreBadge({ score }) {
   );
 }
 
-function ApplicationCard({ application, onSelect, onReject, actionLoading }) {
+function ApplicationCard({ application, onSelect, onReject, onViewProfile, actionLoading }) {
   const {
     id,
     creatorName,
@@ -132,12 +133,24 @@ function ApplicationCard({ application, onSelect, onReject, actionLoading }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-body font-semibold text-dark truncate">{creatorName}</h3>
+              <button
+                type="button"
+                onClick={() => onViewProfile(id)}
+                className="font-body font-semibold text-dark truncate hover:text-accent transition-colors text-left cursor-pointer"
+              >
+                {creatorName}
+              </button>
               <MatchScoreBadge score={aiMatchScore} />
               {isActioned && <StatusBadge status={status} />}
             </div>
             <div className="flex items-center gap-2 text-sm text-muted font-body mt-0.5">
-              <span>@{creatorHandle}</span>
+              <button
+                type="button"
+                onClick={() => onViewProfile(id)}
+                className="hover:text-accent transition-colors cursor-pointer"
+              >
+                @{creatorHandle}
+              </button>
               <span className="text-border">|</span>
               <span>{PLATFORM_LABELS[creatorPlatform] || creatorPlatform}</span>
             </div>
@@ -228,6 +241,7 @@ export default function BriefDetail() {
   const [error, setError] = useState('');
   const [actionLoading, setActionLoading] = useState('');
   const [filteredApps, setFilteredApps] = useState(null);
+  const [profileAppId, setProfileAppId] = useState(null);
   const { addToast } = useToast();
 
   const loadBrief = async () => {
@@ -451,6 +465,7 @@ export default function BriefDetail() {
                     application={app}
                     onSelect={handleSelect}
                     onReject={handleReject}
+                    onViewProfile={setProfileAppId}
                     actionLoading={actionLoading}
                   />
                 ))}
@@ -468,6 +483,7 @@ export default function BriefDetail() {
                     application={app}
                     onSelect={handleSelect}
                     onReject={handleReject}
+                    onViewProfile={setProfileAppId}
                     actionLoading={actionLoading}
                   />
                 ))}
@@ -477,6 +493,14 @@ export default function BriefDetail() {
           </section>
         </FadeIn>
       </div>
+
+      {/* Creator Profile Drawer */}
+      {profileAppId && (
+        <CreatorProfileDrawer
+          applicationId={profileAppId}
+          onClose={() => setProfileAppId(null)}
+        />
+      )}
     </div>
   );
 }
