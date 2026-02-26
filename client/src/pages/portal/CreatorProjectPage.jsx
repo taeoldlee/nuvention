@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { creatorClient, uploadImages } from '../../api';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -53,7 +53,7 @@ export default function CreatorProjectPage() {
     if (urlToken && id) storeToken(id, urlToken);
   }, [urlToken, id]);
 
-  const api = token ? creatorClient(token) : null;
+  const api = useMemo(() => (token ? creatorClient(token) : null), [token]);
 
   const fetchProject = useCallback(async () => {
     if (!api) return;
@@ -438,6 +438,7 @@ function DraftUpload({ projectId, api, onSuccess, revisionOf }) {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+  const previewsRef = useRef(previews);
 
   const handleFileChange = (e) => {
     const selected = Array.from(e.target.files || []);
@@ -461,9 +462,12 @@ function DraftUpload({ projectId, api, onSuccess, revisionOf }) {
     URL.revokeObjectURL(previews[index]);
   };
 
-  // Cleanup preview URLs
+  // Keep ref in sync for cleanup
+  useEffect(() => { previewsRef.current = previews; }, [previews]);
+
+  // Cleanup preview URLs on unmount
   useEffect(() => {
-    return () => previews.forEach((url) => URL.revokeObjectURL(url));
+    return () => previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
   }, []);
 
   const handleSubmit = async (e) => {
@@ -718,9 +722,9 @@ function formatUsageRights(rights) {
   const labels = {
     ORGANIC_SOCIAL: 'Organic social',
     PAID_ADS: 'Paid ads',
-    FULL_BUYOUT: 'Full buyout',
+    IN_STORE: 'In-store',
     WEBSITE: 'Website',
-    PRINT: 'Print',
+    ALL: 'All rights',
   };
   return labels[rights] || rights;
 }
