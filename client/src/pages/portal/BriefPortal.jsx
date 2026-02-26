@@ -879,17 +879,22 @@ export default function BriefPortal() {
   const [selectedBrief, setSelectedBrief] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // Load briefs list
   useEffect(() => {
     if (id) return; // Skip list load when viewing detail via URL
     setLoading(true);
     setError('');
-    getPortalBriefs()
-      .then((res) => setBriefs(res.data.briefs || []))
+    getPortalBriefs({ page, limit: 10 })
+      .then((res) => {
+        setBriefs(res.data.briefs || []);
+        setTotalPages(res.data.totalPages || 1);
+      })
       .catch(() => setError('Could not load briefs. Please try again.'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, page]);
 
   // Load single brief when accessed via URL parameter
   useEffect(() => {
@@ -997,15 +1002,46 @@ export default function BriefPortal() {
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {briefs.map((brief) => (
-              <BriefCard
-                key={brief.id}
-                brief={brief}
-                onClick={() => handleSelectBrief(brief)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3">
+              {briefs.map((brief) => (
+                <BriefCard
+                  key={brief.id}
+                  brief={brief}
+                  onClick={() => handleSelectBrief(brief)}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-8">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="inline-flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-semibold font-body border border-border bg-white hover:bg-bgWarm text-mid transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                  Prev
+                </button>
+                <span className="text-sm font-body text-muted">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="inline-flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-semibold font-body border border-border bg-white hover:bg-bgWarm text-mid transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </div>

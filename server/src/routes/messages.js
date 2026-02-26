@@ -43,12 +43,30 @@ router.get("/:projectId/messages", async (req, res, next) => {
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    const messages = await prisma.message.findMany({
-      where: { projectId: req.params.projectId },
-      orderBy: { createdAt: "asc" },
+    const limit = Math.min(200, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const before = req.query.before; // cursor: message ID
+
+    const where = { projectId: req.params.projectId };
+    if (before) {
+      const cursor = await prisma.message.findUnique({ where: { id: before }, select: { createdAt: true } });
+      if (!cursor) {
+        return res.status(400).json({ error: "Invalid cursor" });
+      }
+      where.createdAt = { lt: cursor.createdAt };
+    }
+
+    // Fetch limit + 1 to check if there are more
+    const fetched = await prisma.message.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      take: limit + 1,
     });
 
-    res.json({ messages });
+    const hasMore = fetched.length > limit;
+    // Trim extra record and reverse to chronological order
+    const messages = (hasMore ? fetched.slice(0, limit) : fetched).reverse();
+
+    res.json({ messages, hasMore });
   } catch (err) {
     next(err);
   }

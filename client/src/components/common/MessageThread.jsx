@@ -7,24 +7,40 @@ import { getProjectMessages, sendProjectMessage } from '../../api';
  * Props:
  *   projectId   – required
  *   senderRole  – 'BRAND' (default) or 'CREATOR'
- *   fetchFn     – optional async (projectId) => res  (overrides default brand fetch)
+ *   fetchFn     – optional async (projectId, params) => res  (overrides default brand fetch)
  *   sendFn      – optional async (projectId, text) => res  (overrides default brand send)
  */
 export default function MessageThread({ projectId, senderRole = 'BRAND', fetchFn, sendFn }) {
   const [messages, setMessages] = useState([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const bottomRef = useRef(null);
+  const scrollContainerRef = useRef(null);
   const intervalRef = useRef(null);
+  const hasLoadedEarlier = useRef(false);
 
   const doFetch = fetchFn || getProjectMessages;
   const doSend = sendFn || sendProjectMessage;
 
+  // Fetch messages — on initial load replaces state; on poll after loading earlier, merges new messages
   const fetchMessages = async () => {
     try {
-      const res = await doFetch(projectId);
-      setMessages(res.data.messages || []);
+      const res = await doFetch(projectId, { limit: 50 });
+      const latest = res.data.messages || [];
+      if (hasLoadedEarlier.current) {
+        // Preserve earlier messages, only append genuinely new ones
+        setMessages((prev) => {
+          const existingIds = new Set(prev.map((m) => m.id));
+          const newMsgs = latest.filter((m) => !existingIds.has(m.id));
+          return newMsgs.length > 0 ? [...prev, ...newMsgs] : prev;
+        });
+      } else {
+        setMessages(latest);
+        setHasMore(res.data.hasMore || false);
+      }
       setError('');
     } catch (err) {
       console.error('[MessageThread] fetch error:', err.response?.status, err.response?.data || err.message);
@@ -32,7 +48,36 @@ export default function MessageThread({ projectId, senderRole = 'BRAND', fetchFn
     }
   };
 
+  // Load older messages (prepend)
+  const loadEarlier = async () => {
+    if (!hasMore || loadingMore || messages.length === 0) return;
+    setLoadingMore(true);
+    try {
+      const oldestId = messages[0]?.id;
+      const container = scrollContainerRef.current;
+      const prevScrollHeight = container?.scrollHeight || 0;
+
+      const res = await doFetch(projectId, { limit: 50, before: oldestId });
+      const older = res.data.messages || [];
+      setHasMore(res.data.hasMore || false);
+      hasLoadedEarlier.current = true;
+      setMessages((prev) => [...older, ...prev]);
+
+      // Preserve scroll position after prepending
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight - prevScrollHeight;
+        }
+      });
+    } catch (err) {
+      console.error('[MessageThread] load earlier error:', err.response?.status, err.response?.data || err.message);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   useEffect(() => {
+    hasLoadedEarlier.current = false;
     fetchMessages();
     intervalRef.current = setInterval(fetchMessages, 10000);
     return () => clearInterval(intervalRef.current);
@@ -76,7 +121,34 @@ export default function MessageThread({ projectId, senderRole = 'BRAND', fetchFn
         <p className="text-sm text-red-500 font-body mb-2">{error}</p>
       )}
 
-      <div className="max-h-80 overflow-y-auto space-y-3 mb-4 pr-1">
+      <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto space-y-3 mb-4 pr-1">
+        {/* Load Earlier Messages */}
+        {hasMore && (
+          <div className="text-center py-2">
+            <button
+              onClick={loadEarlier}
+              disabled={loadingMore}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold font-body text-accent hover:bg-accentLight transition-colors disabled:opacity-50"
+            >
+              {loadingMore ? (
+                <>
+                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Loading...
+                </>
+              ) : (
+                <>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5" />
+                  </svg>
+                  Load earlier messages
+                </>
+              )}
+            </button>
+          </div>
+        )}
         {messages.length === 0 && !error ? (
           <p className="text-sm text-muted font-body text-center py-6">
             No messages yet. Start the conversation!
