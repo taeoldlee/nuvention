@@ -12,7 +12,6 @@ import OperatorSettings from './pages/operator/Settings';
 import InsightsPage from './pages/operator/InsightsPage';
 import Payments from './pages/operator/Payments';
 import BriefPortal from './pages/portal/BriefPortal';
-import ApplicationStatus from './pages/portal/ApplicationStatus';
 import CreatorProjectPage from './pages/portal/CreatorProjectPage';
 import { useAuth } from './contexts/AuthContext';
 
@@ -47,7 +46,6 @@ export default function App() {
         {/* Public Portal (no auth required) */}
         <Route path="/portal/briefs" element={<BriefPortal />} />
         <Route path="/portal/briefs/:id" element={<BriefPortal />} />
-        <Route path="/portal/application/:token" element={<ApplicationStatus />} />
         <Route path="/portal/project/:id" element={<CreatorProjectPage />} />
 
         {/* Catch-all */}
