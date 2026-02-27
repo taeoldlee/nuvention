@@ -23,10 +23,6 @@ export const getBriefApplications = (briefId) => client.get(`/briefs/${briefId}/
 // ─── Public Portal ───
 export const getPortalBriefs = (params = {}) => client.get('/portal/briefs', { params });
 export const getPortalBrief = (id) => client.get(`/portal/briefs/${id}`);
-export const submitApplication = (briefId, data) => client.post(`/portal/briefs/${briefId}/apply`, data);
-
-// ─── Application Status (public) ───
-export const getApplicationStatus = (token) => client.get(`/portal/applications/${token}`);
 
 // ─── Applications ───
 export const getApplication = (id) => client.get(`/applications/${id}`);
