@@ -337,6 +337,42 @@ model Notification {
   @@index([userId, read, createdAt])
 }
 
+// ─── CREATORS ───
+
+model Creator {
+  id       String          @id @default(uuid())
+  name     String
+  handle   String
+  platform CreatorPlatform
+
+  followerCount        Int?
+  engagementRate       Float?
+  audienceGeography    Json?
+  audienceDemographics Json?
+  contentStyleTags     Json?
+  portfolioUrls        Json?
+  topPostUrls          Json?
+
+  bio          String?
+  contactEmail String?
+
+  neighborhoods Json?
+  city          String?
+  state         String?
+
+  prKitData       Json?
+  contentAnalysis Json?
+  profilePhotoUrl String?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([platform])
+  @@index([city])
+  @@index([isActive])
+}
+
 // ─── CAMPAIGN DATA (Analytics) ───
 
 model CampaignData {
