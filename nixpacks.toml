@@ -14,4 +14,4 @@ cmds = [
 ]
 
 [start]
-cmd = "cd server && npx prisma migrate deploy && npx prisma db seed && node src/index.js"
+cmd = "cd server && npx prisma db push --force-reset --accept-data-loss && npx prisma db seed && node src/index.js"
