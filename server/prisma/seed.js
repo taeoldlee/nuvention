@@ -68,6 +68,12 @@ async function main() {
       budgetMin: 15000, // $150
       budgetMax: 40000, // $400
       cuisineTypes: ['Japanese', 'Ramen', 'Asian Fusion'],
+      brandGoals: {
+        primary: 'hype_event',
+        category: 'PROMOTE_SOMETHING',
+        label: 'Hype up an event or grand opening',
+        customText: 'We just started a Thursday night trivia — want to pack the house for it',
+      },
       profilePhotoUrl: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400',
       subscriptionTier: 'PRO',
       subscriptionStatus: 'ACTIVE',

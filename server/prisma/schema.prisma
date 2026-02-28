@@ -55,6 +55,7 @@ model BrandProfile {
   budgetMax Int? // cents
 
   cuisineTypes Json? // ["Italian", "Coffee & Beverage", "Bakery & Pastry"]
+  brandGoals  Json? // { primary, category, label, customText? }
 
   vibeAnalysis    Json?
   profilePhotoUrl String?

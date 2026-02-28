@@ -1,10 +1,7 @@
 import {
   NEIGHBORHOODS,
-  VIBE_OPTIONS,
-  VALUE_OPTIONS,
-  CONTENT_COMFORT_ZONES,
-  VIBE_SCALES,
   CUISINE_OPTIONS,
+  BRAND_GOAL_CATEGORIES,
 } from '../../utils/constants';
 import Btn from '../common/Btn';
 import Chip from '../common/Chip';
@@ -25,14 +22,6 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
     updateForm,
     toggleArrayItem,
     setSingleSelect,
-    updateVibeScale,
-    keywordInput,
-    setKeywordInput,
-    addKeyword,
-    removeKeyword,
-    visualRefUploading,
-    visualRefError,
-    handleVisualRefsSelected: onVisualRefsSelected,
     canSubmitReview,
   } = formActions;
 
@@ -45,20 +34,36 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
     );
   }
 
+  const handleGoalSelect = (goal, category) => {
+    updateForm('selectedGoal', {
+      primary: goal.key,
+      category: category.category,
+      label: goal.label,
+    });
+    updateForm('customGoalText', '');
+  };
+
+  const handleCustomGoalChange = (text) => {
+    updateForm('customGoalText', text);
+    if (text.trim()) {
+      updateForm('selectedGoal', null);
+    }
+  };
+
   return (
     <div className="card space-y-6">
       <div>
         <h2 className="font-display text-xl font-semibold text-dark mb-1">
-          Review your profile
+          Your brand
         </h2>
         <p className="font-body text-sm text-muted">
-          Everything's been pre-filled. Tweak anything that doesn't look right.
+          Confirm the basics and tell us your #1 goal.
         </p>
       </div>
 
-      {/* Business Info */}
+      {/* Section 1: Confirm the basics */}
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Business Info</p>
+        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Confirm the basics</p>
 
         <Section label="Business Name">
           <input
@@ -87,100 +92,6 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
             />
           )}
         </Section>
-      </div>
-
-      {/* Vibe & Style */}
-      <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Vibe & Style</p>
-
-        <Section label="Vibe">
-          <div className="flex flex-wrap gap-2">
-            {VIBE_OPTIONS.map((v) => (
-              <Chip key={v} label={v} selected={form.vibes.includes(v)} onClick={() => toggleArrayItem('vibes', v)} />
-            ))}
-          </div>
-        </Section>
-
-        <Section label="Vibe Scales">
-          <div className="space-y-3">
-            {VIBE_SCALES.map((scale) => (
-              <div key={scale.key}>
-                <div className="flex items-center justify-between text-xs text-muted font-body mb-1">
-                  <span>{scale.left}</span>
-                  <span>{scale.right}</span>
-                </div>
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  value={form.vibeScales[scale.key] ?? 50}
-                  onChange={(e) => updateVibeScale(scale.key, Number(e.target.value))}
-                  className="w-full accent-accent"
-                />
-              </div>
-            ))}
-          </div>
-        </Section>
-
-        <Section label="Values">
-          <div className="flex flex-wrap gap-2">
-            {VALUE_OPTIONS.map((v) => (
-              <Chip key={v} label={v} selected={form.values.includes(v)} onClick={() => toggleArrayItem('values', v)} />
-            ))}
-          </div>
-        </Section>
-
-        <Section label="Guest Experience Keywords">
-          <div className="flex gap-2 mb-2">
-            <input
-              type="text"
-              value={keywordInput}
-              onChange={(e) => setKeywordInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addKeyword(); } }}
-              placeholder="e.g. warm, neighborhood, slow"
-              className="w-full px-4 py-2.5 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-            />
-            <Btn size="sm" onClick={addKeyword} disabled={form.guestExperienceKeywords.length >= 5}>
-              Add
-            </Btn>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {form.guestExperienceKeywords.map((k) => (
-              <span key={k} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-bgTan text-mid border border-border">
-                {k}
-                <button type="button" aria-label={`Remove ${k}`} onClick={() => removeKeyword(k)} className="hover:text-dark">&times;</button>
-              </span>
-            ))}
-          </div>
-        </Section>
-      </div>
-
-      {/* Content Preferences */}
-      <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Content Preferences</p>
-
-        <Section label="Content Comfort Zones">
-          <div className="flex flex-wrap gap-2">
-            {CONTENT_COMFORT_ZONES.map((c) => (
-              <Chip key={c} label={c} selected={form.contentComfortZones.includes(c)} onClick={() => toggleArrayItem('contentComfortZones', c)} />
-            ))}
-          </div>
-        </Section>
-
-        <Section label="Content No-Go's">
-          <textarea
-            value={form.contentNoGos}
-            onChange={(e) => updateForm('contentNoGos', e.target.value)}
-            rows={2}
-            placeholder="e.g. No alcohol in photos, avoid showing the kitchen, etc."
-            className="w-full px-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all resize-none"
-          />
-        </Section>
-      </div>
-
-      {/* Cuisine */}
-      <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Cuisine</p>
 
         <Section label="Cuisine Types">
           <div className="flex flex-wrap gap-2">
@@ -191,88 +102,55 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
         </Section>
       </div>
 
-      {/* Budget */}
+      {/* Section 2: Pick your goal */}
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Budget</p>
+        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">What's your #1 goal right now?</p>
 
-        <Section label="Budget per piece of content">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-xs text-muted mb-1 font-body">Min</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-body text-sm">$</span>
-                <input
-                  type="number"
-                  min={50}
-                  max={form.budgetMax}
-                  value={form.budgetMin}
-                  onChange={(e) => updateForm('budgetMin', Number(e.target.value))}
-                  className="w-full pl-7 pr-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-                />
+        <div className="space-y-4">
+          {BRAND_GOAL_CATEGORIES.map((cat) => (
+            <div key={cat.category}>
+              <p className="text-xs font-semibold text-mid font-body uppercase tracking-wide mb-2">
+                {cat.label}
+              </p>
+              <div className="space-y-2">
+                {cat.goals.map((goal) => {
+                  const isSelected = form.selectedGoal?.primary === goal.key;
+                  return (
+                    <button
+                      key={goal.key}
+                      type="button"
+                      onClick={() => handleGoalSelect(goal, cat)}
+                      className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-body transition-all ${
+                        isSelected
+                          ? 'border-accent bg-accentLight text-dark ring-2 ring-accent/30'
+                          : 'border-border bg-white text-dark hover:border-accent/40 hover:bg-accent/5'
+                      }`}
+                    >
+                      {goal.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-            <span className="text-muted mt-5">--</span>
-            <div className="flex-1">
-              <label className="block text-xs text-muted mb-1 font-body">Max</label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-body text-sm">$</span>
-                <input
-                  type="number"
-                  min={form.budgetMin}
-                  max={2000}
-                  value={form.budgetMax}
-                  onChange={(e) => updateForm('budgetMax', Number(e.target.value))}
-                  className="w-full pl-7 pr-4 py-3 rounded-xl border border-border bg-white text-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all"
-                />
-              </div>
-            </div>
-          </div>
-          <p className="text-xs text-muted mt-2 font-body">
-            Most content on Locale is priced between $150 and $400 per piece.
-          </p>
-        </Section>
-      </div>
+          ))}
+        </div>
 
-      {/* Visual References */}
-      <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Visual References</p>
-
-        <Section label="Upload reference images">
-          <div className="border border-dashed border-border rounded-xl p-4 bg-white text-center">
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(e) => onVisualRefsSelected(e.target.files)}
-              className="hidden"
-              id="review-visual-refs-input"
-            />
-            <label htmlFor="review-visual-refs-input" className="cursor-pointer text-sm text-accent font-body">
-              {visualRefUploading ? 'Uploading...' : 'Click to upload images'}
-            </label>
-            <p className="text-xs text-muted mt-1 font-body">JPG/PNG, up to 5 images</p>
-          </div>
-          {visualRefError && (
-            <p className="text-sm text-red-600 font-body mt-2">{visualRefError}</p>
-          )}
-          {form.visualRefUrls.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-3">
-              {form.visualRefUrls.map((url, idx) => (
-                <div key={url + idx} className="relative aspect-square rounded-lg overflow-hidden border border-border bg-bgTan group">
-                  <img src={url} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    aria-label={`Remove reference ${idx + 1}`}
-                    onClick={() => updateForm('visualRefUrls', form.visualRefUrls.filter((_, i) => i !== idx))}
-                    className="absolute top-1 right-1 w-6 h-6 rounded-full bg-dark/70 text-white flex items-center justify-center text-xs hover:bg-dark transition-colors opacity-0 group-hover:opacity-100"
-                  >
-                    &times;
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </Section>
+        <div className="pt-2">
+          <label className="block text-sm font-medium text-dark font-body mb-2">
+            Something else? Tell us in your own words:
+          </label>
+          <input
+            type="text"
+            value={form.customGoalText}
+            onChange={(e) => handleCustomGoalChange(e.target.value)}
+            placeholder="e.g. I want to get more catering orders"
+            className={`w-full px-4 py-3 rounded-xl border text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all ${
+              form.customGoalText.trim() && !form.selectedGoal
+                ? 'border-accent bg-accentLight ring-2 ring-accent/30'
+                : 'border-border bg-white'
+            }`}
+          />
+        </div>
       </div>
 
       {/* Submit */}

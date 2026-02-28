@@ -21,6 +21,8 @@ const INITIAL_FORM = {
   budgetMin: 100,
   budgetMax: 500,
   contentNoGos: '',
+  selectedGoal: null,
+  customGoalText: '',
 };
 
 export default function useOnboardingForm() {
@@ -152,11 +154,8 @@ export default function useOnboardingForm() {
   const canSubmitReview =
     form.businessName.trim() &&
     effectiveNeighborhood &&
-    form.vibes.length > 0 &&
-    form.values.length > 0 &&
-    form.contentComfortZones.length > 0 &&
-    form.budgetMin > 0 &&
-    form.budgetMax >= form.budgetMin;
+    form.cuisineTypes.length > 0 &&
+    (form.selectedGoal || form.customGoalText.trim());
 
   return {
     form,
