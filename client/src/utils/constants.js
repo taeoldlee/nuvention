@@ -94,6 +94,35 @@ export const CUISINE_OPTIONS = [
   'Farm-to-Table', 'Fusion',
 ];
 
+export const BRAND_GOAL_CATEGORIES = [
+  {
+    category: 'GET_MORE_CUSTOMERS',
+    label: 'Get more customers',
+    goals: [
+      { key: 'fill_slow_days', label: 'Fill slow days (weekday lunches, off-peak hours)' },
+      { key: 'attract_new_faces', label: 'Attract new faces in my neighborhood' },
+      { key: 'reach_different_crowd', label: 'Reach a different crowd (younger, families, etc.)' },
+    ],
+  },
+  {
+    category: 'PROMOTE_SOMETHING',
+    label: 'Promote something',
+    goals: [
+      { key: 'launch_menu_item', label: 'Launch a new menu item or seasonal special' },
+      { key: 'hype_event', label: 'Hype up an event or grand opening' },
+    ],
+  },
+  {
+    category: 'BUILD_MY_BRAND_ONLINE',
+    label: 'Build my brand online',
+    goals: [
+      { key: 'grow_social_media', label: 'Grow my social media presence' },
+      { key: 'get_quality_content', label: 'Get quality content for ads, website, or socials' },
+      { key: 'stand_out_competitors', label: 'Stand out from competitors in my area' },
+    ],
+  },
+];
+
 export const CONTENT_TYPES = [
   'Ambiance / Interior',
   'Food & Drink',

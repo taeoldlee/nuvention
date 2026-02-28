@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const prisma = require("../config/db");
 const { requireAuth, requireOperatorWithBrand } = require("../middleware/auth");
-const { generateBriefSuggestions, rankApplication } = require("../services/ai");
+const { generateBriefSuggestions, rankApplication, normalizeGoalText } = require("../services/ai");
 
 /**
  * POST /api/ai/suggest-brief
@@ -71,6 +71,26 @@ router.post("/rank-applications", requireAuth, requireOperatorWithBrand, async (
 
     ranked.sort((a, b) => b.score - a.score);
     res.json({ ranked });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/ai/normalize-goal
+ * Normalize free-text goal to closest predefined goal.
+ * Body: { customText }
+ */
+router.post("/normalize-goal", requireAuth, async (req, res, next) => {
+  try {
+    const { customText } = req.body;
+
+    if (!customText || !customText.trim()) {
+      return res.status(400).json({ error: "customText is required" });
+    }
+
+    const normalized = await normalizeGoalText(customText.trim());
+    res.json({ normalized });
   } catch (err) {
     next(err);
   }

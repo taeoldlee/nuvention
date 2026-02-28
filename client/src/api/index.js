@@ -68,6 +68,7 @@ export const markAllNotificationsRead = () => client.post('/notifications/read-a
 // ─── AI ───
 export const getBriefSuggestions = (data) => client.post('/ai/suggest-brief', data);
 export const rankApplications = (briefId) => client.post('/ai/rank-applications', { briefId });
+export const normalizeGoal = (customText) => client.post('/ai/normalize-goal', { customText });
 
 // ─── Uploads ───
 export const uploadImage = (formData) =>

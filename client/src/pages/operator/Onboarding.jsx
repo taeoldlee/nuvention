@@ -2,7 +2,7 @@ import { useState, useRef } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
-import { autoImportBrand, createBrandProfile, analyzeBrandFromPlace } from '../../api';
+import { autoImportBrand, createBrandProfile, analyzeBrandFromPlace, normalizeGoal } from '../../api';
 import useOnboardingForm from '../../hooks/useOnboardingForm';
 import useGooglePlaces from '../../hooks/useGooglePlaces';
 import ProgressBar from '../../components/common/ProgressBar';
@@ -20,7 +20,7 @@ export default function Onboarding() {
   const { form } = formActions;
 
   const useGoogleFlow = placesAvailable && placesLoaded;
-  const STEPS = ['Search', 'Review'];
+  const STEPS = ['Search', 'Your Brand'];
 
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
@@ -107,6 +107,29 @@ export default function Onboarding() {
     setSaving(true);
     setSaveError('');
     try {
+      // Resolve brandGoals
+      let brandGoals = form.selectedGoal;
+      if (!brandGoals && form.customGoalText.trim()) {
+        try {
+          const res = await normalizeGoal(form.customGoalText.trim());
+          const n = res.data?.normalized || res.data;
+          brandGoals = {
+            primary: n.key,
+            category: n.category,
+            label: n.label,
+            customText: form.customGoalText.trim(),
+          };
+        } catch {
+          // Fallback if normalize fails
+          brandGoals = {
+            primary: 'get_quality_content',
+            category: 'BUILD_MY_BRAND_ONLINE',
+            label: 'Get quality content for ads, website, or socials',
+            customText: form.customGoalText.trim(),
+          };
+        }
+      }
+
       await createBrandProfile({
         businessName: form.businessName,
         neighborhood: formActions.effectiveNeighborhood,
@@ -121,6 +144,7 @@ export default function Onboarding() {
         budgetMin: form.budgetMin * 100,
         budgetMax: form.budgetMax * 100,
         contentNoGos: form.contentNoGos,
+        brandGoals,
       });
       await refreshProfile();
       navigate('/operator/dashboard');
@@ -145,7 +169,7 @@ export default function Onboarding() {
               ? 'Find your business and we\'ll handle the rest.'
               : analyzing
                 ? 'One moment...'
-                : 'Review and tweak your profile.'}
+                : 'Confirm a few details and pick your top goal.'}
           </p>
         </div>
 

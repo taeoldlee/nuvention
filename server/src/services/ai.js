@@ -466,9 +466,62 @@ function fallbackApplicationRanking(application, brief) {
   return { score, rationale };
 }
 
+/**
+ * Normalize free-text goal input to closest predefined goal.
+ * Uses gpt-4o-mini when available, falls back to keyword matching.
+ */
+async function normalizeGoalText(customText) {
+  const GOAL_MAP = [
+    { key: 'fill_slow_days', category: 'GET_MORE_CUSTOMERS', label: 'Fill slow days (weekday lunches, off-peak hours)', keywords: ['slow', 'weekday', 'lunch', 'off-peak', 'empty', 'dead', 'quiet hours'] },
+    { key: 'attract_new_faces', category: 'GET_MORE_CUSTOMERS', label: 'Attract new faces in my neighborhood', keywords: ['new customers', 'new faces', 'foot traffic', 'walk-in', 'neighborhood', 'locals', 'discover'] },
+    { key: 'reach_different_crowd', category: 'GET_MORE_CUSTOMERS', label: 'Reach a different crowd (younger, families, etc.)', keywords: ['younger', 'families', 'college', 'students', 'different crowd', 'demographic', 'gen z', 'millennials'] },
+    { key: 'launch_menu_item', category: 'PROMOTE_SOMETHING', label: 'Launch a new menu item or seasonal special', keywords: ['menu', 'new dish', 'seasonal', 'special', 'launch', 'new item', 'recipe'] },
+    { key: 'hype_event', category: 'PROMOTE_SOMETHING', label: 'Hype up an event or grand opening', keywords: ['event', 'opening', 'grand opening', 'trivia', 'party', 'night', 'celebration', 'hype', 'pop-up'] },
+    { key: 'grow_social_media', category: 'BUILD_MY_BRAND_ONLINE', label: 'Grow my social media presence', keywords: ['social media', 'instagram', 'tiktok', 'followers', 'engagement', 'presence', 'grow'] },
+    { key: 'get_quality_content', category: 'BUILD_MY_BRAND_ONLINE', label: 'Get quality content for ads, website, or socials', keywords: ['content', 'photos', 'videos', 'ads', 'website', 'quality', 'professional'] },
+    { key: 'stand_out_competitors', category: 'BUILD_MY_BRAND_ONLINE', label: 'Stand out from competitors in my area', keywords: ['stand out', 'competitors', 'competition', 'differentiate', 'unique', 'brand'] },
+  ];
+
+  if (openai) {
+    try {
+      const goalList = GOAL_MAP.map((g) => `${g.key} (${g.category}): ${g.label}`).join('\n');
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [{
+          role: 'user',
+          content: `A restaurant owner typed this as their #1 goal:\n"${customText}"\n\nMatch it to the closest goal from this list:\n${goalList}\n\nReturn JSON: { "key": "goal_key", "category": "CATEGORY", "label": "Goal label", "confidence": 0-1 }\nOnly return the JSON.`,
+        }],
+        temperature: 0.2,
+        max_tokens: 150,
+        response_format: { type: 'json_object' },
+      });
+      return JSON.parse(completion.choices[0].message.content);
+    } catch (err) {
+      console.warn('[AI] normalizeGoalText failed:', err.message);
+    }
+  }
+
+  // Fallback: keyword matching
+  const textLower = customText.toLowerCase();
+  let bestMatch = null;
+  let bestScore = 0;
+  for (const goal of GOAL_MAP) {
+    const score = goal.keywords.filter((kw) => textLower.includes(kw)).length;
+    if (score > bestScore) {
+      bestScore = score;
+      bestMatch = goal;
+    }
+  }
+  if (bestMatch) {
+    return { key: bestMatch.key, category: bestMatch.category, label: bestMatch.label, confidence: 0.6 };
+  }
+  return { key: 'get_quality_content', category: 'BUILD_MY_BRAND_ONLINE', label: 'Get quality content for ads, website, or socials', confidence: 0.3 };
+}
+
 module.exports = {
   analyzeBrandFromUrl,
   analyzeBrandFromPlaceData,
   generateBriefSuggestions,
   rankApplication,
+  normalizeGoalText,
 };
