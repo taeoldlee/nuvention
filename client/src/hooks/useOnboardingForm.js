@@ -22,6 +22,7 @@ const INITIAL_FORM = {
   contentNoGos: '',
   selectedGoal: null,
   customGoalText: '',
+  preferredVideoStyle: '',
 };
 
 export default function useOnboardingForm() {
@@ -85,11 +86,13 @@ export default function useOnboardingForm() {
 
   const effectiveNeighborhood = form.neighborhood === 'Other' ? form.customNeighborhood.trim() : form.neighborhood;
 
-  const canSubmitReview =
+  const canProceedToGoal =
     form.businessName.trim() &&
     effectiveNeighborhood &&
-    form.cuisineTypes.length > 0 &&
-    (form.selectedGoal || form.customGoalText.trim());
+    form.cuisineTypes.length > 0;
+
+  const canSubmit =
+    !!(form.selectedGoal || form.customGoalText.trim());
 
   return {
     form,
@@ -98,6 +101,7 @@ export default function useOnboardingForm() {
     setSingleSelect,
     applyImportData,
     effectiveNeighborhood,
-    canSubmitReview,
+    canProceedToGoal,
+    canSubmit,
   };
 }

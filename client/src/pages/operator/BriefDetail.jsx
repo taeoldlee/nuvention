@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getBrief, selectApplication, rejectApplication } from '../../api';
+import { getBrief, selectApplication, rejectApplication, getCreators } from '../../api';
+import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import Btn from '../../components/common/Btn';
 import StatusBadge from '../../components/common/StatusBadge';
@@ -320,9 +321,53 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
   );
 }
 
+const STYLE_TO_TAG = {
+  style_one: 'Warm',
+  style_two: 'Clean',
+  style_three: 'Bold',
+  style_four: 'Documentary',
+};
+
+function CreatorCard({ creator }) {
+  const tags = Array.isArray(creator.contentStyleTags) ? creator.contentStyleTags.slice(0, 3) : [];
+  const initial = creator.name?.charAt(0)?.toUpperCase() || '?';
+
+  return (
+    <div className="card hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-accent/20 transition-all duration-300">
+      <div className="flex items-start gap-3">
+        <div className="w-11 h-11 rounded-full bg-accentLight flex items-center justify-center flex-shrink-0">
+          <span className="text-base font-bold text-accent">{initial}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-body font-semibold text-dark truncate text-sm">{creator.name}</p>
+          <p className="text-xs text-muted font-body">@{creator.handle}</p>
+          <div className="flex items-center gap-3 mt-1.5 text-xs font-body text-mid">
+            {creator.followerCount && (
+              <span>{formatFollowerCount(creator.followerCount)} followers</span>
+            )}
+            {creator.engagementRate != null && (
+              <span>{creator.engagementRate.toFixed(1)}% eng.</span>
+            )}
+          </div>
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {tags.map((tag) => (
+                <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-bgWarm text-mid border border-border">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BriefDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { profile } = useAuth();
 
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -330,6 +375,8 @@ export default function BriefDetail() {
   const [actionLoading, setActionLoading] = useState('');
   const [filteredApps, setFilteredApps] = useState(null);
   const [profileAppId, setProfileAppId] = useState(null);
+  const [creators, setCreators] = useState([]);
+  const [creatorsLoading, setCreatorsLoading] = useState(false);
   const { addToast } = useToast();
 
   const loadBrief = async () => {
@@ -348,6 +395,23 @@ export default function BriefDetail() {
   useEffect(() => {
     loadBrief();
   }, [id]);
+
+  // Fetch recommended creators when brief is OPEN
+  useEffect(() => {
+    if (!brief || brief.status !== 'OPEN') return;
+    setCreatorsLoading(true);
+    const params = {};
+    if (profile?.neighborhood) params.neighborhood = profile.neighborhood;
+    const styleTag = STYLE_TO_TAG[profile?.preferredVideoStyle];
+    if (styleTag) params.style = styleTag;
+    getCreators(params)
+      .then((res) => {
+        const list = res.data?.creators || res.data || [];
+        setCreators(Array.isArray(list) ? list.slice(0, 6) : []);
+      })
+      .catch(() => setCreators([]))
+      .finally(() => setCreatorsLoading(false));
+  }, [brief?.id, brief?.status, profile?.neighborhood, profile?.preferredVideoStyle]);
 
   const handleSelect = async (applicationId) => {
     setActionLoading(`select-${applicationId}`);
@@ -580,6 +644,44 @@ export default function BriefDetail() {
             )}
           </section>
         </FadeIn>
+
+        {/* Recommended Creators */}
+        {brief.status === 'OPEN' && (
+          <FadeIn delay={0.25}>
+            <section className="mt-8">
+              <h2 className="font-display text-xl font-semibold text-dark mb-4">
+                Recommended Creators
+              </h2>
+              {creatorsLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="card animate-pulse">
+                      <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-full bg-border" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 w-24 bg-border rounded" />
+                          <div className="h-3 w-16 bg-border rounded" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : creators.length === 0 ? (
+                <div className="card text-center py-8">
+                  <p className="text-sm text-muted font-body">
+                    No recommended creators found for your area yet. Creators will discover your brief through the public portal.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {creators.map((creator) => (
+                    <CreatorCard key={creator.id} creator={creator} />
+                  ))}
+                </div>
+              )}
+            </section>
+          </FadeIn>
+        )}
       </div>
 
       {/* Creator Profile Drawer */}

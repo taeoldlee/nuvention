@@ -161,6 +161,7 @@ router.post("/profile", async (req, res, next) => {
       contentNoGos,
       cuisineTypes,
       brandGoals,
+      preferredVideoStyle,
     } = req.body;
 
     if (!businessName || !neighborhood) {
@@ -189,6 +190,7 @@ router.post("/profile", async (req, res, next) => {
         contentNoGos: contentNoGos || null,
         cuisineTypes: cuisineTypes || null,
         ...(brandGoals !== undefined && { brandGoals }),
+        ...(preferredVideoStyle !== undefined && { preferredVideoStyle }),
       },
     });
 
@@ -237,6 +239,7 @@ router.put("/profile", async (req, res, next) => {
       contentNoGos,
       cuisineTypes,
       brandGoals,
+      preferredVideoStyle,
     } = req.body;
 
     const profile = await prisma.brandProfile.update({
@@ -261,6 +264,7 @@ router.put("/profile", async (req, res, next) => {
         ...(contentNoGos !== undefined && { contentNoGos }),
         ...(cuisineTypes !== undefined && { cuisineTypes }),
         ...(brandGoals !== undefined && { brandGoals }),
+        ...(preferredVideoStyle !== undefined && { preferredVideoStyle }),
       },
     });
 

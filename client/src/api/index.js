@@ -88,8 +88,11 @@ export const getBrandStats = () => client.get('/stats/brand');
 export const getTransactions = () => client.get('/transactions');
 export const getTransaction = (id) => client.get(`/transactions/${id}`);
 
+// ─── Creators ───
+export const getCreators = (params = {}) => client.get('/creators', { params });
+
 // ─── Admin ───
-export const reseedDatabase = () => client.post('/admin/reseed');
+export const reseedDatabase = () => client.post('/admin/reseed', {}, { timeout: 120000 });
 
 // ─── Insights ───
 export const getInsights = () => client.get('/stats/insights');

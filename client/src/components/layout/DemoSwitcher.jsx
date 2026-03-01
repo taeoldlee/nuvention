@@ -18,17 +18,23 @@ export default function DemoSwitcher() {
   }, [location.hash]);
 
   const handleReseed = async () => {
-    if (!window.confirm('This will reset all demo data to its starting state. Continue?')) {
+    if (!window.confirm('This will reset all demo data to its starting state. This may take up to a minute. Continue?')) {
       return;
     }
     setReseedLoading(true);
     try {
       await reseedDatabase();
-      localStorage.removeItem('locale_user_id');
+      // Clear all locale-related localStorage keys
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('locale_')) localStorage.removeItem(key);
+      });
       window.location.href = '/';
     } catch (err) {
       console.error('Reseed failed:', err);
-      alert('Failed to reset demo data. Please try again.');
+      const isTimeout = err.code === 'ECONNABORTED' || err.message?.includes('timeout');
+      alert(isTimeout
+        ? 'The reset is taking longer than expected. Please wait a moment and refresh the page.'
+        : 'Failed to reset demo data. Please try again.');
       setReseedLoading(false);
     }
   };
@@ -153,7 +159,7 @@ export default function DemoSwitcher() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Resetting...
+                    Resetting database...
                   </>
                 ) : (
                   <>

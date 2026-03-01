@@ -18,9 +18,9 @@ export const OPERATOR_TOUR_STEPS = [
     placement: 'top',
   },
   {
-    target: '[data-tour="operator-recent-content"]',
-    title: 'Recent Content',
-    body: 'Approved content appears here. Use the library to track usage rights and download for posting.',
+    target: '[data-tour="operator-recent-briefs"]',
+    title: 'Recent Briefs',
+    body: 'Your published briefs appear here. Click into any brief to review applications and manage creator selection.',
     placement: 'top',
   },
 ];

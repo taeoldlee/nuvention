@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/TourContext';
 import { getBrandStats, getBriefs, getProjects } from '../../api';
 import Btn from '../../components/common/Btn';
 import StatCard from '../../components/common/StatCard';
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const { startTour, shouldAutoStart } = useTour();
 
   useEffect(() => {
     if (!profile) return;
@@ -72,6 +74,14 @@ export default function Dashboard() {
 
     load();
   }, [user?.id, profile]);
+
+  // ── Auto-start tour ─────────────────────────────────────────────────────
+  useEffect(() => {
+    if (loading || !user?.id) return;
+    if (!shouldAutoStart(user.id)) return;
+    const timer = setTimeout(() => startTour('operator', user.id), 800);
+    return () => clearTimeout(timer);
+  }, [loading, user?.id, shouldAutoStart, startTour]);
 
   // ── Derived data ──────────────────────────────────────────────────────────
   const activeProjects = projects.filter(
@@ -123,18 +133,20 @@ export default function Dashboard() {
                 <p className="font-body text-muted">{profile.businessName}</p>
               )}
             </div>
-            <Btn onClick={() => navigate('/operator/brief/new')}>
-              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Create Brief
-            </Btn>
+            <div data-tour="operator-new-request">
+              <Btn onClick={() => navigate('/operator/brief/new')}>
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Create Brief
+              </Btn>
+            </div>
           </div>
         </FadeIn>
 
         {/* ── Stats Row ──────────────────────────────────────────────── */}
         <FadeIn delay={0.1}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          <div data-tour="operator-stats" className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
             <StatCard
               label="Active Briefs"
               value={stats?.activeBriefs ?? 0}
@@ -176,7 +188,7 @@ export default function Dashboard() {
 
         {/* ── Recent Briefs ──────────────────────────────────────────── */}
         <FadeIn delay={0.2}>
-          <section className="mb-10">
+          <section data-tour="operator-recent-briefs" className="mb-10">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-semibold text-dark">
                 Recent Briefs
@@ -264,7 +276,7 @@ export default function Dashboard() {
 
         {/* ── Active Projects ────────────────────────────────────────── */}
         <FadeIn delay={0.3}>
-          <section>
+          <section data-tour="operator-active-projects">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-display text-xl font-semibold text-dark">
                 Active Projects

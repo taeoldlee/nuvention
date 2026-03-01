@@ -9,6 +9,8 @@ import ProgressBar from '../../components/common/ProgressBar';
 import OnboardingStepSearch from '../../components/operator/OnboardingStepSearch';
 import OnboardingStepImport from '../../components/operator/OnboardingStepImport';
 import OnboardingStepReview from '../../components/operator/OnboardingStepReview';
+import OnboardingStepGoal from '../../components/operator/OnboardingStepGoal';
+import OnboardingStepStyle from '../../components/operator/OnboardingStepStyle';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -20,7 +22,7 @@ export default function Onboarding() {
   const { form } = formActions;
 
   const useGoogleFlow = placesAvailable && placesLoaded;
-  const STEPS = ['Search', 'Your Brand'];
+  const STEPS = ['Search', 'Your Brand', 'Your Goal', 'Your Style'];
 
   const [step, setStep] = useState(0);
   const [analyzing, setAnalyzing] = useState(false);
@@ -145,6 +147,7 @@ export default function Onboarding() {
         budgetMax: form.budgetMax * 100,
         contentNoGos: form.contentNoGos,
         brandGoals,
+        preferredVideoStyle: form.preferredVideoStyle || null,
       });
       await refreshProfile();
       navigate('/operator/dashboard');
@@ -167,9 +170,13 @@ export default function Onboarding() {
           <p className="font-body text-muted">
             {step === 0
               ? 'Find your business and we\'ll handle the rest.'
-              : analyzing
-                ? 'One moment...'
-                : 'Confirm a few details and pick your top goal.'}
+              : step === 1
+                ? analyzing
+                  ? 'One moment...'
+                  : 'Confirm a few details.'
+                : step === 2
+                  ? 'Pick your top goal.'
+                  : 'Pick your visual style.'}
           </p>
         </div>
 
@@ -200,11 +207,27 @@ export default function Onboarding() {
         {step === 1 && (
           <OnboardingStepReview
             formActions={formActions}
+            onNext={() => setStep(2)}
+            onBack={() => { setStep(0); setPlaceSelected(false); }}
+            analyzing={analyzing}
+          />
+        )}
+
+        {step === 2 && (
+          <OnboardingStepGoal
+            formActions={formActions}
+            onSubmit={() => setStep(3)}
+            onBack={() => setStep(1)}
+          />
+        )}
+
+        {step === 3 && (
+          <OnboardingStepStyle
+            formActions={formActions}
             saving={saving}
             saveError={saveError}
             onSubmit={handleSubmit}
-            onBack={() => { setStep(0); setPlaceSelected(false); }}
-            analyzing={analyzing}
+            onBack={() => setStep(2)}
           />
         )}
       </div>

@@ -17,7 +17,7 @@ export default function OnboardingStepSearch({
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
           </svg>
         </div>
-        <h2 className="font-display text-xl font-semibold text-dark mb-1">
+        <h2 className="font-display text-2xl font-bold text-dark mb-1">
           Find your business
         </h2>
         <p className="font-body text-sm text-muted">

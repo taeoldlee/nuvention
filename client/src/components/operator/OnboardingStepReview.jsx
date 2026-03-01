@@ -1,7 +1,6 @@
 import {
   NEIGHBORHOODS,
   CUISINE_OPTIONS,
-  BRAND_GOAL_CATEGORIES,
 } from '../../utils/constants';
 import Btn from '../common/Btn';
 import Chip from '../common/Chip';
@@ -16,13 +15,13 @@ function Section({ label, children }) {
   );
 }
 
-export default function OnboardingStepReview({ formActions, saving, saveError, onSubmit, onBack, analyzing }) {
+export default function OnboardingStepReview({ formActions, onNext, onBack, analyzing }) {
   const {
     form,
     updateForm,
     toggleArrayItem,
     setSingleSelect,
-    canSubmitReview,
+    canProceedToGoal,
   } = formActions;
 
   // Show loading screen while AI is still generating
@@ -34,34 +33,17 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
     );
   }
 
-  const handleGoalSelect = (goal, category) => {
-    updateForm('selectedGoal', {
-      primary: goal.key,
-      category: category.category,
-      label: goal.label,
-    });
-    updateForm('customGoalText', '');
-  };
-
-  const handleCustomGoalChange = (text) => {
-    updateForm('customGoalText', text);
-    if (text.trim()) {
-      updateForm('selectedGoal', null);
-    }
-  };
-
   return (
     <div className="card space-y-6">
       <div>
-        <h2 className="font-display text-xl font-semibold text-dark mb-1">
+        <h2 className="font-display text-2xl font-bold text-dark mb-2">
           Your brand
         </h2>
         <p className="font-body text-sm text-muted">
-          Confirm the basics and tell us your #1 goal.
+          Confirm the basics.
         </p>
       </div>
 
-      {/* Section 1: Confirm the basics */}
       <div className="bg-bgWarm rounded-xl p-5 space-y-5">
         <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">Confirm the basics</p>
 
@@ -102,65 +84,9 @@ export default function OnboardingStepReview({ formActions, saving, saveError, o
         </Section>
       </div>
 
-      {/* Section 2: Pick your goal */}
-      <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <p className="text-xs text-muted font-body uppercase tracking-wide font-semibold">What's your #1 goal right now?</p>
-
-        <div className="space-y-4">
-          {BRAND_GOAL_CATEGORIES.map((cat) => (
-            <div key={cat.category}>
-              <p className="text-xs font-semibold text-mid font-body uppercase tracking-wide mb-2">
-                {cat.label}
-              </p>
-              <div className="space-y-2">
-                {cat.goals.map((goal) => {
-                  const isSelected = form.selectedGoal?.primary === goal.key;
-                  return (
-                    <button
-                      key={goal.key}
-                      type="button"
-                      onClick={() => handleGoalSelect(goal, cat)}
-                      className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-body transition-all ${
-                        isSelected
-                          ? 'border-accent bg-accentLight text-dark ring-2 ring-accent/30'
-                          : 'border-border bg-white text-dark hover:border-accent/40 hover:bg-accent/5'
-                      }`}
-                    >
-                      {goal.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="pt-2">
-          <label className="block text-sm font-medium text-dark font-body mb-2">
-            Something else? Tell us in your own words:
-          </label>
-          <input
-            type="text"
-            value={form.customGoalText}
-            onChange={(e) => handleCustomGoalChange(e.target.value)}
-            placeholder="e.g. I want to get more catering orders"
-            className={`w-full px-4 py-3 rounded-xl border text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all ${
-              form.customGoalText.trim() && !form.selectedGoal
-                ? 'border-accent bg-accentLight ring-2 ring-accent/30'
-                : 'border-border bg-white'
-            }`}
-          />
-        </div>
-      </div>
-
-      {/* Submit */}
-      {saveError && (
-        <p className="text-sm text-red-600 font-body">{saveError}</p>
-      )}
-
       <div className="pt-2 space-y-3">
-        <Btn onClick={onSubmit} loading={saving} disabled={!canSubmitReview} className="w-full" size="lg">
-          Create Profile
+        <Btn onClick={onNext} disabled={!canProceedToGoal} className="w-full" size="lg">
+          Continue
         </Btn>
         {onBack && (
           <button
