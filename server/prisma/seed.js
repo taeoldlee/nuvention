@@ -1967,13 +1967,16 @@ async function main() {
 // Export main for use by the admin reseed API route
 module.exports = { main };
 
-// Run directly when called as a script (npx prisma db seed)
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+// Only auto-run when called directly as a script (npx prisma db seed),
+// NOT when require()'d by the admin reseed route
+if (require.main === module) {
+  main()
+    .then(async () => {
+      await prisma.$disconnect();
+    })
+    .catch(async (e) => {
+      console.error(e);
+      await prisma.$disconnect();
+      process.exit(1);
+    });
+}
