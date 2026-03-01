@@ -4,6 +4,66 @@ const prisma = require("../config/db");
 const { requireAuth, requireOperatorWithBrand } = require("../middleware/auth");
 const { closeExpiredBriefs } = require("../services/briefExpiry");
 
+// ─── Auto-populate applications from seeded creators ───
+
+const PITCH_TEMPLATES = [
+  "I'd love to create content for {brand}! My style is a perfect match for this brief — I specialize in {style} content and my audience is exactly who you're trying to reach.",
+  "This brief really resonates with me. I've been following {brand} and have some great ideas for {style} content that would connect with my followers.",
+  "I'm excited about this opportunity! I create {style} content regularly and think I can deliver something really special for {brand}.",
+  "Hey! I think my {style} content style would be a great fit here. I know the {neighborhood} area well and can create authentic, engaging content for {brand}.",
+  "Love this brief! My audience engages heavily with {style} content. I'd bring a fresh perspective that highlights what makes {brand} unique.",
+];
+
+async function autoPopulateApplications(brief, brandProfile) {
+  const creators = await prisma.creator.findMany({
+    where: { isActive: true },
+    orderBy: { engagementRate: "desc" },
+  });
+
+  if (creators.length === 0) return;
+
+  // Pick 3-5 random creators
+  const shuffled = creators.sort(() => Math.random() - 0.5);
+  const count = Math.min(3 + Math.floor(Math.random() * 3), shuffled.length);
+  const selected = shuffled.slice(0, count);
+
+  const applications = selected.map((creator, i) => {
+    const styleTags = Array.isArray(creator.contentStyleTags) ? creator.contentStyleTags : [];
+    const style = styleTags[0] || "food & lifestyle";
+    const neighborhood = brandProfile.neighborhood || "the area";
+    const brand = brandProfile.businessName || "your brand";
+    const pitch = PITCH_TEMPLATES[i % PITCH_TEMPLATES.length]
+      .replace("{brand}", brand)
+      .replace("{style}", style.toLowerCase())
+      .replace("{neighborhood}", neighborhood);
+
+    // Generate a realistic match score (60-95)
+    const baseScore = 60 + Math.random() * 35;
+    const score = Math.round(baseScore * 10) / 10;
+
+    return {
+      briefId: brief.id,
+      creatorName: creator.name,
+      creatorHandle: creator.handle.replace("@", ""),
+      creatorPlatform: creator.platform,
+      followerCount: creator.followerCount,
+      engagementRate: creator.engagementRate,
+      audienceDemographics: creator.audienceDemographics,
+      contentStyleTags: creator.contentStyleTags,
+      portfolioUrls: creator.portfolioUrls,
+      topPostUrls: creator.topPostUrls,
+      pitch,
+      contactEmail: creator.contactEmail || `${creator.handle.replace("@", "")}@example.com`,
+      aiMatchScore: score,
+      aiMatchRationale: `Content Style: ${Math.round(50 + Math.random() * 50)}/100\nLocation Fit: ${Math.round(50 + Math.random() * 50)}/100\nEngagement Quality: ${Math.round(50 + Math.random() * 50)}/100\nAudience Match: ${Math.round(50 + Math.random() * 50)}/100`,
+      status: "PENDING",
+    };
+  });
+
+  await prisma.application.createMany({ data: applications });
+  console.log(`[Briefs] Auto-populated ${applications.length} applications for brief "${brief.title}"`);
+}
+
 // All routes require authentication
 router.use(requireAuth);
 
@@ -57,6 +117,16 @@ router.post("/", requireOperatorWithBrand, async (req, res, next) => {
         aiSuggestions: aiSuggestions || null,
       },
     });
+
+    // Auto-populate applications from seeded creators when publishing
+    if (status === "OPEN") {
+      try {
+        await autoPopulateApplications(brief, req.brandProfile);
+      } catch (err) {
+        console.error("[Briefs] Auto-populate applications failed:", err.message);
+        // Non-blocking — brief is still created
+      }
+    }
 
     res.status(201).json({ brief });
   } catch (err) {

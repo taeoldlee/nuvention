@@ -1,25 +1,34 @@
-import { BRAND_GOAL_CATEGORIES } from '../../utils/constants';
 import Btn from '../common/Btn';
 
+const GOALS = [
+  { key: 'attract_new_faces', label: 'Get more customers', category: 'GET_MORE_CUSTOMERS' },
+  { key: 'launch_menu_item', label: 'Promote something new', category: 'PROMOTE_SOMETHING' },
+  { key: 'grow_social_media', label: 'Grow my social media', category: 'BUILD_MY_BRAND_ONLINE' },
+  { key: 'get_quality_content', label: 'Get quality content', category: 'BUILD_MY_BRAND_ONLINE' },
+];
+
 export default function OnboardingStepGoal({ formActions, saving, saveError, onSubmit, onBack }) {
-  // saving/saveError may not be passed when used as intermediate step
-  const { form, updateForm, canSubmit } = formActions;
+  const { form, updateForm } = formActions;
+  const selected = form.selectedGoal?.primary || '';
 
-  const handleGoalSelect = (goal, category) => {
-    updateForm('selectedGoal', {
-      primary: goal.key,
-      category: category.category,
-      label: goal.label,
-    });
-    updateForm('customGoalText', '');
-  };
-
-  const handleCustomGoalChange = (text) => {
-    updateForm('customGoalText', text);
-    if (text.trim()) {
+  const handleChange = (e) => {
+    const key = e.target.value;
+    if (!key) {
       updateForm('selectedGoal', null);
+      return;
+    }
+    const goal = GOALS.find((g) => g.key === key);
+    if (goal) {
+      updateForm('selectedGoal', {
+        primary: goal.key,
+        category: goal.category,
+        label: goal.label,
+      });
+      updateForm('customGoalText', '');
     }
   };
+
+  const canContinue = !!form.selectedGoal || !!form.customGoalText.trim();
 
   return (
     <div className="card space-y-6">
@@ -32,52 +41,37 @@ export default function OnboardingStepGoal({ formActions, saving, saveError, onS
         </p>
       </div>
 
-      <div className="bg-bgWarm rounded-xl p-5 space-y-5">
-        <div className="space-y-4">
-          {BRAND_GOAL_CATEGORIES.map((cat) => (
-            <div key={cat.category}>
-              <p className="text-xs font-semibold text-mid font-body uppercase tracking-wide mb-2">
-                {cat.label}
-              </p>
-              <div className="space-y-2">
-                {cat.goals.map((goal) => {
-                  const isSelected = form.selectedGoal?.primary === goal.key;
-                  return (
-                    <button
-                      key={goal.key}
-                      type="button"
-                      onClick={() => handleGoalSelect(goal, cat)}
-                      className={`w-full text-left px-4 py-3 rounded-xl border text-sm font-body transition-all ${
-                        isSelected
-                          ? 'border-accent bg-accentLight text-dark ring-2 ring-accent/30'
-                          : 'border-border bg-white text-dark hover:border-accent/40 hover:bg-accent/5'
-                      }`}
-                    >
-                      {goal.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+      <div>
+        <select
+          value={selected}
+          onChange={handleChange}
+          className="w-full px-4 py-3.5 rounded-xl border border-border bg-white text-dark font-body text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all appearance-none"
+        >
+          <option value="">Select a goal...</option>
+          {GOALS.map((g) => (
+            <option key={g.key} value={g.key}>{g.label}</option>
           ))}
-        </div>
+        </select>
+      </div>
 
-        <div className="pt-2">
-          <label className="block text-sm font-medium text-dark font-body mb-2">
-            Something else? Tell us in your own words:
-          </label>
-          <input
-            type="text"
-            value={form.customGoalText}
-            onChange={(e) => handleCustomGoalChange(e.target.value)}
-            placeholder="e.g. I want to get more catering orders"
-            className={`w-full px-4 py-3 rounded-xl border text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all ${
-              form.customGoalText.trim() && !form.selectedGoal
-                ? 'border-accent bg-accentLight ring-2 ring-accent/30'
-                : 'border-border bg-white'
-            }`}
-          />
-        </div>
+      <div>
+        <label className="block text-sm font-medium text-dark font-body mb-2">
+          Something else? Tell us in your own words:
+        </label>
+        <input
+          type="text"
+          value={form.customGoalText}
+          onChange={(e) => {
+            updateForm('customGoalText', e.target.value);
+            if (e.target.value.trim()) updateForm('selectedGoal', null);
+          }}
+          placeholder="e.g. I want to get more catering orders"
+          className={`w-full px-4 py-3 rounded-xl border text-dark font-body text-sm placeholder:text-muted/60 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent transition-all ${
+            form.customGoalText.trim() && !form.selectedGoal
+              ? 'border-accent bg-accentLight ring-2 ring-accent/30'
+              : 'border-border bg-white'
+          }`}
+        />
       </div>
 
       {saveError && (
@@ -85,7 +79,7 @@ export default function OnboardingStepGoal({ formActions, saving, saveError, onS
       )}
 
       <div className="pt-2 space-y-3">
-        <Btn onClick={onSubmit} loading={saving} disabled={!canSubmit} className="w-full" size="lg">
+        <Btn onClick={onSubmit} loading={saving} disabled={!canContinue} className="w-full" size="lg">
           {saving ? 'Creating Profile...' : 'Continue'}
         </Btn>
         {onBack && (
