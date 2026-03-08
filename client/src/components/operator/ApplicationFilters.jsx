@@ -72,7 +72,7 @@ export default function ApplicationFilters({ applications, onChange }) {
     <div className="mb-4 space-y-3">
       {/* Summary bar */}
       <div className="flex flex-wrap items-center gap-3 text-sm font-body text-muted">
-        <span className="font-semibold text-dark">{applications.length} application{applications.length !== 1 ? 's' : ''}</span>
+        <span className="font-semibold text-dark">{applications.length} matched creator{applications.length !== 1 ? 's' : ''}</span>
         {avgScore > 0 && (
           <>
             <span className="text-border">·</span>

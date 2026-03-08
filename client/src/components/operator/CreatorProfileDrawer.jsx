@@ -200,8 +200,22 @@ export default function CreatorProfileDrawer({ applicationId, onClose }) {
                 </div>
               </div>
 
+              {/* Location */}
+              {(() => {
+                const neighborhoods = Array.isArray(app.creatorNeighborhoods) ? app.creatorNeighborhoods : [];
+                return neighborhoods.length > 0 ? (
+                  <div className="flex items-center gap-1.5 text-sm font-body text-mid -mt-2">
+                    <svg className="w-4 h-4 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                    </svg>
+                    <span>{neighborhoods.join(', ')}</span>
+                  </div>
+                ) : null;
+              })()}
+
               {/* Stats row */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div className="bg-bgWarm rounded-xl p-3 text-center border border-border">
                   <p className="text-lg font-bold text-dark font-body">{formatFollowerCount(app.followerCount)}</p>
                   <p className="text-xs text-muted font-body">Followers</p>
@@ -217,22 +231,17 @@ export default function CreatorProfileDrawer({ applicationId, onClose }) {
                   </p>
                   <p className="text-xs text-muted font-body">Eng. Rate</p>
                 </div>
-                <div className="bg-bgWarm rounded-xl p-3 text-center border border-border">
-                  <p className="text-lg font-bold text-dark font-body">
-                    {app.compensationAsk || '--'}
-                  </p>
-                  <p className="text-xs text-muted font-body">Ask</p>
-                </div>
               </div>
 
-              {/* AI Match Score */}
-              <div className="bg-bgWarm rounded-xl p-4 border border-border">
+              {/* AI Match Score + Reasoning */}
+              <div className="bg-accentLight/50 rounded-xl p-4 border border-accent/10">
                 <SectionLabel>AI Match Score</SectionLabel>
                 <MatchScoreBar score={app.aiMatchScore} />
                 {app.aiMatchRationale && (
-                  <p className="text-sm text-dark font-body leading-relaxed mt-2">
-                    {app.aiMatchRationale}
-                  </p>
+                  <div className="mt-3 pt-3 border-t border-accent/10">
+                    <p className="text-xs text-accent font-body uppercase tracking-wide mb-1.5 font-semibold">Why they're a good fit</p>
+                    <p className="text-sm text-dark font-body leading-relaxed whitespace-pre-wrap">{app.aiMatchRationale}</p>
+                  </div>
                 )}
               </div>
 
@@ -249,16 +258,6 @@ export default function CreatorProfileDrawer({ applicationId, onClose }) {
                         {tag}
                       </span>
                     ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Full Pitch */}
-              {app.pitch && (
-                <div>
-                  <SectionLabel>Pitch</SectionLabel>
-                  <div className="bg-bgWarm rounded-xl p-4 border border-border">
-                    <p className="text-sm text-dark font-body leading-relaxed whitespace-pre-wrap">{app.pitch}</p>
                   </div>
                 </div>
               )}
@@ -298,15 +297,15 @@ export default function CreatorProfileDrawer({ applicationId, onClose }) {
 
               {/* Past Rankings */}
               <div>
-                <SectionLabel>Past Rankings by Your Brand</SectionLabel>
+                <SectionLabel>Past Matches with Your Brand</SectionLabel>
                 {pastRankings.length === 0 ? (
                   <p className="text-sm text-muted font-body">
-                    This is the first time @{app.creatorHandle} has applied to one of your briefs.
+                    This is the first time @{app.creatorHandle} has been matched to one of your briefs.
                   </p>
                 ) : (
                   <>
                     <p className="text-sm text-muted font-body mb-2">
-                      Previously applied to {pastRankings.length} other brief{pastRankings.length !== 1 ? 's' : ''} from your brand.
+                      Previously matched to {pastRankings.length} other brief{pastRankings.length !== 1 ? 's' : ''} from your brand.
                     </p>
                     <div className="space-y-2">
                       {pastRankings.map((pr) => (

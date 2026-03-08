@@ -366,12 +366,11 @@ async function main() {
       engagementRate: 6.2,
       topPostUrls: ['https://instagram.com/p/example1', 'https://instagram.com/p/example2'],
       contentStyleTags: ['Warm', 'Close-up', 'Storytelling'],
-      pitch: 'Summer ramen is my dream shoot — bright colors, fresh ingredients, the whole vibe. I\'ve shot 5 restaurant seasonal launches and know how to make new menu items look irresistible.',
       compensationAsk: 'Accepts offered terms',
       availabilityConfirmed: true,
       contactEmail: 'shaurya@gmail.com',
       aiMatchScore: 92,
-      aiMatchRationale: 'Excellent warm style alignment with Todoroki brand. Close-up food photography experience. Strong seasonal content portfolio.',
+      aiMatchRationale: 'Based in Evanston, right in your neighborhood — their audience knows the area well. Their warm + close-up style aligns with your brief\'s creative direction. Strong 6.2% engagement rate — their audience actively interacts with content.\n\nContent Style: 90/100\nLocation Fit: 95/100\nEngagement Quality: 88/100\nAudience Match: 85/100',
       status: 'SELECTED',
       selectedAt: new Date('2026-02-20'),
     },
@@ -388,12 +387,11 @@ async function main() {
       engagementRate: 7.2,
       topPostUrls: ['https://tiktok.com/@kk.ameliu/video1'],
       contentStyleTags: ['Bold', 'Energetic', 'Candid'],
-      pitch: 'I make food look fun, not fancy. My TikTok style would bring a fresh, younger audience to your summer menu. I know how to capture energy and get engagement.',
       compensationAsk: '$250',
       availabilityConfirmed: true,
       contactEmail: 'katelyn.liu@gmail.com',
       aiMatchScore: 78,
-      aiMatchRationale: 'High engagement TikTok creator with energetic style. Slight mismatch with warm/cozy brand but strong reach potential.',
+      aiMatchRationale: 'Active in Evanston & Wicker Park, with reach into your area. Their bold + energetic style brings a fresh take — could attract a younger audience. Strong 7.2% engagement rate — their audience actively interacts with content.\n\nContent Style: 70/100\nLocation Fit: 82/100\nEngagement Quality: 90/100\nAudience Match: 72/100',
       status: 'PENDING',
     },
   });
@@ -408,12 +406,11 @@ async function main() {
       followerCount: 18500,
       engagementRate: 4.8,
       contentStyleTags: ['Vlog', 'Detailed', 'Long-form'],
-      pitch: 'I review ramen shops across Chicago. Would love to feature your new summer menu in a dedicated episode.',
       compensationAsk: '$300',
       availabilityConfirmed: true,
       contactEmail: 'jin.park@gmail.com',
       aiMatchScore: 65,
-      aiMatchRationale: 'YouTube long-form doesn\'t match brief\'s Reel/Carousel format. Good reach but wrong content type.',
+      aiMatchRationale: 'Active in Chinatown & West Loop — some distance from your neighborhood. YouTube long-form vlog style is a content type mismatch for this brief\'s Reel/Carousel format, but good local food reach.\n\nContent Style: 55/100\nLocation Fit: 58/100\nEngagement Quality: 72/100\nAudience Match: 65/100',
       status: 'REJECTED',
     },
   });
@@ -428,12 +425,11 @@ async function main() {
       followerCount: 9400,
       engagementRate: 7.5,
       contentStyleTags: ['Clean', 'Natural Light', 'Story-driven'],
-      pitch: 'I\'d love to capture the summer menu launch! My style is all about natural light and making food look approachable.',
       compensationAsk: 'Accepts offered terms',
       availabilityConfirmed: true,
       contactEmail: 'ava.thompson@gmail.com',
       aiMatchScore: 81,
-      aiMatchRationale: 'Clean, natural-light style works well for summer content. Good local following.',
+      aiMatchRationale: 'Based in Evanston, right in your neighborhood — their audience knows the area well. Their clean + natural light style works beautifully for summer seasonal content. Nano creator with a loyal, local following — ideal for hyperlocal campaigns.\n\nContent Style: 82/100\nLocation Fit: 90/100\nEngagement Quality: 85/100\nAudience Match: 78/100',
       status: 'WITHDRAWN',
     },
   });
@@ -455,7 +451,7 @@ async function main() {
       availabilityConfirmed: true,
       contactEmail: 'katelyn.liu@gmail.com',
       aiMatchScore: 91,
-      aiMatchRationale: 'Proven grand opening content experience with viral results. Energetic style perfect for capturing opening-day buzz.',
+      aiMatchRationale: 'Active in Evanston & Wicker Park, with reach into the Lincoln Park area. Their bold + energetic TikTok style is perfect for capturing grand opening energy. Strong 7.2% engagement rate with viral grand opening track record (800K views).\n\nContent Style: 88/100\nLocation Fit: 85/100\nEngagement Quality: 92/100\nAudience Match: 90/100',
       status: 'SELECTED',
       selectedAt: new Date('2026-02-25'),
     },
@@ -476,7 +472,7 @@ async function main() {
       availabilityConfirmed: true,
       contactEmail: 'shaurya@gmail.com',
       aiMatchScore: 88,
-      aiMatchRationale: 'Strong brand-fit storytelling. Slightly lower reach than ideal for a grand opening event.',
+      aiMatchRationale: 'Based in Evanston, right in your neighborhood — their audience knows the area well. Their warm + storytelling style captures the anticipation of a grand opening beautifully. Nano/micro creator with a loyal, local following — ideal for hyperlocal campaigns.\n\nContent Style: 88/100\nLocation Fit: 92/100\nEngagement Quality: 82/100\nAudience Match: 84/100',
       status: 'PENDING',
     },
   });
@@ -496,7 +492,7 @@ async function main() {
       availabilityConfirmed: true,
       contactEmail: 'marcus@locale.app',
       aiMatchScore: 80,
-      aiMatchRationale: 'Strong editorial photographer. Warm style complements the brand. Good for daytime coverage.',
+      aiMatchRationale: 'Active in West Loop & Hyde Park, with reach into broader Chicago. Their golden hour + editorial style creates warm, inviting visuals that complement your brand. Good engagement rate for their tier.\n\nContent Style: 82/100\nLocation Fit: 68/100\nEngagement Quality: 80/100\nAudience Match: 75/100',
       status: 'PENDING',
     },
   });
@@ -1945,6 +1941,20 @@ async function main() {
   });
 
   console.log('  Created 15 creators (4 nano, 8 micro, 3 mid)\n');
+
+  // ─── BACKFILL: Add creatorNeighborhoods to applications ──────
+  console.log('Backfilling application neighborhoods from creators...');
+  const allApps = await prisma.application.findMany({ select: { id: true, creatorHandle: true } });
+  for (const app of allApps) {
+    const creator = await prisma.creator.findFirst({ where: { handle: app.creatorHandle } });
+    if (creator?.neighborhoods) {
+      await prisma.application.update({
+        where: { id: app.id },
+        data: { creatorNeighborhoods: creator.neighborhoods },
+      });
+    }
+  }
+  console.log(`  Backfilled ${allApps.length} applications with neighborhood data\n`);
 
   console.log('=== Seed complete ===');
   console.log('  2 users (1 loaded operator + 1 blank for onboarding)');

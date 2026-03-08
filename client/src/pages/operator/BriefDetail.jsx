@@ -199,16 +199,21 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
     creatorPlatform,
     followerCount,
     engagementRate,
-    pitch,
     aiMatchScore,
     aiMatchRationale,
     contentStyleTags,
-    compensationAsk,
+    creatorNeighborhoods,
     status,
   } = application;
 
   const isActioned = status !== 'PENDING';
   const tags = Array.isArray(contentStyleTags) ? contentStyleTags : [];
+  const neighborhoods = Array.isArray(creatorNeighborhoods) ? creatorNeighborhoods : [];
+
+  // Extract the human-readable summary (before the factor scores)
+  const matchSummary = aiMatchRationale
+    ? aiMatchRationale.split('\n\n')[0]
+    : null;
 
   return (
     <div className={`card transition-all duration-300 ${isActioned ? 'opacity-60' : 'hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-accent/20'}`}>
@@ -246,6 +251,15 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
 
             {/* Stats Row */}
             <div className="flex items-center gap-4 mt-2 text-sm font-body flex-wrap">
+              {neighborhoods.length > 0 && (
+                <div className="flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                  </svg>
+                  <span className="font-semibold text-dark">{neighborhoods.slice(0, 2).join(', ')}</span>
+                </div>
+              )}
               <div className="flex items-center gap-1.5">
                 <span className="text-muted">Followers: </span>
                 <span className="font-semibold text-dark">{formatFollowerCount(followerCount)}</span>
@@ -259,12 +273,6 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
                   <span className={`font-semibold ${engagementRate >= 4 ? 'text-green' : engagementRate >= 2 ? 'text-dark' : 'text-muted'}`}>
                     {engagementRate.toFixed(1)}%
                   </span>
-                </div>
-              )}
-              {compensationAsk && (
-                <div>
-                  <span className="text-muted">Ask: </span>
-                  <span className="font-semibold text-dark">{compensationAsk}</span>
                 </div>
               )}
             </div>
@@ -283,11 +291,11 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
               </div>
             )}
 
-            {/* Pitch */}
-            {pitch && (
-              <div className="mt-3 bg-bgWarm rounded-lg p-3 border border-border">
-                <p className="text-xs text-muted font-body uppercase tracking-wide mb-1">Pitch</p>
-                <p className="text-sm text-dark font-body leading-relaxed">{pitch}</p>
+            {/* AI Match Reasoning — replaces pitch */}
+            {matchSummary && (
+              <div className="mt-3 bg-accentLight/50 rounded-lg p-3 border border-accent/10">
+                <p className="text-xs text-accent font-body uppercase tracking-wide mb-1 font-semibold">Why they're a good fit</p>
+                <p className="text-sm text-dark font-body leading-relaxed">{matchSummary}</p>
               </div>
             )}
           </div>
@@ -312,7 +320,7 @@ function ApplicationCard({ application, onSelect, onReject, onViewProfile, actio
               disabled={!!actionLoading}
               className="text-red-500 hover:text-red-700 hover:bg-red-50"
             >
-              Reject
+              Pass
             </Btn>
           </div>
         )}
@@ -330,6 +338,7 @@ const STYLE_TO_TAG = {
 
 function CreatorCard({ creator }) {
   const tags = Array.isArray(creator.contentStyleTags) ? creator.contentStyleTags.slice(0, 3) : [];
+  const neighborhoods = Array.isArray(creator.neighborhoods) ? creator.neighborhoods : [];
   const initial = creator.name?.charAt(0)?.toUpperCase() || '?';
 
   return (
@@ -341,7 +350,16 @@ function CreatorCard({ creator }) {
         <div className="flex-1 min-w-0">
           <p className="font-body font-semibold text-dark truncate text-sm">{creator.name}</p>
           <p className="text-xs text-muted font-body">@{creator.handle}</p>
-          <div className="flex items-center gap-3 mt-1.5 text-xs font-body text-mid">
+          <div className="flex items-center gap-3 mt-1.5 text-xs font-body text-mid flex-wrap">
+            {neighborhoods.length > 0 && (
+              <span className="flex items-center gap-0.5">
+                <svg className="w-3 h-3 text-muted flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+                </svg>
+                {neighborhoods.slice(0, 2).join(', ')}
+              </span>
+            )}
             {creator.followerCount && (
               <span>{formatFollowerCount(creator.followerCount)} followers</span>
             )}

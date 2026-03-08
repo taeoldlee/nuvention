@@ -167,7 +167,8 @@ model Application {
   topPostUrls          Json? // string array
   portfolioUrls        Json? // string array — links or uploaded file URLs
   contentStyleTags     Json? // string array
-  pitch                String // "why I'm a good fit"
+  pitch                String? // legacy — replaced by AI match rationale
+  creatorNeighborhoods Json? // ["Evanston", "Rogers Park"] — copied from Creator
   compensationAsk      String? // free text — their rate or "accepts offered terms"
   availabilityConfirmed Boolean @default(false)
   contactEmail         String
