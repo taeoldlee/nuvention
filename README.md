@@ -410,8 +410,8 @@ npm run migrate:deploy  # run prisma migrate deploy (production)
 ### First-time setup
 
 ```bash
-git clone <repo-url>
-cd locale
+git clone https://github.com/taeoldlee/nuvention.git
+cd nuvention
 npm run install:all
 
 createdb locale
@@ -437,6 +437,20 @@ This wipes all tables and re-inserts the full demo dataset.
 
 ---
 
+## Live Demo
+
+**https://energetic-abundance-production-3958.up.railway.app**
+
+Use the **Demo Switcher** (bottom-right) to log in as any demo account.
+
+---
+
+## Repository
+
+**https://github.com/taeoldlee/nuvention**
+
+---
+
 ## Production Deployment (Railway)
 
 The app is configured for Railway via `nixpacks.toml`. A single service runs both the Express API and serves the built Vite frontend.
@@ -449,13 +463,18 @@ The `start` script runs `prisma db push --force-reset` + `prisma db seed` + `nod
 ### Environment variables to set in Railway
 
 ```
-DATABASE_URL        (Railway PostgreSQL plugin — set automatically)
-CORS_ORIGIN         https://your-domain.railway.app
-OPENAI_API_KEY      (optional)
-AWS_REGION          (optional)
-AWS_ACCESS_KEY_ID   (optional)
+DATABASE_URL          (Railway PostgreSQL plugin)
+CORS_ORIGIN           *
+DEMO_MODE             true
+NODE_ENV              production
+PORT                  3001
+OPENAI_API_KEY        (optional)
+AWS_REGION            (optional)
+AWS_ACCESS_KEY_ID     (optional)
 AWS_SECRET_ACCESS_KEY (optional)
-AWS_S3_BUCKET       (optional)
+AWS_S3_BUCKET         (optional)
+RAPIDAPI_KEY          (optional)
+VITE_GOOGLE_PLACES_API_KEY (optional)
 ```
 
 ---
